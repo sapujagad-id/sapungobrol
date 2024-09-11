@@ -35,7 +35,7 @@ Proyek ini dikerjakan oleh mahasiswa Universitas Indonesia untuk mengembangkan c
 
 ## Anggota Kelompok
 
-Proyek ini dikerjakan oleh kelompok mahasiswa Universitas Indonesia sebagai bagian dari kolaborasi dengan Broom.id. Anggota kelompok ini adalah:
+Proyek ini dikerjakan oleh kelompok mahasiswa Universitas Indonesia sebagai bagian dari syarat kelulusan untuk mata kuliah Proyek Perangkat Lunak. Anggota kelompok ini adalah:
 
 - **Nyoo Steven** - 2106630050
 - **Arkan Alexei Andrei** - 2106631463
