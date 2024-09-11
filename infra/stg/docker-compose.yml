@@ -1,0 +1,35 @@
+services:
+  sapungobrol-stg:
+    image: nayyaraairlangga/sapungobrol:latest
+    container_name: sapungobrol-stg
+    labels:
+      caddy: sapungobrol.nairlangga.com
+      caddy.reverse_proxy: "{{upstreams 8080}}"
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PORT: 8080
+    networks:
+      - public-web
+      - sapungobrol-stg
+  
+  sapungobrol-db-stg:
+    image: postgres:16
+    container_name: sapungobrol-db-stg
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - sapungobrol-stg
+    volumes:
+      - sapungobrol-db-stg:/var/lib/postgresql/data
+
+volumes:
+  sapungobrol-db-stg:
+    external: true
+
+networks:
+  sapungobrol-stg:
+    external: true
