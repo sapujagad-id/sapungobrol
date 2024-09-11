@@ -1,0 +1,105 @@
+name: Deploy to Staging
+
+env:
+  # Deployment variables
+  CONFIG_DIR: infra/stg
+  DEPLOY_DIR: sapungobrol
+  ENV: ${{ secrets.STG_ENV }}
+  # VM variables
+  HOST: ${{ vars.STG_SSH_HOST }}
+  PORT: ${{ vars.STG_SSH_PORT }}
+  USER: ${{ vars.STG_SSH_USER }}
+  KEYNAME: ${{ vars.STG_SSH_KEYNAME }}
+  KEY: ${{ secrets.STG_SSH_KEY }}
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build and push Docker image
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ vars.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Get Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ vars.DOCKERHUB_USER }}/sapungobrol
+          tags: |
+            type=raw,value=latest
+            type=sha
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          platforms: linux/amd64
+
+  deploy:
+    name: Deploy image to machine
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Read env file
+        run: echo ${{ env.ENV }} | base64 -di >> ${{ env.CONFIG_DIR }}/.env
+
+      - name: Setup known hosts
+        id: known-hosts
+        run: |
+          KNOWN_HOSTS=$(ssh-keyscan -H ${{ env.HOST }})
+          echo "known_hosts=$KNOWN_HOSTS" >> "$GITHUB_OUTPUT"
+
+      - name: Register SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ env.KEY }}
+          name: ${{ env.KEYNAME }}
+          known_hosts: ${{ steps.known-hosts.outputs.known_hosts }}
+          if_key_exists: replace
+          config: |
+            Host ${{ env.HOST }}
+              HostName ${{ env.HOST }}
+              User ${{ env.USER }}
+              Port ${{ env.PORT }}
+              IdentityFile ~/.ssh/${{ env.KEYNAME }}
+              ServerAliveInterval 15
+
+      - name: Move deployment configuration
+        run: rsync -avrz --progress ${{ env.CONFIG_DIR }}/ ${{ env.HOST }}:${{ env.DEPLOY_DIR }}
+
+      - name: Run any setup script
+        run: |
+          ssh ${{ env.HOST }} "
+            cd ${{ env.DEPLOY_DIR }}
+            if [ -f "setup.sh" ]; then
+              chmod +x setup.sh && ./setup.sh
+            fi
+          "
+
+      - name: Run containers based on docker compose
+        run: |
+          ssh ${{ env.HOST }} 'sudo bash -c "cd ${{ env.DEPLOY_DIR }}; docker compose pull; docker compose down; docker compose up -d"'
