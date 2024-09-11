@@ -31,5 +31,7 @@ volumes:
     external: true
 
 networks:
+  public-web:
+    external: true
   sapungobrol-stg:
     external: true
