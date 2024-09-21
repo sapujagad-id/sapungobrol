@@ -31,8 +31,10 @@ def upgrade():
         sa.Column('system_prompt', sa.Text, nullable=False),
         sa.Column('model', modelengine, nullable=False),
         sa.Column('data_source', datatype, nullable=False),
-        sa.Column('url', sa.String(length=127), nullable=True),
-        sa.Column('tables', sa.String(length=255), nullable=True),
+        sa.Column('url', sa.String(length=127)),
+        sa.Column('tables', sa.String(length=255)),
+        sa.Column('created_at', sa.DateTime()),
+        sa.Column('updated_at', sa.DateTime()),
         sa.PrimaryKeyConstraint('id')
     )
 

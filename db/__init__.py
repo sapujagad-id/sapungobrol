@@ -12,7 +12,7 @@ if DATABASE_URL is None or DATABASE_URL == "":
     raise ValueError("database url is required")
 
 db_engine = create_engine(DATABASE_URL)
-
+SessionType = Session
 DbSession = sessionmaker(bind=db_engine)
 ModelBase = declarative_base()
 

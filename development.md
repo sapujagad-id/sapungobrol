@@ -53,3 +53,9 @@ FastAPI has a built-in, auto-generated Swagger UI at `/docs`
 #### Creating Migrations
 
 To use Alembic to create a new migration, run `alembic revision -m "<migration message>"`
+
+Read more: https://alembic.sqlalchemy.org/en/latest/tutorial.html
+
+#### Downgrading Migrations
+
+Run `alembic downgrade <migration>` where <migration> is the migration name, or `base` to down-migrate everything.
