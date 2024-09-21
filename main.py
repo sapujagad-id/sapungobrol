@@ -4,9 +4,8 @@ from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
-from app.api.main import api_router
+from app.api.routes import api_router
 from db import Group, get_db_session, get_group
-
 
 app = FastAPI()
 
