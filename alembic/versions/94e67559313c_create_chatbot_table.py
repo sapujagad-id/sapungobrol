@@ -28,7 +28,7 @@ def upgrade():
     op.create_table('chatbot',
         sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=False),
-        sa.Column('system_prompt', sa.Text(length=2048), nullable=False),
+        sa.Column('system_prompt', sa.Text, nullable=False),
         sa.Column('model', modelengine, nullable=False),
         sa.Column('data_source', datatype, nullable=False),
         sa.Column('url', sa.String(length=127), nullable=True),
