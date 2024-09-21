@@ -4,6 +4,10 @@
 
 Broom.id adalah platform digital yang bergerak dalam ekosistem mobil bekas di Indonesia. Tujuan utama Broom.id adalah memberdayakan pelaku bisnis jual-beli mobil bekas dengan menyediakan solusi bisnis yang menyeluruh dan efisien.
 
+## Panduan Development
+
+Untuk panduan instalasi dan development, silahkan merujuk ke [development.md](./development.md)
+
 ### Link Proyek
 [Tauntan ke Proyek Chatbot Broom.id](https://sapungobrol.nairlangga.com/)
 
