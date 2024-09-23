@@ -17,6 +17,11 @@ DbSession = sessionmaker(bind=db_engine)
 ModelBase = declarative_base()
 
 
+def config_db(database_url: str) -> sessionmaker[Session]:
+    engine = create_engine(database_url)
+    return sessionmaker(bind=engine)
+
+
 def get_db_session():
     db = DbSession()
     try:
