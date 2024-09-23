@@ -3,20 +3,24 @@ import os
 
 
 class AppConfig:
+
+    def validate_env_var(self, var_name: str) -> tuple[str, bool]:
+        var = os.getenv(var_name, "")
+        if var == "":
+            logging.error(f"config error: missing '{var_name}'")
+
+        return var, var != ""
+
     def __init__(self) -> None:
         missing_values = False
 
-        log_level = os.getenv("LOG_LEVEL", "")
-        if log_level == "":
-            logging.error("config error: missing 'LOG_LEVEL'")
+        self.log_level, valid = self.validate_env_var("LOG_LEVEL")
+        if not valid:
             missing_values = True
-        self.log_level = log_level
 
-        database_url = os.getenv("DATABASE_URL", "")
-        if database_url == "":
-            logging.error("config error: missing 'DATABASE_URL'")
+        self.database_url, valid = self.validate_env_var("DATABASE_URL")
+        if not valid:
             missing_values = True
-        self.database_url = database_url
 
         if missing_values:
             raise ValueError("missing values")
