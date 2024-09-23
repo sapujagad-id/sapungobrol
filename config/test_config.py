@@ -1,6 +1,6 @@
 import pytest
 
-from . import AppConfig, InvalidLogLevelException
+from . import AppConfig, InvalidLogLevelException, parse_log_level
 
 
 class TestAppConfig:

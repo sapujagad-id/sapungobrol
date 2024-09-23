@@ -2,6 +2,10 @@ import logging
 import os
 
 
+class InvalidLogLevelException(Exception):
+    pass
+
+
 class AppConfig:
 
     def validate_env_var(self, var_name: str) -> tuple[str, bool]:
@@ -24,3 +28,12 @@ class AppConfig:
 
         if missing_values:
             raise ValueError("missing values")
+
+
+# For now, we only want INFO or DEBUG level logging
+def parse_log_level(log_level: str) -> str:
+    if log_level == "info" or log_level == "INFO":
+        return "INFO"
+    if log_level == "debug" or log_level == "DEBUG":
+        return "DEBUG"
+    raise InvalidLogLevelException("invalid log level")
