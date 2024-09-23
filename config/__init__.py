@@ -1,5 +1,9 @@
+import json
 import logging
 import os
+import sys
+
+from loguru import logger
 
 
 class InvalidLogLevelException(Exception):
@@ -37,3 +41,40 @@ def parse_log_level(log_level: str) -> str:
     if log_level == "debug" or log_level == "DEBUG":
         return "DEBUG"
     raise InvalidLogLevelException("invalid log level")
+
+
+# Remove default logger and configure new logger
+def configure_logger(log_level: str):
+    def sink(message):
+        message_json = json.loads(message)
+        message_json["level"] = message_json["record"]["level"]["name"]
+        message_json["timestamp"] = message_json["record"]["time"]["repr"]
+        message_json["function"] = message_json["record"]["function"]
+        message_json["message"] = message_json["record"]["message"]
+        if message_json["record"]["exception"] is not None:
+            message_json["exception"] = message_json["record"]["exception"]
+            message_json["caller"] = (
+                message_json["record"]["file"]["path"]
+                + ":"
+                + str(message_json["record"]["line"])
+            )
+        message_json.update(message_json["record"]["extra"])
+        message_json.pop("text")
+        message_json.pop("record")
+
+        serialized = json.dumps(message_json, default=str)
+        print(serialized, file=sys.stdout, flush=True)
+
+    level = parse_log_level(log_level)
+    logger.remove(0)
+    logger.add(
+        sink,
+        level=level,
+        format="{time} | {level} | {message}",
+        backtrace=True,
+        serialize=True,
+    )
+
+    logger.info("lololol")
+    with logger.bind(lol="adwadwa").catch():
+        raise InvalidLogLevelException("hmm")
