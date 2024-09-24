@@ -21,18 +21,28 @@ class AppConfig:
         return var, var != ""
 
     def __init__(self) -> None:
-        missing_values = False
+        invalid = False
 
-        self.log_level, valid = self.validate_env_var("LOG_LEVEL")
-        if not valid:
-            missing_values = True
+        port = os.getenv("PORT", "")
+        if port == "":
+            self.port = 8000
+        else:
+            try:
+                self.port = int(port)
+            except ValueError:
+                logging.error(f"config error: port must be integer")
+                invalid = True
 
-        self.database_url, valid = self.validate_env_var("DATABASE_URL")
-        if not valid:
-            missing_values = True
+        self.log_level, found = self.validate_env_var("LOG_LEVEL")
+        if not found:
+            invalid = True
 
-        if missing_values:
-            raise ValueError("missing values")
+        self.database_url, found = self.validate_env_var("DATABASE_URL")
+        if not found:
+            invalid = True
+
+        if invalid:
+            raise ValueError("invalid app config")
 
 
 # For now, we only want INFO or DEBUG level logging
