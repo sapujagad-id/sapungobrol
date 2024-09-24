@@ -39,8 +39,8 @@ jobs:
           pip install -r requirements.txt
           echo PATH=$PATH >> $GITHUB_ENV
 
-      - name: Setup coverage
-        run: pip install coverage
+      - name: Setup coverage and pytest
+        run: pip install coverage pytest
 
       - name: Setup Atlas
         uses: ariga/setup-atlas@v0
