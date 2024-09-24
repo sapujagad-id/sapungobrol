@@ -19,8 +19,55 @@ on:
       - main
 
 jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5433:5432
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.10"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Setup coverage and pytest
+        run: pip install coverage pytest
+
+      - name: Setup Atlas
+        uses: ariga/setup-atlas@v0
+
+      - name: Run migrations
+        run: atlas migrate apply --url postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
+
+      - name: Run test and get coverage
+        run: coverage run -m pytest && coverage xml
+
+      - name: Scan code and upload coverage to Sonarcloud
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
   build:
     name: Build and push Docker image
+    needs: [test]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Sources
