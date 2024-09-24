@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 
+from datetime import datetime
 from loguru import logger
 
 
@@ -48,7 +49,10 @@ def configure_logger(log_level: str):
     def sink(message):
         message_json = json.loads(message)
         message_json["level"] = message_json["record"]["level"]["name"]
-        message_json["timestamp"] = message_json["record"]["time"]["repr"]
+        timestamp = message_json["record"]["time"]["timestamp"]
+        message_json["timestamp"] = (
+            datetime.fromtimestamp(timestamp).astimezone().isoformat()
+        )
         message_json["function"] = message_json["record"]["function"]
         message_json["message"] = message_json["record"]["message"]
         if message_json["record"]["exception"] is not None:
@@ -74,7 +78,3 @@ def configure_logger(log_level: str):
         backtrace=True,
         serialize=True,
     )
-
-    logger.info("lololol")
-    with logger.bind(lol="adwadwa").catch():
-        raise InvalidLogLevelException("hmm")
