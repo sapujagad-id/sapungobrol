@@ -1,4 +1,14 @@
-# development.md
+# Development Guidelines
+
+## Prerequisites
+
+- Python >= 3.11
+- Docker
+- Atlas
+
+### More on Atlas
+
+Atlas is a language-agnostic database migration tool. To install Atlas, check out the [Getting Started](https://atlasgo.io/getting-started/) page here.
 
 ## Installation
 
@@ -10,12 +20,15 @@ python -m venv env
 
 2. Activate the virtual environment
 
-```
-// on macOS or linux:
+```bash
+# on macOS or linux:
 source env/bin/activate
 
-// on windows:
-.\venv\Scripts\activate.bat
+# on windows cmd:
+.\env\Scripts\activate.bat
+
+# on windows powershell:
+.\env\Scripts\Activate.ps1
 ```
 
 3. Install dependencies
@@ -32,30 +45,44 @@ docker compose -f dev.docker-compose.yml up
 
 5. Configure `.env` based on `.env.example`
 
-6. Run all Alembic migrations
+6. Run all migrations
 
 ```
-alembic upgrade head
+atlas migrate apply --url postgres://postgres:postgres@localhost:5433
 ```
 
 7. Start server locally
 
 ```
-fastapi dev
+python main.py
 ```
 
 ## Development
 
-#### /docs
+### API Documentation
 
-FastAPI has a built-in, auto-generated Swagger UI at `/docs`
+FastAPI has a built-in, auto-generated Swagger UI at `/docs`. It can also be used for testing requests while developing locally.
 
-#### Creating Migrations
+### Creating migrations
 
-To use Alembic to create a new migration, run `alembic revision -m "<migration message>"`
+To make changes to the current schema, modify the `schema.sql` file as needed. Run the command below to generate the migration file for the schema change.
 
-Read more: https://alembic.sqlalchemy.org/en/latest/tutorial.html
+```bash
+atlas migrate diff <name_of_the_migration> --dev-url docker://postgres/16/dev --to file://schema.sql
+```
 
-#### Downgrading Migrations
+A new migration file will be generated under the `migrations` directory. Sometimes, the generated migration file doesn't contain the migration that we want (e.g. accidentally adding a new value to an enum instead of renaming it). You can edit the generated migration file manually in this case.
 
-Run `alembic downgrade <migration>` where <migration> is the migration name, or `base` to down-migrate everything.
+If you edited the migration file manually, run the following to tell Atlas of the change and update its hash on `migrations/atlas.sum`.
+
+```bash
+atlas migrate hash
+```
+
+### Applying migrations
+
+To apply your migrations to your local database, run the command below.
+
+```bash
+atlas migrate apply --url postgres://postgres:postgres@localhost:5433
+```

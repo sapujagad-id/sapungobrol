@@ -1,0 +1,16 @@
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "adapter/__init__.py",
+    "bot/__init__.py",
+    "chat/__init__.py",
+    "db/__init__.py",
+    "main.py",
+]
+
+[tool.pytest.ini_options]
+env = [
+    "PORT=8000",
+    "LOG_LEVEL=info",
+    "DATABASE_URL=postgresql://postgres:postgres@localhost:5433",
+]
