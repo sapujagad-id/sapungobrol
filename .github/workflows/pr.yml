@@ -32,12 +32,11 @@ jobs:
         with:
           python-version: "3.11.10"
 
-      - name: Install dependencies and activate env
-        run: |
-          python -m venv env
-          source env/bin/activate
-          pip install -r requirements.txt
-          echo PATH=$PATH >> $GITHUB_ENV
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Setup coverage and pytest
+        run: pip install coverage pytest
 
       - name: Setup Atlas
         uses: ariga/setup-atlas@v0
@@ -45,5 +44,10 @@ jobs:
       - name: Run migrations
         run: atlas migrate apply --url postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
 
-      - name: Run test
-        run: pytest
+      - name: Run test and get coverage
+        run: coverage run -m pytest && coverage xml
+
+      - name: Scan code and upload coverage to Sonarcloud
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
