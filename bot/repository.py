@@ -3,9 +3,8 @@ from uuid import uuid4
 from loguru import logger
 
 from datetime import datetime
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from sqlalchemy import Column, Enum, Uuid, String, Text, DateTime
-from sqlalchemy.ext.declarative import declarative_base
 
 from .bot import ModelEngine, Bot, BotCreate
 
