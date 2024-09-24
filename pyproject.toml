@@ -2,6 +2,22 @@
 source = ["."]
 omit = ["db/__init__.py", "main.py"]
 
+[tool.coverage.report]
+exclude_lines = [
+    # Exclude abstract methods
+    "@abc.abstractmethod",
+    "@abstractmethod",
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+    # Don't complain about missing debug-only code
+    "def __repr__",
+    "if self.debug",
+    # Don't complain if tests don't hit defensive assertion code
+    "raise AssertionError",
+    "raise NotImplementedError",
+]
+
+
 [tool.pytest.ini_options]
 env = [
     "PORT=8000",
