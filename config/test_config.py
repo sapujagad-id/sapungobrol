@@ -9,10 +9,9 @@ class TestAppConfig:
 
         assert config.log_level == "info"
         assert config.database_url == "postgresql://postgres:postgres@localhost:5433"
+        assert config.port == 8000
 
     def test_parse_log_level(self):
-        config = AppConfig()
-
         assert parse_log_level("info") == "INFO"
         assert parse_log_level("debug") == "DEBUG"
         assert parse_log_level("INFO") == "INFO"
