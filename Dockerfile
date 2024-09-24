@@ -3,11 +3,10 @@ FROM python:3.11.3-slim-buster AS build
 
 WORKDIR /app
 
-# Install dependencies
-RUN set -ex && apt-get update && apt-get install -y libpq-dev gcc
+# Install dependencies and activate env
+RUN set -ex && apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/* && \
+    python -m venv env
 
-# Create virtual env to install deps
-RUN python -m venv env
 ENV PATH="env/bin:$PATH"
 
 # Copy requirements and install
@@ -28,12 +27,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONBUFFERED=1 \
     PATH="env/bin:$PATH"
 
-# Copy project and example env
+# Copy project
 COPY . .
-COPY .env.example ./.env
 
 # Expose port 8000
 ENV PORT=8000
 EXPOSE 8000
 
-CMD ["python", "main.py"]
+CMD ["sh", "-c", "python main.py"]
