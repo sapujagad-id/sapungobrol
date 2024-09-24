@@ -36,4 +36,4 @@ COPY .env.example ./.env
 ENV PORT=8000
 EXPOSE 8000
 
-CMD ["sh", "-c", "fastapi run main.py --host 0.0.0.0 --port $PORT"]
+CMD ["python", "main.py"]
