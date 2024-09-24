@@ -1,11 +1,13 @@
 from abc import abstractmethod, ABC
+from uuid import uuid4
+from loguru import logger
 
 from datetime import datetime
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import Column, Enum, Uuid, String, Text, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 
-from .bot import ModelEngine, Bot
+from .bot import ModelEngine, Bot, BotCreate
 
 Base = declarative_base()
 
@@ -20,7 +22,7 @@ class BotModel(Base):
     id = Column(Uuid, primary_key=True)
     name = Column(String(255), nullable=False)
     system_prompt = Column(Text(length=2048), nullable=False)
-    model = Column(Enum(ModelEngine), nullable=False)
+    model = Column(Enum(ModelEngine, validate_strings=True), nullable=False)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -33,11 +35,24 @@ class BotRepository(ABC):
     def find_bots(self) -> list[Bot]:
         pass
 
+    @abstractmethod
+    def create_bot(self, bot_create: BotCreate):
+        pass
+
 
 class PostgresBotRepository(BotRepository):
     def __init__(self, session: sessionmaker[Session]) -> None:
         self.create_session = session
+        self.logger = logger.bind(service="PostgresBotRepository")
 
     def find_bots(self) -> list[Bot]:
         with self.create_session() as session:
             return session.query(BotModel).all()
+
+    def create_bot(self, bot_create: BotCreate):
+        with self.create_session() as session:
+            with self.logger.catch(message="create bot error", reraise=True):
+                id = uuid4()
+                new_bot = BotModel(**bot_create.model_dump(), id=id)
+                session.add(new_bot)
+                session.commit()
