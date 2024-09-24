@@ -39,11 +39,19 @@ jobs:
           pip install -r requirements.txt
           echo PATH=$PATH >> $GITHUB_ENV
 
+      - name: Setup coverage
+        run: pip install coverage
+
       - name: Setup Atlas
         uses: ariga/setup-atlas@v0
 
       - name: Run migrations
         run: atlas migrate apply --url postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
 
-      - name: Run test
-        run: pytest
+      - name: Run test and get coverage
+        run: coverage run -m pytest && coverage xml
+
+      - name: Scan code and upload coverage to Sonarcloud
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
