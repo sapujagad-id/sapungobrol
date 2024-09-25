@@ -26,13 +26,13 @@ if __name__ == "__main__":
     app = FastAPI()
 
     app.add_api_route(
-        "/bots",
+        "/api/v1/bots",
         endpoint=bot_controller.fetch_chatbots,
         status_code=status.HTTP_200_OK,
         response_model=list[Bot],
     )
     app.add_api_route(
-        "/bots",
+        "/api/v1/bots",
         endpoint=bot_controller.create_chatbot,
         methods=["POST"],
         status_code=status.HTTP_201_CREATED,

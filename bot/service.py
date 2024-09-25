@@ -7,7 +7,7 @@ from .bot import Bot, BotCreate
 
 class BotService(ABC):
     @abstractmethod
-    def get_chatbots(self) -> list[Bot]:
+    def get_chatbots(self, skip: int, limit: int) -> list[Bot]:
         pass
 
     @abstractmethod
@@ -21,8 +21,8 @@ class BotServiceV1(BotService):
         self.repository = repository
         self.logger = logger.bind(service="BotService")
 
-    def get_chatbots(self) -> list[Bot]:
-        return self.repository.find_bots()
+    def get_chatbots(self, skip: int, limit: int) -> list[Bot]:
+        return self.repository.find_bots(skip, limit)
 
     def create_chatbot(self, request: BotCreate):
         request.validate()

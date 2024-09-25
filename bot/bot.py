@@ -15,6 +15,9 @@ class SystemPromptIsRequired(Exception):
 class UnsupportedModel(Exception):
     pass
 
+class UnsupportedAdapter(Exception):
+    pass
+
 
 class ModelEngine(str, enum.Enum):
     OPENAI = "OpenAI"
@@ -31,6 +34,7 @@ class Bot(BaseModel):
     model: ModelEngine
     created_at: datetime
     updated_at: datetime
+    adapter: MessageAdapter
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -39,8 +43,11 @@ class BotCreate(BaseModel):
     name: str
     system_prompt: str
     model: str
+    adapter: str
 
     def validate(self):
+        if self.adapter not in MessageAdapter._value2member_map_:
+            raise UnsupportedAdapter
         if len(self.name) == 0:
             raise NameIsRequired
         if len(self.system_prompt) == 0:

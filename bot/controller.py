@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from fastapi import HTTPException
 
-from .bot import BotCreate, NameIsRequired, SystemPromptIsRequired, UnsupportedModel
+from .bot import BotCreate, NameIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
 from .service import BotService
 
 
@@ -20,8 +20,8 @@ class BotControllerV1(BotController):
         super().__init__()
         self.service = service
 
-    def fetch_chatbots(self):
-        return self.service.get_chatbots()
+    def fetch_chatbots(self, skip = 0, limit:int = 10):
+        return self.service.get_chatbots(skip, limit)
 
     def create_chatbot(self, request: BotCreate):
         try:
@@ -33,5 +33,7 @@ class BotControllerV1(BotController):
             raise HTTPException(status_code=400, detail="System prompt is required")
         except UnsupportedModel:
             raise HTTPException(status_code=400, detail="Unsupported model")
+        except UnsupportedAdapter:
+            raise HTTPException(status_code=400, detail="Unsupported message adapter")
         except Exception:
             raise HTTPException(status_code=500, detail="Something went wrong")
