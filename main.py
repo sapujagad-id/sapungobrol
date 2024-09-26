@@ -1,6 +1,9 @@
 from dotenv import load_dotenv
 from fastapi import FastAPI, status
+from slack_bolt import App
+from slack_bolt.adapter.fastapi import SlackRequestHandler
 
+from adapter import SlackAdapter
 from config import AppConfig, configure_logger
 from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
@@ -17,11 +20,18 @@ if __name__ == "__main__":
 
     sessionmaker = config_db(config.database_url)
 
+    slack_app = App(
+        token=config.slack_bot_token, signing_secret=config.slack_signing_secret
+    )
+    slack_app_handler = SlackRequestHandler(slack_app)
+
     bot_repository = PostgresBotRepository(sessionmaker)
 
     bot_service = BotServiceV1(bot_repository)
 
     bot_controller = BotControllerV1(bot_service)
+
+    slack_adapter = SlackAdapter(slack_app)
 
     app = FastAPI()
 
@@ -36,6 +46,9 @@ if __name__ == "__main__":
         endpoint=bot_controller.create_chatbot,
         methods=["POST"],
         status_code=status.HTTP_201_CREATED,
+    )
+    app.add_api_route(
+        "/api/slack/events", endpoint=slack_adapter.handle_events, methods=["POST"]
     )
 
     uvicorn.run(app, host="0.0.0.0", port=config.port)
