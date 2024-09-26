@@ -41,5 +41,3 @@ class BotServiceV1(BotService):
         request.validate(bot)
 
         self.repository.update_bot(bot, request)
-
-        return
