@@ -2,7 +2,7 @@ from abc import abstractmethod, ABC
 from loguru import logger
 
 from .repository import BotRepository
-from .bot import Bot, BotCreate
+from .bot import Bot, BotCreate, BotUpdate
 
 
 class BotService(ABC):
@@ -12,6 +12,10 @@ class BotService(ABC):
 
     @abstractmethod
     def create_chatbot(self, request: BotCreate):
+        pass
+
+    @abstractmethod
+    def update_chatbot(self, bot_id:str, request: BotUpdate):
         pass
 
 
@@ -28,5 +32,12 @@ class BotServiceV1(BotService):
         request.validate()
 
         self.repository.create_bot(request)
+
+        return
+    
+    def update_chatbot(self, bot_id, request: BotUpdate):
+        request.validate()
+
+        self.repository.update_bot(bot_id, request)
 
         return
