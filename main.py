@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 from fastapi import FastAPI, status
 from slack_bolt import App
-from slack_bolt.adapter.fastapi import SlackRequestHandler
 
 from adapter import SlackAdapter
 from config import AppConfig, configure_logger
@@ -23,7 +22,6 @@ if __name__ == "__main__":
     slack_app = App(
         token=config.slack_bot_token, signing_secret=config.slack_signing_secret
     )
-    slack_app_handler = SlackRequestHandler(slack_app)
 
     bot_repository = PostgresBotRepository(sessionmaker)
 
