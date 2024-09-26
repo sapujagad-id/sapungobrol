@@ -46,6 +46,12 @@ if __name__ == "__main__":
         status_code=status.HTTP_201_CREATED,
     )
     app.add_api_route(
+        "/api/bots/{bot_id}",
+        endpoint=bot_controller.update_chatbot,
+        methods=["PATCH"],
+        status_code=status.HTTP_200_OK,
+    )
+    app.add_api_route(
         "/api/slack/events", endpoint=slack_adapter.handle_events, methods=["POST"]
     )
 
