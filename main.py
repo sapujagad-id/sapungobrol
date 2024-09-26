@@ -48,5 +48,9 @@ if __name__ == "__main__":
     app.add_api_route(
         "/api/slack/events", endpoint=slack_adapter.handle_events, methods=["POST"]
     )
+    app.add_api_route(
+        "/api/slack/ask", endpoint=slack_adapter.ask, methods=["POST"]
+    )
+
 
     uvicorn.run(app, host="0.0.0.0", port=config.port)
