@@ -130,6 +130,11 @@ class TestUpdateChatbot:
         response = setup_controller.update_chatbot(created_bot[0].id, bot_update_request)
         assert response == {"detail": "Bot updated successfully!"}
 
+        updated_bot = setup_controller.service.repository.find_bots(0, 10)
+        assert updated_bot[0].name == "Updated Bot"
+        assert updated_bot[0].system_prompt == "Updated prompt"
+
+
     def test_update_chatbot_name_required(self, setup_controller):
         controller = setup_controller
 

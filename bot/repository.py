@@ -75,13 +75,13 @@ class PostgresBotRepository(BotRepository):
 
     def update_bot(self, bot, bot_update: BotUpdate = None):
         with self.create_session() as session:
-            with self.logger.catch(message="update bot error", reraise=True):                
+            with self.logger.catch(message="update bot error", reraise=True): 
+                session.add(bot)           
+
                 bot.name = bot_update.name
                 bot.system_prompt = bot_update.system_prompt
                 bot.model = bot_update.model            
                 bot.adapter = bot_update.adapter
 
-                
                 session.commit()
-
                 return bot
