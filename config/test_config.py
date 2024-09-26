@@ -31,12 +31,26 @@ class TestAppConfig:
 
         assert config.port == 8000
 
+    def test_config_empty_slack_bot_token(self, monkeypatch):
+        monkeypatch.setenv("SLACK_BOT_TOKEN", "")
+
+        with pytest.raises(ValueError, match="invalid app config"):
+            AppConfig()
+
+    def test_config_empty_slack_signing_secret(self, monkeypatch):
+        monkeypatch.setenv("SLACK_SIGNING_SECRET", "")
+
+        with pytest.raises(ValueError, match="invalid app config"):
+            AppConfig()
+
     def test_config(self):
         config = AppConfig()
 
         assert config.log_level == "info"
         assert config.database_url == "postgresql://postgres:postgres@localhost:5433"
         assert config.port == 8000
+        assert config.slack_bot_token == "xoxb-slack-bot-token"
+        assert config.slack_signing_secret == "slack-signing-secret"
 
     def test_parse_log_level(self):
         assert parse_log_level("info") == "INFO"
