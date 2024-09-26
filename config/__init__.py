@@ -45,6 +45,10 @@ class AppConfig:
         if not found:
             invalid = True
 
+        self.slack_signing_secret, found = self.validate_env_var("SLACK_SIGNING_SECRET")
+        if not found:
+            invalid = True
+
         if invalid:
             raise ValueError("invalid app config")
 
