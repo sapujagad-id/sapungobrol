@@ -15,7 +15,7 @@ class BotController(ABC):
         pass
 
     @abstractmethod
-    def update_chatbot(self, request: BotUpdate):
+    def update_chatbot(self, bot_id, request: BotUpdate):
         pass
 
 
