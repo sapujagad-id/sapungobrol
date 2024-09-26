@@ -33,6 +33,8 @@ python-multipart==0.0.9
 PyYAML==6.0.2
 rich==13.8.1
 shellingham==1.5.4
+slack_bolt==1.20.1
+slack_sdk==3.33.1
 sniffio==1.3.1
 SQLAlchemy==2.0.34
 starlette==0.38.5
