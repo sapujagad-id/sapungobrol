@@ -41,6 +41,10 @@ class AppConfig:
         if not found:
             invalid = True
 
+        self.slack_bot_token, found = self.validate_env_var("SLACK_BOT_TOKEN")
+        if not found:
+            invalid = True
+
         if invalid:
             raise ValueError("invalid app config")
 
