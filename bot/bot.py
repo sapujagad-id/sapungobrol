@@ -8,10 +8,11 @@ from typing import Optional
 class NameIsRequired(Exception):
     pass
 
+class BotNotFound(Exception):
+    pass
 
 class SystemPromptIsRequired(Exception):
     pass
-
 
 class UnsupportedModel(Exception):
     pass
@@ -62,7 +63,7 @@ class BotUpdate(BaseModel):
     model: Optional[str] = None
     adapter: Optional[str] = None
 
-    def validate(self):
+    def validate(self, bot):
         if self.adapter and self.adapter not in MessageAdapter._value2member_map_:
             raise UnsupportedAdapter
         if self.name is not None and len(self.name) == 0:
@@ -71,3 +72,5 @@ class BotUpdate(BaseModel):
             raise SystemPromptIsRequired
         if self.model and self.model not in ModelEngine._value2member_map_:
             raise UnsupportedModel
+        if not bot:
+            raise BotNotFound

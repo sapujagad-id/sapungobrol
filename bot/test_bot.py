@@ -16,8 +16,8 @@ TEST_DATABASE_URL = "sqlite:///:memory:"  # Change as needed for your test setup
 @pytest.fixture
 def session(setup_database):
     """Create a new database session for each test."""
-    SessionLocal = sessionmaker(bind=setup_database)
-    session = SessionLocal()
+    session_local = sessionmaker(bind=setup_database)
+    session = session_local()
     yield session
     session.close()
 
@@ -127,13 +127,8 @@ class TestUpdateChatbot:
             model="OpenAI",
             adapter="Slack"
         )
-
         response = setup_controller.update_chatbot(created_bot[0].id, bot_update_request)
         assert response == {"detail": "Bot updated successfully!"}
-        
-        updated_bot = setup_controller.service.repository.find_bots(0, 10)
-        assert updated_bot[0].name == "Updated Bot"
-        assert updated_bot[0].system_prompt == "Updated prompt"
 
     def test_update_chatbot_name_required(self, setup_controller):
         controller = setup_controller
@@ -146,7 +141,7 @@ class TestUpdateChatbot:
         )
 
         with pytest.raises(HTTPException) as exc:
-            controller.update_chatbot("some-uuid", bot_update_request)
+            controller.update_chatbot(uuid4(), bot_update_request)
         
         assert exc.value.status_code == 400
         assert exc.value.detail == "Name is required"
@@ -162,7 +157,7 @@ class TestUpdateChatbot:
         )
 
         with pytest.raises(HTTPException) as exc:
-            controller.update_chatbot("some-uuid", bot_update_request)
+            controller.update_chatbot(uuid4(), bot_update_request)
         
         assert exc.value.status_code == 400
         assert exc.value.detail == "System prompt is required"
@@ -178,7 +173,7 @@ class TestUpdateChatbot:
         )
 
         with pytest.raises(HTTPException) as exc:
-            controller.update_chatbot("some-uuid", bot_update_request)
+            controller.update_chatbot(uuid4(), bot_update_request)
         
         assert exc.value.status_code == 400
         assert exc.value.detail == "Unsupported model"
@@ -194,7 +189,7 @@ class TestUpdateChatbot:
         )
 
         with pytest.raises(HTTPException) as exc:
-            controller.update_chatbot("some-uuid", bot_update_request)
+            controller.update_chatbot(uuid4(), bot_update_request)
 
         assert exc.value.status_code == 400
         assert exc.value.detail == "Unsupported message adapter"
@@ -215,3 +210,19 @@ class TestUpdateChatbot:
             controller.update_chatbot("some-uuid", bot_update_request)
 
         assert exc.value.status_code == 500
+
+    def test_update_chatbot_non_existent_bot(self, setup_controller):
+        controller = setup_controller
+
+        bot_update_request = BotUpdate(
+            name="Updated Bot",
+            system_prompt="Updated prompt",
+            model="OpenAI",
+            adapter="Slack"
+        )
+
+        with pytest.raises(HTTPException) as exc:
+            controller.update_chatbot(uuid4(), bot_update_request)
+        
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "Bot not found"

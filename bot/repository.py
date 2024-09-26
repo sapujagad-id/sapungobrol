@@ -36,11 +36,15 @@ class BotRepository(ABC):
         pass
 
     @abstractmethod
+    def find_bot_by_id(self, bot_id):
+        pass
+
+    @abstractmethod
     def create_bot(self, bot_create: BotCreate):
         pass
 
     @abstractmethod
-    def update_bot(self, bot_id:str, bot_update: BotUpdate):
+    def update_bot(self, bot, bot_update: BotUpdate):
         pass
 
 
@@ -55,7 +59,12 @@ class PostgresBotRepository(BotRepository):
                 .offset(skip) \
                 .limit(limit) \
                 .all() \
-
+                
+    def find_bot_by_id(self, bot_id):
+        with self.create_session() as session:
+            with self.logger.catch(message=f"Bot with ID:{bot_id} not found", reraise=True):
+                return session.query(BotModel).filter(BotModel.id == bot_id).first()
+    
     def create_bot(self, bot_create: BotCreate):
         with self.create_session() as session:
             with self.logger.catch(message="create bot error", reraise=True):
@@ -64,17 +73,15 @@ class PostgresBotRepository(BotRepository):
                 session.add(new_bot)
                 session.commit()
 
-    def update_bot(self, bot_id, bot_update: BotUpdate = None):
+    def update_bot(self, bot, bot_update: BotUpdate = None):
         with self.create_session() as session:
-            with self.logger.catch(message="update bot error", reraise=True):
-                bot = session.query(BotModel).filter(BotModel.id == bot_id).first()
-                
+            with self.logger.catch(message="update bot error", reraise=True):                
                 bot.name = bot_update.name
                 bot.system_prompt = bot_update.system_prompt
                 bot.model = bot_update.model            
                 bot.adapter = bot_update.adapter
 
-
+                
                 session.commit()
 
                 return bot

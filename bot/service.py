@@ -36,8 +36,10 @@ class BotServiceV1(BotService):
         return
     
     def update_chatbot(self, bot_id, request: BotUpdate):
-        request.validate()
 
-        self.repository.update_bot(bot_id, request)
+        bot = self.repository.find_bot_by_id(bot_id)   
+        request.validate(bot)
+
+        self.repository.update_bot(bot, request)
 
         return
