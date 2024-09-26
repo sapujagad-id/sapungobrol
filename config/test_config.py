@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 from loguru import logger
 
 from . import AppConfig, InvalidLogLevelException, parse_log_level, configure_logger
@@ -6,6 +7,10 @@ import pytest
 
 
 class TestAppConfig:
+    @pytest.fixture(autouse=True)
+    def setup_dotenv(self):
+        load_dotenv()
+
     def test_config_empty_database_url(self, monkeypatch):
         monkeypatch.setenv("DATABASE_URL", "")
 
@@ -43,7 +48,10 @@ class TestAppConfig:
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()
 
-    def test_config(self):
+    def test_config(self, monkeypatch):
+        monkeypatch.setenv("SLACK_BOT_TOKEN", "xoxb-slack-bot-token")
+        monkeypatch.setenv("SLACK_SIGNING_SECRET", "slack-signing-secret")
+
         config = AppConfig()
 
         assert config.log_level == "info"

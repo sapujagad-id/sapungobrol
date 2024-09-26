@@ -23,6 +23,4 @@ env = [
     "PORT=8000",
     "LOG_LEVEL=info",
     "DATABASE_URL=postgresql://postgres:postgres@localhost:5433",
-    "SLACK_BOT_TOKEN=xoxb-slack-bot-token",
-    "SLACK_SIGNING_SECRET=slack-signing-secret",
 ]
