@@ -15,7 +15,7 @@ class BotService(ABC):
         pass
 
     @abstractmethod
-    def update_chatbot(self, bot_id:str, request: BotUpdate):
+    def update_chatbot(self, bot_id: str, request: BotUpdate):
         pass
 
 
@@ -33,11 +33,9 @@ class BotServiceV1(BotService):
 
         self.repository.create_bot(request)
 
-        return
-    
     def update_chatbot(self, bot_id, request: BotUpdate):
 
-        bot = self.repository.find_bot_by_id(bot_id)   
+        bot = self.repository.find_bot_by_id(bot_id)
         request.validate(bot)
 
         self.repository.update_bot(bot, request)
