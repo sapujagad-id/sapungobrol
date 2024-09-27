@@ -30,7 +30,7 @@ class AppConfig:
             try:
                 self.port = int(port)
             except ValueError:
-                logging.error(f"config error: port must be integer")
+                logging.error("config error: 'PORT' must be integer")
                 invalid = True
 
         self.log_level, found = self.validate_env_var("LOG_LEVEL")
