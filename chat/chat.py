@@ -1,7 +1,14 @@
 from openai import OpenAI
 from config import AppConfig
+from abc import ABC, abstractmethod
 
-class ChatOpenAI():
+class Chat(ABC):
+    @abstractmethod
+    def generate_response(self, query: str, context: str = None) -> str:
+        """Generate a response based on the query and optional context."""
+        pass
+    
+class ChatOpenAI(Chat):
     
     def __init__(self):
         config = AppConfig()
