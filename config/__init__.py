@@ -49,6 +49,10 @@ class AppConfig:
         if not found:
             invalid = True
 
+        self.openai_key_api, found = self.validate_env_var("OPENAI_API_KEY")
+        if not found:
+            invalid = True
+            
         if invalid:
             raise ValueError("invalid app config")
 
