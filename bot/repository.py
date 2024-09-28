@@ -81,6 +81,7 @@ class PostgresBotRepository(BotRepository):
                 bot.system_prompt = bot_update.system_prompt
                 bot.model = bot_update.model
                 bot.adapter = bot_update.adapter
+                bot.updated_at = datetime.now()
 
                 session.commit()
                 return bot
