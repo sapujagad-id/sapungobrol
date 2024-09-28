@@ -1,8 +1,11 @@
 from dotenv import load_dotenv
 from fastapi import FastAPI, status
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from slack_bolt import App
 
 from adapter import SlackAdapter
+from bot.view import BotViewV1
 from config import AppConfig, configure_logger
 from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
@@ -29,9 +32,27 @@ if __name__ == "__main__":
 
     bot_controller = BotControllerV1(bot_service)
 
+    bot_view = BotViewV1(bot_controller)
+
     slack_adapter = SlackAdapter(slack_app)
 
     app = FastAPI()
+    
+    app.mount("/assets", StaticFiles(directory="public"), name="assets")
+    
+    app.add_api_route(
+        "/",
+        endpoint=bot_view.show_list_chatbots,
+        response_class=HTMLResponse,
+        description="Page that displays existing chatbots"
+    )
+    
+    app.add_api_route(
+        "/{id}",
+        endpoint=bot_view.show_edit_chatbot,
+        response_class=HTMLResponse,
+        description="Page that displays chatbot in detail"
+    )
 
     app.add_api_route(
         "/api/bots",

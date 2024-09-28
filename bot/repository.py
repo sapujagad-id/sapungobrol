@@ -6,7 +6,9 @@ from datetime import datetime
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from sqlalchemy import Column, Enum, Uuid, String, Text, DateTime
 
-from .bot import BotUpdate, MessageAdapter, ModelEngine, Bot, BotCreate
+from bot.helper import relative_time
+
+from .bot import BotUpdate, MessageAdapter, ModelEngine, BotResponse, BotCreate
 
 Base = declarative_base()
 
@@ -32,7 +34,7 @@ class BotModel(Base):
 
 class BotRepository(ABC):
     @abstractmethod
-    def find_bots(self, skip: int, limit: int) -> list[Bot]:
+    def find_bots(self, skip: int, limit: int) -> list[BotResponse]:
         pass
 
     @abstractmethod
@@ -53,9 +55,12 @@ class PostgresBotRepository(BotRepository):
         self.create_session = session
         self.logger = logger.bind(service="PostgresBotRepository")
 
-    def find_bots(self, skip: int, limit: int) -> list[Bot]:
+    def find_bots(self, skip: int, limit: int) -> list[BotResponse]:
         with self.create_session() as session:
-            return session.query(BotModel).offset(skip).limit(limit).all()
+            bots = session.query(BotModel).offset(skip).limit(limit).all()
+            for bot in bots:
+                bot.updated_at_relative = relative_time(bot.updated_at)
+            return bots
 
     def find_bot_by_id(self, bot_id):
         with self.create_session() as session:

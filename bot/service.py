@@ -2,12 +2,12 @@ from abc import abstractmethod, ABC
 from loguru import logger
 
 from .repository import BotRepository
-from .bot import Bot, BotCreate, BotUpdate
+from .bot import BotResponse, BotCreate, BotUpdate
 
 
 class BotService(ABC):
     @abstractmethod
-    def get_chatbots(self, skip: int, limit: int) -> list[Bot]:
+    def get_chatbots(self, skip: int, limit: int) -> list[BotResponse]:
         pass
 
     @abstractmethod
@@ -25,7 +25,7 @@ class BotServiceV1(BotService):
         self.repository = repository
         self.logger = logger.bind(service="BotService")
 
-    def get_chatbots(self, skip: int, limit: int) -> list[Bot]:
+    def get_chatbots(self, skip: int, limit: int) -> list[BotResponse]:
         return self.repository.find_bots(skip, limit)
 
     def create_chatbot(self, request: BotCreate):

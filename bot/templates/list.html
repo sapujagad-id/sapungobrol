@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sapungobrol - Broom.id</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="/assets/broom-logo.png" alt="Broom.id Logo" class="h-4 mx-4">
+                <h1 class="text-lg font-semibold">View Existing Chatbots</h1>
+            </div>
+            <div class="flex items-center">
+                <img src="avatar.png" alt="Avatar" class="h-8 w-8 rounded-full">
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto mt-8 px-4">
+        <div class="bg-white rounded shadow">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h2 class="text-xl font-semibold">List of Chatbots</h2>
+                <button class="bg-blue-600 text-white px-4 py-2 rounded">Create New</button>
+            </div>
+
+            <!-- Content Table -->
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-4 py-2 text-left">Title</th>
+                        <th class="px-4 py-2 text-left">Message Adapter</th>
+                        <th class="px-4 py-2 text-left">Model</th>
+                        <th class="px-4 py-2"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bot in bots %}
+                    <tr class="border-t">
+                        <td class="px-4 py-2 flex flex-col my-1">
+                            <p>{{bot.name}}</p>
+                            <p class="text-sm text-gray-500">Updated {{bot.updated_at_relative}}</p>
+                        </td>
+                        <td class="px-4 py-2">{{bot.adapter.value}}</td>
+                        <td class="px-4 py-2">{{bot.model.value}}</td>
+                        <td class="px-4 py-2 text-right"><button>EDIT</button></td>
+                        <td class="px-4 py-2 text-right"><button>DEL</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-4 flex justify-center">
+            <nav class="inline-flex rounded-md shadow">
+                <!-- TODO -->              
+                <!-- Pagination buttons -->
+            </nav>
+        </div>
+    </main>
+</body>
+</html>
