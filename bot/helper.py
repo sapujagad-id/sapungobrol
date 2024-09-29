@@ -15,7 +15,6 @@ def relative_time(date: datetime) -> str:
 
     # Get the current time
     now = datetime.now() # Ensure we use the same timezone
-    print("awooga", parsed_date, now)
 
     # Compute the time difference (as a timedelta object)
     delta = now - parsed_date
