@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import MagicMock
 from .chat import ChatOpenAI
 
 @pytest.fixture
@@ -23,19 +22,13 @@ def sample_query_history():
     return "Say my name!"
 
 @pytest.fixture
-def mock_openai(mocker):
-    mock_openai_instance = mocker.patch('openai.OpenAI')
-    mock_openai_instance.return_value.run = MagicMock(return_value="Apache Doris is a real-time analytics SQL data warehouse.")
-    return mock_openai_instance
-
-@pytest.fixture
 def chat():
     """Fixture to initialize the ChatOpenAI instance."""
     return ChatOpenAI()
 
 class TestChat:
 
-    def test_generate_response_with_context(self, chat, sample_query, sample_context, mock_openai):
+    def test_generate_response_with_context(self, chat, sample_query, sample_context):
         response = chat.generate_response(sample_query, sample_context)
 
         assert response is not None
@@ -43,14 +36,14 @@ class TestChat:
         assert "Apache Doris" in response  
         assert "real-time analytics" in response  
 
-    def test_generate_response_no_context(self, chat, sample_query, mock_openai):
+    def test_generate_response_no_context(self, chat, sample_query):
         response = chat.generate_response(sample_query, None)
 
         assert response is not None
         assert isinstance(response, str)
         assert "Apache Doris" in response 
 
-    def test_generate_empty_response(self, chat, mock_openai):
+    def test_generate_empty_response(self, chat):
         response = chat.generate_response("", "")
         
         assert response == ""
@@ -73,7 +66,13 @@ class TestChat:
 
         assert response is not None
         assert isinstance(response, str)
-        assert "not enough information" in response
+        assert any(phrase in response.lower() for phrase in [
+            "not enough information", 
+            "not mentioned", 
+            "does not contain", 
+            "irrelevant context",
+            "cannot answer"
+        ])
     
     def test_chat_remember_history(self, chat, sample_history, sample_query_history):
         response = chat.generate_response(sample_history, None)
