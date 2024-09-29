@@ -14,15 +14,14 @@ class ChatOpenAI(Chat):
         config = AppConfig()
         self.llm = OpenAI(api_key=config.openai_api_key) 
 
-    def generate_response(query, context=None):
+    def generate_response(self, query, context=None):
         if not query:
             return ""  
-        llm = OpenAI() 
         
         if context:
             full_input = f"Given a context: {context}\n Given a query: {query}\n Please answer query based on the given context"
         else:
             full_input = query
         
-        resp = llm.run(full_input)
+        resp = self.llm.run(full_input)
         return resp
