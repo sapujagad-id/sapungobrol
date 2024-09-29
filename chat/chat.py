@@ -12,7 +12,8 @@ class ChatOpenAI(Chat):
     
     def __init__(self):
         config = AppConfig()
-        self.llm = OpenAI(api_key=config.openai_api_key) 
+        self.openai = OpenAI(api_key=config.openai_api_key)
+        self.history = []
 
     def generate_response(self, query, context=None):
         if not query:
@@ -23,5 +24,18 @@ class ChatOpenAI(Chat):
         else:
             full_input = query
         
-        resp = self.llm.run(full_input)
-        return resp
+        self.history.append({"role": "user", "content": full_input})
+        
+        response = self.openai.completions.create(
+            model="gpt-4o-mini",
+            messages=self.history,
+        )
+        
+        assistant_response = response.choices[0].message.content
+        
+        self.history.append({"role": "assistant", "content": assistant_response})
+        
+        return assistant_response
+    
+    def reset_history(self):
+        self.history = []
