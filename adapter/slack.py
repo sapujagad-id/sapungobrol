@@ -25,7 +25,7 @@ class SlackAdapter:
           
         parts = parameter.split(" ", 1) 
         if len(parts) == 2:
-            bot_id, question = parts
+            _, question = parts
         else:
             raise HTTPException(status_code=400, detail="Missing parameter in the request.")
 
