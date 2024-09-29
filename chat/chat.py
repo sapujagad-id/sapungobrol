@@ -1,4 +1,4 @@
-from openai import OpenAI
+import openai
 from config import AppConfig
 from abc import ABC, abstractmethod
 
@@ -7,12 +7,12 @@ class Chat(ABC):
     def generate_response(self, query: str, context: str = None) -> str:
         """Generate a response based on the query and optional context."""
         pass
-    
+
 class ChatOpenAI(Chat):
     
     def __init__(self):
         config = AppConfig()
-        self.openai = OpenAI(api_key=config.openai_api_key)
+        openai.api_key = config.openai_api_key
         self.history = []
 
     def generate_response(self, query, context=None):
@@ -26,12 +26,12 @@ class ChatOpenAI(Chat):
         
         self.history.append({"role": "user", "content": full_input})
         
-        response = self.openai.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4o-mini",
             messages=self.history,
         )
         
-        assistant_response = response.choices[0].message.content
+        assistant_response = response['choices'][0]['message']['content']
         
         self.history.append({"role": "assistant", "content": assistant_response})
         
