@@ -23,23 +23,22 @@ def chat():
 
 class TestChat:
 
-    def test_generate_response_with_context(self, sample_query, sample_context, mock_openai):
-        response = self.chat.generate_response(sample_query, sample_context)
+    def test_generate_response_with_context(self, chat, sample_query, sample_context, mock_openai):
+        response = chat.generate_response(sample_query, sample_context)
 
         assert response is not None
         assert isinstance(response, str)
         assert "Apache Doris" in response  
         assert "real-time analytics" in response  
 
-    def test_generate_response_no_context(self, sample_query, mock_openai):
-
-        response = self.chat.generate_response(sample_query, None)
+    def test_generate_response_no_context(self, chat, sample_query, mock_openai):
+        response = chat.generate_response(sample_query, None)
 
         assert response is not None
         assert isinstance(response, str)
         assert "Apache Doris" in response 
 
-    def test_generate_empty_response(self, mock_openai):
-
-        response = self.chat.generate_response("", "")
+    def test_generate_empty_response(self, chat, mock_openai):
+        response = chat.generate_response("", "")
+        
         assert response == ""
