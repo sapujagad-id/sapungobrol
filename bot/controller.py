@@ -7,7 +7,7 @@ from .service import BotService
 
 class BotController(ABC):
     @abstractmethod
-    def fetch_chatbots(self):
+    def fetch_chatbots(self, skip: int, limit: int):
         pass
 
     @abstractmethod

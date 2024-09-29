@@ -39,7 +39,9 @@ class Bot(BaseModel):
     adapter: MessageAdapter
 
     model_config = ConfigDict(from_attributes=True)
-
+    
+class BotResponse(Bot):
+    updated_at_relative: str
 
 class BotCreate(BaseModel):
     name: str
