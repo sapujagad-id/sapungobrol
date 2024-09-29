@@ -16,10 +16,12 @@ def mock_openai(mocker):
     mock_openai_instance.return_value.run = MagicMock(return_value="Apache Doris is a real-time analytics SQL data warehouse.")
     return mock_openai_instance
 
+@pytest.fixture
+def chat():
+    """Fixture to initialize the ChatOpenAI instance."""
+    return ChatOpenAI()
+
 class TestChat:
-    
-    def __init__(self):
-        self.chat = ChatOpenAI()
 
     def test_generate_response_with_context(self, sample_query, sample_context, mock_openai):
         response = self.chat.generate_response(sample_query, sample_context)
