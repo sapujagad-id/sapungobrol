@@ -12,33 +12,24 @@ def relative_time(date: datetime) -> str:
     relative time: string in the format of "x days ago" or "x minutes ago"
     '''
     parsed_date = datetime.fromisoformat(str(date).replace("+00:00", ""))
+    now = datetime.now()
 
-    # Get the current time
-    now = datetime.now() # Ensure we use the same timezone
-
-    # Compute the time difference (as a timedelta object)
+    # compute the time difference
     delta = now - parsed_date
-    
     seconds = delta.total_seconds()
-    minutes = seconds // 60
-    hours = minutes // 60
-    days = hours // 24
-    weeks = days // 7
-    months = days // 30
-    years = days // 365
-    
-        
-    if years >= 1:
-        return f"{int(years)} year{'s' if years > 1 else ''} ago"
-    elif months >= 1:
-        return f"{int(months)} month{'s' if months > 1 else ''} ago"
-    elif weeks >= 1:
-        return f"{int(weeks)} week{'s' if weeks > 1 else ''} ago"
-    elif days >= 1:
-        return f"{int(days)} day{'s' if days > 1 else ''} ago"
-    elif hours >= 1:
-        return f"{int(hours)} hour{'s' if hours > 1 else ''} ago"
-    elif minutes >= 1:
-        return f"{int(minutes)} minute{'s' if minutes > 1 else ''} ago"
-    else:
-        return "just now"
+
+    # define time units in seconds
+    time_units = [
+        (60, 'minute'),
+        (60 * 60, 'hour'),
+        (60 * 60 * 24, 'day'),
+        (60 * 60 * 24 * 7, 'week'),
+        (60 * 60 * 24 * 30, 'month'),
+        (60 * 60 * 24 * 365, 'year')
+    ]
+
+    for unit_seconds, unit_name in reversed(time_units):
+        if seconds >= unit_seconds:
+            value = int(seconds // unit_seconds)
+            return f"{value} {unit_name}{'s' if value > 1 else ''} ago"
+    return "just now"

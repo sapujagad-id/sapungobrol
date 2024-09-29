@@ -8,7 +8,7 @@ from bot.controller import BotController
 
 class BotView(ABC):
     @abstractmethod
-    def show_list_chatbots(self):
+    def show_list_chatbots(self, request: Request):
         pass
       
     @abstractmethod
@@ -36,11 +36,9 @@ class BotViewV1(BotView):
         )
         
     def show_edit_chatbot(self, id: str):
-        # TODO
         raise NotImplementedError
 
     def show_create_chatbots(self):
-        # TODO
         raise NotImplementedError
 
     
