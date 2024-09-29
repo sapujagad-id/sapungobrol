@@ -15,6 +15,14 @@ def irrelevant_context():
     return "This context is not relevant to the query."
 
 @pytest.fixture
+def sample_history():
+    return "My name is Molvative Squarepants. Remember my name!"
+
+@pytest.fixture
+def sample_query_history():
+    return "Say my name!"
+
+@pytest.fixture
 def mock_openai(mocker):
     mock_openai_instance = mocker.patch('openai.OpenAI')
     mock_openai_instance.return_value.run = MagicMock(return_value="Apache Doris is a real-time analytics SQL data warehouse.")
@@ -66,3 +74,11 @@ class TestChat:
         assert response is not None
         assert isinstance(response, str)
         assert "not enough information" in response
+    
+    def test_chat_remember_history(self, chat, sample_history, sample_query_history):
+        response = chat.generate_response(sample_history, None)
+        response = chat.generate_response(sample_query_history, None)
+        
+        assert response is not None
+        assert isinstance(response, str)
+        assert "Molvative Squarepants" in response
