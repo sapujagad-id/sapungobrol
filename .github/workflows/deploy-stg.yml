@@ -198,5 +198,8 @@ jobs:
         run: |
           ssh ${{ env.HOST }} 'sudo bash -c "cd ${{ env.DEPLOY_DIR }}; docker compose pull; docker compose down; docker compose up -d"'
 
+      - name: Setup Atlas
+        uses: ariga/setup-atlas@v0
+
       - name: Apply database migrations
         run: atlas migrate apply --url ${{ env.DATABASE_MIGRATE_URL }}
