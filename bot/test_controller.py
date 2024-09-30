@@ -1,8 +1,52 @@
+from datetime import datetime
 from uuid import uuid4
 from fastapi import HTTPException
 import pytest
 
-from .bot import BotCreate, BotUpdate
+from .bot import BotCreate, BotResponse, BotUpdate, MessageAdapter, ModelEngine
+
+class TestBotControllerFetch:
+    def test_fetch_chatbots_success(self, setup_controller):
+        create_request = BotCreate(
+            name="Bot A",
+            system_prompt="some system prompt",
+            model="OpenAI",
+            adapter="Slack"
+        )
+        setup_controller.create_chatbot(create_request)
+        create_request = BotCreate(
+            name="Bot B",
+            system_prompt="alternative system prompt",
+            model="OpenAI",
+            adapter="Slack"
+        )
+        setup_controller.create_chatbot(create_request)
+        
+        response = setup_controller.fetch_chatbots(skip=0, limit=10)
+        assert len(response) == 2
+        assert response[0].name == "Bot A"
+        assert response[0].model == "OpenAI"
+        assert response[1].name == "Bot B"
+        assert response[1].system_prompt == "alternative system prompt"
+
+    def test_fetch_chatbots_empty(self, setup_controller):
+        response = setup_controller.fetch_chatbots(skip=0, limit=10)
+        assert response == []
+
+    def test_fetch_chatbots_pagination(self, setup_controller):
+        bot = BotCreate(
+            name="Bot Z",
+            system_prompt="some very very long Z prompt",
+            model="OpenAI",
+            adapter="Slack"
+        )
+        setup_controller.create_chatbot(bot)
+        setup_controller.create_chatbot(bot)
+        setup_controller.create_chatbot(bot)
+        
+        response = setup_controller.fetch_chatbots(0, 2)
+        assert len(response) == 2
+        assert response[0].name == "Bot Z"
 
 class TestBotControllerCreate:
     def test_create_chatbot_success(self, setup_controller):
