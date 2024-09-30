@@ -49,10 +49,8 @@ class TestChat:
         assert response == ""
         
     def test_refine_query_before_chat(self, chat, sample_query, sample_context):
-        original_query = sample_query
-        
         # simulating query refinement
-        refined_query = "what is apache doris for real-time analytics in SQL data warehouse?"
+        refined_query = sample_query + " for real-time analytics in SQL data warehouse?"
         response = chat.generate_response(refined_query, sample_context)
 
         assert response is not None
