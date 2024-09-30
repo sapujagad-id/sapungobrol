@@ -45,6 +45,8 @@ jobs:
         run: atlas migrate apply --url postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
 
       - name: Run test and get coverage
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: coverage run -m pytest && coverage xml
 
       - name: Scan code and upload coverage to Sonarcloud
