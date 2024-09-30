@@ -26,6 +26,8 @@ jobs:
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup python
         uses: actions/setup-python@v5
@@ -38,8 +40,28 @@ jobs:
       - name: Setup coverage and pytest
         run: pip install coverage pytest
 
+      - name: Get list of changed migration files
+        id: migration-changes-list
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            changed:
+              - 'migrations/**'
+          list-files: json
+
+      - name: Get number of changed migration files
+        id: migration-changes
+        run: |
+          MIGRATION_CHANGES_LIST=${{ steps.migration-changes-list.outputs.changed_files }}
+          MIGRATION_CHANGES_COUNT=$(echo $MIGRATION_CHANGES_LIST | jq length)
+          echo "count=$MIGRATION_CHANGES_COUNT" >> "$GITHUB_OUTPUT"
+
       - name: Setup Atlas
         uses: ariga/setup-atlas@v0
+
+      - name: Lint migration files
+        if: ${{ steps.migration-changes.outputs.count > 0 }}
+        run: atlas migrate lint --dir file://migrations --dev-url postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable --latest ${{ steps.migration-changes.outputs.count }}
 
       - name: Run migrations
         run: atlas migrate apply --url postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
