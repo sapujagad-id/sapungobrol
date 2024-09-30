@@ -6,32 +6,6 @@ import pytest
 from bot.bot import BotCreate, BotResponse, MessageAdapter, ModelEngine
 from bot.helper import relative_time
 
-@pytest.fixture
-def setup_bots():
-  '''Setup BotResponse list for template context'''
-  return [
-    BotResponse(
-        id = uuid4(),
-        name = "Bot A",
-        system_prompt = "prompt A here",
-        model = ModelEngine.OPENAI,
-        adapter = MessageAdapter.SLACK,
-        created_at = datetime.fromisocalendar(2024, 1, 1),
-        updated_at = datetime.fromisocalendar(2024, 1, 1),
-        updated_at_relative = relative_time(datetime.fromisocalendar(2024, 1, 1)),
-    ),
-    BotResponse(
-        id = uuid4(),
-        name = "Bot B",
-        system_prompt = "a much longer prompt B here",
-        model = ModelEngine.OPENAI,
-        adapter = MessageAdapter.SLACK,
-        created_at = datetime.now(),
-        updated_at = datetime.now(),
-        updated_at_relative = relative_time(datetime.now()),
-    )
-  ]
-
 class TestBotViews:
   def test_show_list_chatbots(self, setup_bots):
     context = {
