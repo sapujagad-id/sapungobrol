@@ -109,6 +109,29 @@ jobs:
     needs: [build]
     runs-on: ubuntu-24.04
     steps:
+      - name: Connect to ZeroTier
+        uses: zerotier/github-action@v1.0.1
+        with:
+          network_id: ${{ secrets.ZEROTIER_NETWORK_ID }}
+          auth_token: ${{ secrets.ZEROTIER_CENTRAL_TOKEN }}
+
+      - name: Ping ZeroTier host
+        shell: bash
+        run: |
+          count=60 # 1 minute
+          while ! ping -c 1 ${{ secrets.ZEROTIER_HOST_IP }} ; do
+            echo "Waiting..." ;
+            sleep 1 ;
+            let count=count-1
+          done
+
+          if [ $count -eq 0 ]; then
+            echo "Failed to ping host"
+            exit 1
+          fi
+
+          echo "Ping success!"
+
       - name: Checkout Sources
         uses: actions/checkout@v4
 
