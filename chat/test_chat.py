@@ -73,7 +73,7 @@ class TestChat:
         ])
     
     def test_chat_remember_history(self, chat, sample_history, sample_query_history):
-        response = chat.generate_response(sample_history, None)
+        chat.generate_response(sample_history, None)
         response = chat.generate_response(sample_query_history, None)
         
         assert response is not None
