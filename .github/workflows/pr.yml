@@ -42,7 +42,7 @@ jobs:
         uses: ariga/setup-atlas@v0
 
       - name: Lint migration files
-        run: atlas migrate lint --dir file://migrations --dev-url postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable --git-base main
+        run: atlas migrate lint --dir file://migrations --dev-url postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable --git-base --git-base master
 
       - name: Run migrations
         run: atlas migrate apply --url postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
