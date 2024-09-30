@@ -41,7 +41,7 @@ class TestBotServiceUpdate:
             adapter="Slack"
         )
 
-        with pytest.raises(NameIsRequired) as exc:
+        with pytest.raises(NameIsRequired):
             setup_service.update_chatbot(uuid4(), bot_update_request)
         
     def test_update_chatbot_system_prompt_required(self, setup_service: BotService):
@@ -52,7 +52,7 @@ class TestBotServiceUpdate:
             adapter="Slack"
         )
 
-        with pytest.raises(SystemPromptIsRequired) as exc:
+        with pytest.raises(SystemPromptIsRequired):
             setup_service.update_chatbot(uuid4(), bot_update_request)
         
     def test_update_chatbot_unsupported_model(self, setup_service: BotService):
@@ -63,7 +63,7 @@ class TestBotServiceUpdate:
             adapter="Slack"
         )
 
-        with pytest.raises(UnsupportedModel) as exc:
+        with pytest.raises(UnsupportedModel):
             setup_service.update_chatbot(uuid4(), bot_update_request)
 
     def test_update_chatbot_unsupported_adapter(self, setup_service: BotService):
@@ -74,7 +74,7 @@ class TestBotServiceUpdate:
             adapter="UnsupportedAdapter"
         )
 
-        with pytest.raises(UnsupportedAdapter) as exc:
+        with pytest.raises(UnsupportedAdapter):
             setup_service.update_chatbot(uuid4(), bot_update_request)
         
     def test_update_chatbot_not_found(self, setup_service: BotService):
@@ -85,5 +85,5 @@ class TestBotServiceUpdate:
             adapter="Slack"
         )
 
-        with pytest.raises(BotNotFound) as exc:
+        with pytest.raises(BotNotFound):
             setup_service.update_chatbot(uuid4(), bot_update_request)
