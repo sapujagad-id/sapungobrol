@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 import jinja2
+import pytest
 
 from bot.bot import BotCreate, BotResponse, MessageAdapter, ModelEngine
 from bot.helper import relative_time
@@ -32,6 +33,9 @@ def setup_bots():
 
 class TestBotViews:
   def test_show_list_chatbots(self, setup_bots):
+    context = {
+      'bots': setup_bots
+    }
 
     env = jinja2.Environment(
       loader = jinja2.FileSystemLoader('bot/templates')
@@ -46,7 +50,7 @@ class TestBotViews:
     assert 'Edit Chatbot' not in rendered
     
     # Validate Content
-    assert 'Updated Just Now' in rendered
+    assert 'Updated just now' in rendered
     assert 'OpenAI' in rendered
     assert 'Slack' in rendered
     assert 'Bot A' in rendered
@@ -54,6 +58,10 @@ class TestBotViews:
     assert 'Non-existent Bot X' not in rendered
     
   def test_empty_show_list_chatbots(self):
+    context = {
+      'bots': []
+    }
+    
     env = jinja2.Environment(
       loader = jinja2.FileSystemLoader('bot/templates')
     )
