@@ -5,6 +5,7 @@ env:
   CONFIG_DIR: infra/stg
   DEPLOY_DIR: sapungobrol
   ENV: ${{ secrets.STG_ENV }}
+  DATABASE_MIGRATE_URL: ${{ secrets.STG_DATABASE_MIGRATE_URL }}
   # VM variables
   HOST: ${{ vars.STG_SSH_HOST }}
   PORT: ${{ vars.STG_SSH_PORT }}
@@ -174,3 +175,6 @@ jobs:
       - name: Run containers based on docker compose
         run: |
           ssh ${{ env.HOST }} 'sudo bash -c "cd ${{ env.DEPLOY_DIR }}; docker compose pull; docker compose down; docker compose up -d"'
+
+      - name: Apply database migrations
+        run: atlas migrate apply --url ${{ env.DATABASE_MIGRATE_URL }}
