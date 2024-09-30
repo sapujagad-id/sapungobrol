@@ -9,48 +9,8 @@ from .service import BotServiceV1
 from .repository import BotModel, PostgresBotRepository
 from .controller import BotControllerV1
 
-TEST_DATABASE_URL = "sqlite:///:memory:"
-
-@pytest.fixture(scope="module")
-def setup_database():
-    """Create a test database and tables."""
-    engine = create_engine(TEST_DATABASE_URL)
-    BotModel.metadata.create_all(engine)
-    
-    yield engine
-
-    BotModel.metadata.drop_all(engine)
-    
-@pytest.fixture
-def session(setup_database):
-    """Create a new database session for each test."""
-    session_local = sessionmaker(bind=setup_database)
-    session = session_local()
-    yield session
-    session.close()
-
-@pytest.fixture
-def setup_repository(session):
-    """Set up the repository with the test session."""
-    repository = PostgresBotRepository(session=lambda: session)
-    return repository
-
-@pytest.fixture
-def setup_service(setup_repository):
-    """Set up the service with the repository."""
-    service = BotServiceV1(setup_repository)
-    return service
-
-@pytest.fixture
-def setup_controller(setup_service):
-    """Set up the controller with the service."""
-    controller = BotControllerV1(setup_service)
-    return controller
-
-
 class TestBotControllerCreate:
     pass
-
 
 class TestBotControllerUpdate:
     def test_update_chatbot_success(self, setup_controller):

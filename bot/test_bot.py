@@ -1,43 +1,6 @@
-from uuid import uuid4
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from fastapi import HTTPException
 import pytest
 
 from .bot import BotCreate, BotUpdate, NameIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
-from .service import BotServiceV1
-from .repository import BotModel, PostgresBotRepository
-from .controller import BotControllerV1
-
-
-# Setup 
-TEST_DATABASE_URL = "sqlite:///:memory:"  # Change as needed for your test setup
-
-@pytest.fixture
-def session(setup_database):
-    """Create a new database session for each test."""
-    session_local = sessionmaker(bind=setup_database)
-    session = session_local()
-    yield session
-    session.close()
-
-@pytest.fixture
-def setup_repository(session):
-    """Set up the repository with the test session."""
-    repository = PostgresBotRepository(session=lambda: session)
-    return repository
-
-@pytest.fixture
-def setup_service(setup_repository):
-    """Set up the service with the repository."""
-    service = BotServiceV1(setup_repository)
-    return service
-
-@pytest.fixture
-def setup_controller(setup_service):
-    """Set up the controller with the service."""
-    controller = BotControllerV1(setup_service)
-    return controller
 
 # Tests
 

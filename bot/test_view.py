@@ -8,6 +8,7 @@ from bot.helper import relative_time
 
 @pytest.fixture
 def setup_bots():
+  '''Setup BotResponse list for template context'''
   return [
     BotResponse(
         id = uuid4(),
@@ -36,13 +37,12 @@ class TestBotViews:
     context = {
       'bots': setup_bots
     }
-
     env = jinja2.Environment(
-      loader = jinja2.FileSystemLoader('bot/templates')
+      loader = jinja2.FileSystemLoader('bot/templates'),
+      autoescape = True,
     )
     rendered = env.get_template('list.html').render(context)
   
-    
     # Validate Template
     assert 'List of Chatbots' in rendered
     assert 'Message Adapter' in rendered
@@ -61,9 +61,9 @@ class TestBotViews:
     context = {
       'bots': []
     }
-    
     env = jinja2.Environment(
-      loader = jinja2.FileSystemLoader('bot/templates')
+      loader = jinja2.FileSystemLoader('bot/templates'),
+      autoescape = True,
     )
     rendered = env.get_template('list.html').render(context)
   
