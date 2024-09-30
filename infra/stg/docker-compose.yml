@@ -21,6 +21,8 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - 10.243.242.62:5433:5432
     networks:
       - sapungobrol-stg
     volumes:
