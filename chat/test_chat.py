@@ -22,6 +22,10 @@ def sample_query_history():
     return "Say my name!"
 
 @pytest.fixture
+def sample_query_forget_history():
+    return "Do you know my name? Yes or No"
+
+@pytest.fixture
 def chat():
     """Fixture to initialize the ChatOpenAI instance."""
     return ChatOpenAI()
@@ -79,3 +83,12 @@ class TestChat:
         assert response is not None
         assert isinstance(response, str)
         assert "Molvative Squarepants" in response
+    
+    def test_chat_reset_history(self, chat, sample_history, sample_query_forget_history):
+        chat.generate_response(sample_history, None)
+        chat.reset_history()
+        response = chat.generate_response(sample_query_forget_history, None)
+        
+        assert response is not None
+        assert isinstance(response, str)
+        assert "No" in response
