@@ -44,8 +44,6 @@ class TestBotServiceUpdate:
         with pytest.raises(NameIsRequired) as exc:
             setup_service.update_chatbot(uuid4(), bot_update_request)
         
-        assert exc.typename == "NameIsRequired"
-        
     def test_update_chatbot_system_prompt_required(self, setup_service: BotService):
         bot_update_request = BotUpdate(
             name="Updated Bot",
@@ -57,8 +55,6 @@ class TestBotServiceUpdate:
         with pytest.raises(SystemPromptIsRequired) as exc:
             setup_service.update_chatbot(uuid4(), bot_update_request)
         
-        assert exc.typename == "SystemPromptIsRequired"
-        
     def test_update_chatbot_unsupported_model(self, setup_service: BotService):
         bot_update_request = BotUpdate(
             name="Updated Bot",
@@ -69,8 +65,6 @@ class TestBotServiceUpdate:
 
         with pytest.raises(UnsupportedModel) as exc:
             setup_service.update_chatbot(uuid4(), bot_update_request)
-        
-        assert exc.typename == "UnsupportedModel"
 
     def test_update_chatbot_unsupported_adapter(self, setup_service: BotService):
         bot_update_request = BotUpdate(
@@ -83,8 +77,6 @@ class TestBotServiceUpdate:
         with pytest.raises(UnsupportedAdapter) as exc:
             setup_service.update_chatbot(uuid4(), bot_update_request)
         
-        assert exc.typename == "UnsupportedAdapter"
-        
     def test_update_chatbot_not_found(self, setup_service: BotService):
         bot_update_request = BotUpdate(
             name="Updated Bot",
@@ -95,5 +87,3 @@ class TestBotServiceUpdate:
 
         with pytest.raises(BotNotFound) as exc:
             setup_service.update_chatbot(uuid4(), bot_update_request)
-
-        assert exc.typename == "BotNotFound"

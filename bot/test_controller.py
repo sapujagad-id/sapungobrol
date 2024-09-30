@@ -1,16 +1,96 @@
 from uuid import uuid4
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from fastapi import HTTPException
 import pytest
 
-from .bot import BotCreate, BotUpdate, NameIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
-from .service import BotServiceV1
-from .repository import BotModel, PostgresBotRepository
-from .controller import BotControllerV1
+from .bot import BotCreate, BotUpdate
 
 class TestBotControllerCreate:
-    pass
+    def test_create_chatbot_success(self, setup_controller):
+        create_request = BotCreate(
+            name="Bot A",
+            system_prompt="some system prompt",
+            model="OpenAI",
+            adapter="Slack"
+        )
+        
+        response = setup_controller.create_chatbot(create_request)
+        assert response == {"detail": "Bot created successfully!"}
+        
+        bot = setup_controller.service.repository.find_bots(0, 10)
+        assert bot[0].name == "Bot A"
+        assert bot[0].system_prompt == "some system prompt"
+        
+    def test_create_chatbot_name_required(self, setup_controller):
+        create_request = BotCreate(
+            name="",
+            system_prompt="some system prompt",
+            model="OpenAI",
+            adapter="Slack"
+        )
+        
+        with pytest.raises(HTTPException) as exc:
+            setup_controller.create_chatbot(create_request)
+        
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "Name is required"
+        
+    def test_create_chatbot_system_prompt_required(self, setup_controller):
+        create_request = BotCreate(
+            name="Bot A",
+            system_prompt="",
+            model="OpenAI",
+            adapter="Slack"
+        )
+        
+        with pytest.raises(HTTPException) as exc:
+            setup_controller.create_chatbot(create_request)
+        
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "System prompt is required"
+
+    def test_create_chatbot_unsupported_model(self, setup_controller):
+        create_request = BotCreate(
+            name="Bot A",
+            system_prompt="some system prompt",
+            model="Llama2.5",
+            adapter="Slack"
+        )
+        
+        with pytest.raises(HTTPException) as exc:
+            setup_controller.create_chatbot(create_request)
+        
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "Unsupported model"
+        
+    def test_create_chatbot_unsupported_adapter(self, setup_controller):
+        create_request = BotCreate(
+            name="Bot A",
+            system_prompt="some system prompt",
+            model="OpenAI",
+            adapter="WeChat"
+        )
+        
+        with pytest.raises(HTTPException) as exc:
+            setup_controller.create_chatbot(create_request)
+        
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "Unsupported message adapter"
+
+    def test_create_chatbot_general_exception(self, setup_controller, mocker):
+        mocker.patch.object(setup_controller.service, 'create_chatbot', side_effect=Exception)
+        
+        create_request = BotCreate(
+            name="Bot A",
+            system_prompt="some system prompt",
+            model="OpenAI",
+            adapter="Slack"
+        )
+        
+        with pytest.raises(HTTPException) as exc:
+            setup_controller.create_chatbot(create_request)
+        
+        assert exc.value.status_code == 500
+        assert exc.value.detail == "Something went wrong"
 
 class TestBotControllerUpdate:
     def test_update_chatbot_success(self, setup_controller):
