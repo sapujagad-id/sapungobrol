@@ -40,6 +40,8 @@ jobs:
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup python
         uses: actions/setup-python@v5
@@ -56,7 +58,7 @@ jobs:
         uses: ariga/setup-atlas@v0
 
       - name: Lint migration files
-        run: atlas migrate lint --dir file://migrations --dev-url postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable --git-base master
+        run: atlas migrate lint --dir file://migrations --dev-url postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable --git-base main
 
       - name: Run migrations
         run: atlas migrate apply --url postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
