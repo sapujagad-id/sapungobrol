@@ -26,6 +26,7 @@ class TestAppConfig:
 
     def test_config_default_port(self, monkeypatch):
         monkeypatch.setenv("PORT", "")
+        monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
 
         config = AppConfig()
 
