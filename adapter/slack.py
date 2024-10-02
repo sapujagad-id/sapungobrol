@@ -28,11 +28,17 @@ class SlackAdapter:
             _, question = parts
         else:
             raise HTTPException(status_code=400, detail="Missing parameter in the request.")
-
-            
-        user_info = self.app.client.users_info(user=user_id)
-        display_name = user_info["user"]["profile"]["display_name"]
         
-        question = f"{question} \n\n-{display_name}"
+        question = f"{question} \n\n<@{user_id}>"
 
-        self.app.client.chat_postMessage(channel=channel_id, text=question)
+        response = self.app.client.chat_postMessage(channel=channel_id, text=question)
+        
+        thread_ts = response["ts"]
+
+        reply_message = f"This is a reply to the message."
+        self.app.client.chat_postMessage(
+            channel=channel_id,
+            text=reply_message,
+            thread_ts=thread_ts
+        )
+        return Response(status_code=200)
