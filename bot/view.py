@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
+from jinja2 import Environment
 
 from bot.controller import BotController
 
@@ -23,7 +24,12 @@ class BotView(ABC):
 class BotViewV1(BotView):    
     def __init__(self, controller: BotController) -> None:
         super().__init__()
-        self.templates = Jinja2Templates(directory="bot/templates")
+        self.templates = Jinja2Templates(
+            directory="bot/templates",
+            env=Environment(
+                autoescape=True,
+            )
+        )
         self.controller = controller
     
     def show_list_chatbots(self, request: Request):
