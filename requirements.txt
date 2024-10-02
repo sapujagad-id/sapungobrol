@@ -53,3 +53,4 @@ typing_extensions==4.12.2
 uvicorn==0.30.6
 watchfiles==0.24.0
 websockets==13.0.1
+openai==0.28
