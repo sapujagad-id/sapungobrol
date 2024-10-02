@@ -35,7 +35,7 @@ class SlackAdapter:
         
         thread_ts = response["ts"]
 
-        reply_message = f"This is a reply to the message."
+        reply_message = "This is a reply to the message."
         self.app.client.chat_postMessage(
             channel=channel_id,
             text=reply_message,
