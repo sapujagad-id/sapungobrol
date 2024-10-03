@@ -1,12 +1,12 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import Request, HTTPException
-from slack_bolt import App
 from .slack import SlackAdapter
+from slack_sdk.errors import SlackApiError
 
 
 class TestAppConfig:
-    
+
     @pytest.mark.asyncio
     async def test_ask_method(self):
         with patch('slack_bolt.App') as MockApp:
@@ -44,7 +44,7 @@ class TestAppConfig:
             )
 
             assert response.status_code == 200
-           
+
     @pytest.mark.asyncio 
     async def test_missing_parameter_incomplete_text(self):
         with patch('slack_bolt.App') as MockApp:
@@ -67,3 +67,75 @@ class TestAppConfig:
             assert excinfo.value.detail == "Missing parameter in the request."
 
             mock_app.client.chat_postMessage.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_chat_post_message_failure(self):
+        with patch('slack_bolt.App') as MockApp:
+            mock_app = MockApp()
+            
+            mock_app.client.chat_postMessage = MagicMock(
+                side_effect=[
+                    {"ts": "1234567890.123456"},
+                    SlackApiError("Error posting message", response={})
+                ]
+            )
+            mock_app.client.chat_delete = MagicMock()  
+
+            slack_adapter = SlackAdapter(mock_app)
+
+            mock_request = MagicMock(spec=Request)
+            mock_request.form = AsyncMock(return_value={
+                "channel_id": "C12345678",
+                "user_id": "U12345678",
+                "text": "12 How are you?"
+            })
+            
+            with pytest.raises(HTTPException) as excinfo:
+                await slack_adapter.ask(mock_request)
+
+            assert excinfo.value.status_code == 400
+            assert "Slack API Error" in excinfo.value.detail
+
+            assert mock_app.client.chat_postMessage.call_count == 2
+            
+            mock_app.client.chat_delete.assert_called_once_with(
+                channel="C12345678",
+                ts="1234567890.123456"
+            )
+            
+    @pytest.mark.asyncio
+    async def test_chat_post_message_and_delete_failure(self):
+        with patch('slack_bolt.App') as MockApp:
+            mock_app = MockApp()
+            
+            mock_app.client.chat_postMessage = MagicMock(
+                side_effect=[
+                    {"ts": "1234567890.123456"},
+                    SlackApiError("Error posting message", response={})
+                ]
+            )
+            mock_app.client.chat_delete = MagicMock(
+                side_effect=SlackApiError("Error delete message", response={})
+
+            )
+            slack_adapter = SlackAdapter(mock_app)
+
+            mock_request = MagicMock(spec=Request)
+            mock_request.form = AsyncMock(return_value={
+                "channel_id": "C12345678",
+                "user_id": "U12345678",
+                "text": "12 How are you?"
+            })
+
+            with pytest.raises(HTTPException) as excinfo:
+                await slack_adapter.ask(mock_request)
+
+            assert excinfo.value.status_code == 400
+            assert "Slack API Error" in excinfo.value.detail
+
+            assert mock_app.client.chat_postMessage.call_count == 2
+            
+            mock_app.client.chat_delete.assert_called_once_with(
+                channel="C12345678",
+                ts="1234567890.123456"
+            )
