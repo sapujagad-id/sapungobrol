@@ -2,7 +2,7 @@ from fastapi import Request, Response, HTTPException
 from loguru import logger
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
-
+from slack_sdk.errors import SlackApiError
 
 class SlackAdapter:
     def __init__(self, app: App) -> None:
@@ -30,15 +30,25 @@ class SlackAdapter:
             raise HTTPException(status_code=400, detail="Missing parameter in the request.")
         
         question = f"{question} \n\n<@{user_id}>"
-
-        response = self.app.client.chat_postMessage(channel=channel_id, text=question)
         
-        thread_ts = response["ts"]
+        try:
+            response = self.app.client.chat_postMessage(channel=channel_id, text=question)
+            thread_ts = response["ts"]
 
-        reply_message = "This is a reply to the message."
-        self.app.client.chat_postMessage(
-            channel=channel_id,
-            text=reply_message,
-            thread_ts=thread_ts
-        )
-        return Response(status_code=200)
+            reply_message = "This is a reply to the message."
+            self.app.client.chat_postMessage(
+                channel=channel_id,
+                text=reply_message,
+                thread_ts=thread_ts
+            )
+            return Response(status_code=200)
+
+        except SlackApiError as e:
+            if 'thread_ts' in locals():
+                try:
+                    self.app.client.chat_delete(channel=channel_id, ts=thread_ts)
+                except SlackApiError as delete_error:
+                    raise HTTPException(status_code=400, detail=f"Slack API Error : {delete_error}")
+
+            raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")
+        
