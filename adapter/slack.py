@@ -3,12 +3,14 @@ from loguru import logger
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 from slack_sdk.errors import SlackApiError
+from chat.chat import ChatOpenAI
 
 class SlackAdapter:
-    def __init__(self, app: App) -> None:
+    def __init__(self, app: App, chatbot: ChatOpenAI) -> None:
         self.app = app
         self.handler = SlackRequestHandler(self.app)
         self.logger = logger.bind(service="SlackAdapter")
+        self.chatbot = chatbot
 
     # Function to listen for events on Slack. No need to test this since this is purely dependent on
     # Bolt
@@ -29,18 +31,26 @@ class SlackAdapter:
         else:
             raise HTTPException(status_code=400, detail="Missing parameter in the request.")
         
-        question = f"{question} \n\n<@{user_id}>"
-        
+        question = f"<@{user_id}> asked: \n\n\"{question}\" "
+
         try:
             response = self.app.client.chat_postMessage(channel=channel_id, text=question)
             thread_ts = response["ts"]
-
-            reply_message = "This is a reply to the message."
-            self.app.client.chat_postMessage(
+            
+            loading_message = self.app.client.chat_postMessage(
                 channel=channel_id,
-                text=reply_message,
+                text=":hourglass_flowing_sand: Processing your request, please wait...",
                 thread_ts=thread_ts
             )
+            
+            chatbot_response = self.chatbot.generate_response(query=question)
+            
+            self.app.client.chat_update(
+                channel=channel_id,
+                ts=loading_message["ts"],
+                text=chatbot_response
+            )
+            
             return Response(status_code=200)
 
         except SlackApiError as e:
