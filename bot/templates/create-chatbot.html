@@ -22,9 +22,7 @@
                 return false;
             }
 
-            if (!isValidInput(name) || !isValidInput(systemPrompt)) {
-                return false;
-            }
+            return isValidInput(name) && isValidInput(systemPrompt);
 
             return true;
         }
