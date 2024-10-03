@@ -45,4 +45,6 @@ class BotServiceV1(BotService):
         self.repository.update_bot(bot, request)
 
     def get_chatbot_by_id(self, bot_id):
-        pass
+        bot = self.repository.find_bot_by_id(bot_id)
+        return bot if bot else None
+        

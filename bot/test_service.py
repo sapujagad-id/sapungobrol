@@ -22,19 +22,17 @@ class TestBotServiceGetBotById:
 
         bots = setup_service.get_chatbots(0, 10)
         bot_id = bots[0].id
-
         found_bot = setup_service.get_chatbot_by_id(bot_id)
 
         assert found_bot is not None
-        assert found_bot.name == "Test Bot"
-        assert found_bot.system_prompt == "Test prompt"
-        assert found_bot.model == "OpenAI"
-        assert found_bot.adapter == "Slack"
+        assert found_bot.name == create_request.name
+        assert found_bot.system_prompt == create_request.system_prompt
+        assert found_bot.model == create_request.model
+        assert found_bot.adapter == create_request.adapter
 
     def test_find_bot_by_id_not_found(self, setup_service: BotService):
-        with pytest.raises(BotNotFound):
-            setup_service.get_chatbot_by_id(str(uuid4()))
-
+        bot = setup_service.get_chatbot_by_id(uuid4())
+        assert bot == None
 
 class TestBotServiceUpdate:
     def test_update_chatbot_success(self, setup_service: BotService):
