@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     bot_controller = BotControllerV1(bot_service)
 
-    bot_view = BotViewV1(bot_controller)
+    bot_view = BotViewV1(bot_controller, bot_service)
 
     slack_adapter = SlackAdapter(slack_app)
 
@@ -48,7 +48,15 @@ if __name__ == "__main__":
     )
     
     app.add_api_route(
-        "/{id}",
+        "/create",
+        endpoint=bot_view.show_create_chatbots,
+        response_class=HTMLResponse,
+        methods=['POST','GET'],
+        description="Page that displays create chatbot"
+    )
+
+    app.add_api_route(
+        "/edit/{id}",
         endpoint=bot_view.show_edit_chatbot,
         response_class=HTMLResponse,
         description="Page that displays chatbot in detail"
