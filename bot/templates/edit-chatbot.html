@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Chatbot - Broom.id</title>
-    <script src="https://cdn.tailwindcss.com"> integrity="sha384-06e9349ec38b5d05dc29eef6add2296bed44cca9c4e934f7d764a7d3efaf88bc79e893442a50f8ebabf43da0939d31fe" crossorigin="anonymous"</script>
+    <script src="https://cdn.tailwindcss.com" integrity="sha384-06e9349ec38b5d05dc29eef6add2296bed44cca9c4e934f7d764a7d3efaf88bc79e893442a50f8ebabf43da0939d31fe" crossorigin="anonymous"></script>
     <script>
         // Function to check for potential SQL injection
         function isValidInput(input) {
@@ -107,7 +107,13 @@
             </div>
 
             <div class="flex items-center justify-end">
-                <button type="submit" class="text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-all" style="background-color: #2a4365;" onmouseover="this.style.backgroundColor='#1e3150'" onmouseout="this.style.backgroundColor='#2a4365'">
+                <button id="edit-bot-button" type="submit" 
+                        class="text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-all" 
+                        style="background-color: #2a4365;" 
+                        onmouseover="this.style.backgroundColor='#1e3150'" 
+                        onmouseout="this.style.backgroundColor='#2a4365'"
+                        onfocus="this.style.backgroundColor='#1e3150'" 
+                        onblur="this.style.backgroundColor='#2a4365'">
                     Update Chatbot
                 </button>
             </div>
