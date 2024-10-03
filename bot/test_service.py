@@ -9,6 +9,33 @@ from .service import BotService, BotServiceV1
 from .repository import BotModel, PostgresBotRepository
 from .controller import BotControllerV1
 
+class TestBotServiceGetBotById:
+    def test_find_bot_by_id_success(self, setup_service: BotService):
+        create_request = BotCreate(
+            name="Test Bot",
+            system_prompt="Test prompt",
+            model="OpenAI",
+            adapter="Slack"
+        )
+        
+        setup_service.create_chatbot(create_request)
+
+        bots = setup_service.get_chatbots(0, 10)
+        bot_id = bots[0].id
+
+        found_bot = setup_service.get_chatbot_by_id(bot_id)
+
+        assert found_bot is not None
+        assert found_bot.name == "Test Bot"
+        assert found_bot.system_prompt == "Test prompt"
+        assert found_bot.model == "OpenAI"
+        assert found_bot.adapter == "Slack"
+
+    def test_find_bot_by_id_not_found(self, setup_service: BotService):
+        with pytest.raises(BotNotFound):
+            setup_service.get_chatbot_by_id(str(uuid4()))
+
+
 class TestBotServiceUpdate:
     def test_update_chatbot_success(self, setup_service: BotService):
         create_request = BotCreate(
