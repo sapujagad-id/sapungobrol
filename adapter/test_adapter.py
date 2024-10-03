@@ -15,8 +15,8 @@ class TestAppConfig:
             
             mock_app.client.chat_postMessage = MagicMock(
                 side_effect=[
-                    {"ts": "1234567890.123456"},  
-                    {"ok": True} 
+                    {"ts": "1234567890.123456"},
+                    {"ts": "1234567890.654321"}
                 ]
             )
             
@@ -41,10 +41,10 @@ class TestAppConfig:
                 text="<@U12345678> asked: \n\n\"How are you?\" "
             )
 
-            mock_app.client.chat_postMessage.assert_any_call(
+            mock_app.client.chat_update.assert_called_once_with(
                 channel="C12345678",
-                text="Chatbot Reply: I'm fine, thank you!",
-                thread_ts="1234567890.123456"
+                ts="1234567890.654321",
+                text="Chatbot Reply: I'm fine, thank you!"
             )
 
             assert response.status_code == 200
@@ -181,10 +181,10 @@ class TestAppConfig:
                 channel="C12345678",
                 text="<@U12345678> asked: \n\n\"How is the weather?\" "
             )
-            mock_app.client.chat_postMessage.assert_any_call(
+            mock_app.client.chat_update.assert_called_once_with(
                 channel="C12345678",
-                text="Chatbot Response: Hello!",
-                thread_ts="1234567890.123456"
+                ts="1234567890.123456",
+                text="Chatbot Response: Hello!"
             )
     
     @pytest.mark.asyncio
@@ -248,8 +248,8 @@ class TestAppConfig:
                 channel="C12345678",
                 text="<@U12345678> asked: \n\n\"Explain quantum computing\" "
             )
-            mock_app.client.chat_postMessage.assert_any_call(
+            mock_app.client.chat_update.assert_called_once_with(
                 channel="C12345678",
-                text="I'm not sure how to answer that.",
-                thread_ts="1234567890.123456"
+                ts="1234567890.123456",
+                text="I'm not sure how to answer that."
             )
