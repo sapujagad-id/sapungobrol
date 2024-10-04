@@ -243,3 +243,49 @@ class TestAppConfig:
         )
         
         assert response.status_code == 200
+    
+    @pytest.mark.asyncio
+    async def test_listbots_method_chat_postMessage_failure(self, mock_slack_adapter, mock_request):
+        mock_app, _, mock_bot_controller, slack_adapter = mock_slack_adapter
+        
+        mock_app.client.chat_postMessage = MagicMock(
+            side_effect=[
+                SlackApiError("Error posting message", response={}),
+            ]
+        )
+        
+        first_bot_id = uuid4()
+        second_bot_id = uuid4()
+        
+        mock_bot_controller.fetch_chatbots = MagicMock(
+            return_value=[
+                BotResponse(
+                    id = first_bot_id,
+                    name = "Bot A",
+                    system_prompt = "prompt A here",
+                    model = ModelEngine.OPENAI,
+                    adapter = MessageAdapter.SLACK,
+                    created_at = datetime.fromisocalendar(2024, 1, 1),
+                    updated_at = datetime.fromisocalendar(2024, 1, 1),
+                    updated_at_relative = relative_time(datetime.fromisocalendar(2024, 1, 1)),
+                ),
+                BotResponse(
+                    id = second_bot_id,
+                    name = "Bot B",
+                    system_prompt = "a much longer prompt B here",
+                    model = ModelEngine.OPENAI,
+                    adapter = MessageAdapter.SLACK,
+                    created_at = datetime.now(),
+                    updated_at = datetime.now(),
+                    updated_at_relative = relative_time(datetime.now()),
+                )
+            ]
+        )
+        
+        mock_request = await self.common_mock_request(mock_request, "")
+
+        with pytest.raises(HTTPException) as excinfo:
+            await slack_adapter.list_bots(mock_request)
+        assert excinfo.value.status_code == 400
+        assert "Slack API Error" in excinfo.value.detail
+        assert mock_app.client.chat_postMessage.call_count == 1
