@@ -75,15 +75,7 @@ class SlackAdapter:
         response_text += ''.join([f'\n- {bot_response.name} ({bot_response.id})' for bot_response in bot_responses])
         
         try:
-            response = self.app.client.chat_postMessage(channel=channel_id, text=response_text)
-            thread_ts = response["ts"]
+            self.app.client.chat_postMessage(channel=channel_id, text=response_text)
             return Response(status_code=200)
-
         except SlackApiError as e:
-            if 'thread_ts' in locals():
-                try:
-                    self.app.client.chat_delete(channel=channel_id, ts=thread_ts)
-                except SlackApiError as delete_error:
-                    raise HTTPException(status_code=400, detail=f"Slack API Error : {delete_error}")
-
             raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")
