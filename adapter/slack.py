@@ -3,10 +3,10 @@ from loguru import logger
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 from slack_sdk.errors import SlackApiError
-from chat.chat import ChatOpenAI
+from chat.chat import Chat
 
 class SlackAdapter:
-    def __init__(self, app: App, chatbot: ChatOpenAI) -> None:
+    def __init__(self, app: App, chatbot: Chat) -> None:
         self.app = app
         self.handler = SlackRequestHandler(self.app)
         self.logger = logger.bind(service="SlackAdapter")
