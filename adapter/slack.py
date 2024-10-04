@@ -4,10 +4,12 @@ from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 from slack_sdk.errors import SlackApiError
 from bot.controller import BotController
+from chat.chat import Chat
 
 class SlackAdapter:
-    def __init__(self, app: App, bot_controller: BotController) -> None:
+    def __init__(self, app: App, chatbot: Chat, bot_controller: BotController) -> None:
         self.app = app
+        self.chatbot = chatbot
         self.bot_controller = bot_controller
         self.handler = SlackRequestHandler(self.app)
         self.logger = logger.bind(service="SlackAdapter")
@@ -31,18 +33,26 @@ class SlackAdapter:
         else:
             raise HTTPException(status_code=400, detail="Missing parameter in the request.")
         
-        question = f"{question} \n\n<@{user_id}>"
-        
+        question = f"<@{user_id}> asked: \n\n\"{question}\" "
+
         try:
             response = self.app.client.chat_postMessage(channel=channel_id, text=question)
             thread_ts = response["ts"]
-
-            reply_message = "This is a reply to the message."
-            self.app.client.chat_postMessage(
+            
+            loading_message = self.app.client.chat_postMessage(
                 channel=channel_id,
-                text=reply_message,
+                text=":hourglass_flowing_sand: Processing your request, please wait...",
                 thread_ts=thread_ts
             )
+            
+            chatbot_response = self.chatbot.generate_response(query=question)
+            
+            self.app.client.chat_update(
+                channel=channel_id,
+                ts=loading_message["ts"],
+                text=chatbot_response
+            )
+            
             return Response(status_code=200)
 
         except SlackApiError as e:

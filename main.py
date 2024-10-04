@@ -7,6 +7,7 @@ from slack_bolt import App
 from adapter import SlackAdapter
 from bot.view import BotViewV1
 from config import AppConfig, configure_logger
+from chat.chat import ChatOpenAI
 from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
 
@@ -33,8 +34,10 @@ if __name__ == "__main__":
     bot_controller = BotControllerV1(bot_service)
 
     bot_view = BotViewV1(bot_controller, bot_service)
+  
+    chatbot_openai = ChatOpenAI()
 
-    slack_adapter = SlackAdapter(slack_app, bot_controller)
+    slack_adapter = SlackAdapter(slack_app, chatbot_openai, bot_controller)
 
     app = FastAPI()
     
