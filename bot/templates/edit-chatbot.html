@@ -4,62 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Chatbot - Broom.id</title>
-    <script src="https://cdn.tailwindcss.com" integrity="sha384-06e9349ec38b5d05dc29eef6add2296bed44cca9c4e934f7d764a7d3efaf88bc79e893442a50f8ebabf43da0939d31fe" crossorigin="anonymous"></script>
-    <script>
-        // Function to check for potential SQL injection
-        
-
-        function validateForm() {
-            const name = document.getElementById('name').value;
-            const systemPrompt = document.getElementById('system_prompt').value;
-            const model = document.getElementById('model').value;
-            const adapter = document.getElementById('adapter').value;
-
-            if (name === "" || systemPrompt === "" || model === "" || adapter === "") {
-                return false;
-            }
-
-            return isValidInput(name) && isValidInput(systemPrompt);
-
-        }
-
-        function isValidInput(input) {
-            const sqlInjectionPattern = /['";-]/; 
-            return !sqlInjectionPattern.test(input);
-        }
-
-        async function submitForm(event) {
-            event.preventDefault(); 
-
-            if (!validateForm()) {
-                alert('Error: Please check your input!');
-                return;
-            }
-
-            const formData = {
-                name: document.getElementById('name').value,
-                system_prompt: document.getElementById('system_prompt').value,
-                model: document.getElementById('model').value,
-                adapter: document.getElementById('adapter').value
-            };
-
-            const response = await fetch('/api/bots/{{ bot.id }}', {
-                method: 'PATCH',  
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
-
-            const result = await response.json();
-            if (response.ok) {
-                alert('Chatbot updated successfully!');
-                window.location.href = '/';
-            } else {
-                alert(`Error: ${result.detail}`);
-            }
-        }
-    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/js/chatbotForm.js"></script>
 </head>
 <body class="bg-gray-100">
     <!-- Navbar -->
@@ -76,7 +22,7 @@
     </nav>
 
     <main class="container mx-auto mt-8 px-4">
-        <form id="chatbot-form" method="POST" class="bg-white shadow-md rounded-lg p-6" onsubmit="submitForm(event)">
+        <form id="chatbot-form" method="POST" class="bg-white shadow-md rounded-lg p-6" onsubmit="submitForm(event, '{{ bot.id if bot.id else null }}')">
             <div class="mb-4">
                 <label for="name" class="block text-gray-700 text-sm font-bold mb-2">Chatbot Name</label>
                 <input type="text" id="name" name="name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter chatbot name" value="{{ bot.name }}">
@@ -106,7 +52,8 @@
             </div>
 
             <div class="flex items-center justify-end">
-                <button id="edit-bot-button" type="submit" 
+                <button id="edit-bot-button" 
+                        type="submit" 
                         class="text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-all" 
                         style="background-color: #2a4365;" 
                         onmouseover="this.style.backgroundColor='#1e3150'" 

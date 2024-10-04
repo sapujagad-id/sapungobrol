@@ -42,6 +42,7 @@ if __name__ == "__main__":
     app = FastAPI()
     
     app.mount("/assets", StaticFiles(directory="public"), name="assets")
+    app.mount("/static", StaticFiles(directory="public"), name="static")
     
     app.add_api_route(
         "/",

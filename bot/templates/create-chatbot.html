@@ -4,60 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Chatbot - Broom.id</title>
-    <script src="https://cdn.tailwindcss.com"> integrity="sha384-06e9349ec38b5d05dc29eef6add2296bed44cca9c4e934f7d764a7d3efaf88bc79e893442a50f8ebabf43da0939d31fe" crossorigin="anonymous"</script>
-    <script>
-        // Function to check for potential SQL injection
-        function isValidInput(input) {
-            const sqlInjectionPattern = /['";-]/; 
-            return !sqlInjectionPattern.test(input);
-        }
-
-        function validateForm() {
-            const name = document.getElementById('name').value;
-            const systemPrompt = document.getElementById('system_prompt').value;
-            const model = document.getElementById('model').value;
-            const adapter = document.getElementById('adapter').value;
-
-            if (name === "" || systemPrompt === "" || model === "" || adapter === "") {
-                return false;
-            }
-
-            return isValidInput(name) && isValidInput(systemPrompt);
-
-        }
-
-        async function submitForm(event) {
-            event.preventDefault(); 
-
-            if (!validateForm()) {
-                alert('Error: Please check your input!')
-                return;
-            }
-
-            const formData = {
-                name: document.getElementById('name').value,
-                system_prompt: document.getElementById('system_prompt').value,
-                model: document.getElementById('model').value,
-                adapter: document.getElementById('adapter').value
-            };
-
-            const response = await fetch('/api/bots', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
-
-            const result = await response.json();
-            if (response.ok) {
-                alert('Chatbot created successfully!');
-                window.location.href = '/';
-            } else {
-                alert(`Error: ${result.detail}`);
-            }
-        }
-    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/js/chatbotForm.js"></script>
 </head>
 <body class="bg-gray-100">
     <!-- Navbar -->
