@@ -71,7 +71,7 @@ class SlackAdapter:
         
         bot_responses = self.bot_controller.fetch_chatbots()
         
-        response_text = f"{len(bot_responses)} Active Bots:"
+        response_text = f"{len(bot_responses)} Active Bot(s)"
         response_text += ''.join([f'\n- {bot_response.name} ({bot_response.id})' for bot_response in bot_responses])
         
         try:

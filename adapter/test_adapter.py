@@ -239,7 +239,7 @@ class TestAppConfig:
         
         mock_app.client.chat_postMessage.assert_any_call(
             channel="C12345678",
-            text=f"2 Active Bots:\n- Bot A ({first_bot_id})\n- Bot B ({second_bot_id})"
+            text=f"2 Active Bot(s)\n- Bot A ({first_bot_id})\n- Bot B ({second_bot_id})"
         )
         
         assert response.status_code == 200
