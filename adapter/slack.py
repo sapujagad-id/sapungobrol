@@ -3,10 +3,10 @@ from loguru import logger
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 from slack_sdk.errors import SlackApiError
-from bot import BotControllerV1
+from bot.controller import BotController
 
 class SlackAdapter:
-    def __init__(self, app: App, bot_controller: BotControllerV1) -> None:
+    def __init__(self, app: App, bot_controller: BotController) -> None:
         self.app = app
         self.bot_controller = bot_controller
         self.handler = SlackRequestHandler(self.app)
@@ -58,12 +58,11 @@ class SlackAdapter:
         data = await request.form()
     
         channel_id = data.get("channel_id")
-        user_id = data.get("user_id")
         
-        bot_responses = self.bot_controller.fetch_chatbots()[0]
+        bot_responses = self.bot_controller.fetch_chatbots()
         
         response_text = f"{len(bot_responses)} Active Bots:"
-        response_text += ''.join([f'\n- {bot_response['name']}' for bot_response in bot_responses])
+        response_text += ''.join([f'\n- {bot_response.name} ({bot_response.id})' for bot_response in bot_responses])
         
         try:
             response = self.app.client.chat_postMessage(channel=channel_id, text=response_text)

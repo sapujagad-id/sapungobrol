@@ -3,6 +3,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import Request, HTTPException
 from .slack import SlackAdapter
 from slack_sdk.errors import SlackApiError
+from datetime import datetime
+from uuid import uuid4
+from bot.bot import BotResponse, MessageAdapter, ModelEngine
+from bot.helper import relative_time
 
 
 class TestAppConfig:
@@ -161,26 +165,31 @@ class TestAppConfig:
                     ]
                 )
                 
+                first_bot_id = uuid4()
+                second_bot_id = uuid4()
+                
                 mock_bot_controller.fetch_chatbots = MagicMock(
                     return_value=[
-                        [
-                            {
-                                'id': 'bot1',
-                                'name': 'Bot A',
-                                'system_prompt': 'Prompt A',
-                                'model': 'OpenAI',
-                                'adapter': 'Slack',
-                                'updated_at': '2024-10-04T00:00:00Z'
-                            },
-                            {
-                                'id': 'bot2',
-                                'name': 'Bot B',
-                                'system_prompt': 'Prompt B',
-                                'model': 'OpenAI',
-                                'adapter': 'Slack',
-                                'updated_at': '2024-10-04T00:00:00Z'
-                            }
-                        ]
+                        BotResponse(
+                            id = first_bot_id,
+                            name = "Bot A",
+                            system_prompt = "prompt A here",
+                            model = ModelEngine.OPENAI,
+                            adapter = MessageAdapter.SLACK,
+                            created_at = datetime.fromisocalendar(2024, 1, 1),
+                            updated_at = datetime.fromisocalendar(2024, 1, 1),
+                            updated_at_relative = relative_time(datetime.fromisocalendar(2024, 1, 1)),
+                        ),
+                        BotResponse(
+                            id = second_bot_id,
+                            name = "Bot B",
+                            system_prompt = "a much longer prompt B here",
+                            model = ModelEngine.OPENAI,
+                            adapter = MessageAdapter.SLACK,
+                            created_at = datetime.now(),
+                            updated_at = datetime.now(),
+                            updated_at_relative = relative_time(datetime.now()),
+                        )
                     ]
                 )
                 
@@ -199,7 +208,7 @@ class TestAppConfig:
                 
                 mock_app.client.chat_postMessage.assert_any_call(
                     channel="C12345678",
-                    text="2 Active Bots:\n- Bot A\n- Bot B"
+                    text=f"2 Active Bots:\n- Bot A ({first_bot_id})\n- Bot B ({second_bot_id})"
                 )
                 
                 assert response.status_code == 200
