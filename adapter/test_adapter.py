@@ -26,6 +26,38 @@ class TestAppConfig:
     def mock_request(self):
         mock_request = MagicMock(spec=Request)
         return mock_request
+    
+    @pytest.fixture
+    def mock_bot_response_list(self):
+        first_bot_id = uuid4()
+        second_bot_id = uuid4()
+        
+        mock_bot_response_list = MagicMock(
+            return_value=[
+                BotResponse(
+                    id = first_bot_id,
+                    name = "Bot A",
+                    system_prompt = "prompt A here",
+                    model = ModelEngine.OPENAI,
+                    adapter = MessageAdapter.SLACK,
+                    created_at = datetime.fromisocalendar(2024, 1, 1),
+                    updated_at = datetime.fromisocalendar(2024, 1, 1),
+                    updated_at_relative = relative_time(datetime.fromisocalendar(2024, 1, 1)),
+                ),
+                BotResponse(
+                    id = second_bot_id,
+                    name = "Bot B",
+                    system_prompt = "a much longer prompt B here",
+                    model = ModelEngine.OPENAI,
+                    adapter = MessageAdapter.SLACK,
+                    created_at = datetime.now(),
+                    updated_at = datetime.now(),
+                    updated_at_relative = relative_time(datetime.now()),
+                )
+            ]
+        )
+        
+        return first_bot_id, second_bot_id, mock_bot_response_list
 
     async def common_mock_request(self, mock_request, text):
         mock_request.form = AsyncMock(return_value={
@@ -194,7 +226,7 @@ class TestAppConfig:
         )
     
     @pytest.mark.asyncio
-    async def test_list_bots_method(self, mock_slack_adapter, mock_request):
+    async def test_list_bots_method(self, mock_slack_adapter, mock_request, mock_bot_response_list):
         mock_app, _, mock_bot_controller, slack_adapter = mock_slack_adapter
         
         mock_app.client.chat_postMessage = MagicMock(
@@ -203,33 +235,7 @@ class TestAppConfig:
             ]
         )
         
-        first_bot_id = uuid4()
-        second_bot_id = uuid4()
-        
-        mock_bot_controller.fetch_chatbots = MagicMock(
-            return_value=[
-                BotResponse(
-                    id = first_bot_id,
-                    name = "Bot A",
-                    system_prompt = "prompt A here",
-                    model = ModelEngine.OPENAI,
-                    adapter = MessageAdapter.SLACK,
-                    created_at = datetime.fromisocalendar(2024, 1, 1),
-                    updated_at = datetime.fromisocalendar(2024, 1, 1),
-                    updated_at_relative = relative_time(datetime.fromisocalendar(2024, 1, 1)),
-                ),
-                BotResponse(
-                    id = second_bot_id,
-                    name = "Bot B",
-                    system_prompt = "a much longer prompt B here",
-                    model = ModelEngine.OPENAI,
-                    adapter = MessageAdapter.SLACK,
-                    created_at = datetime.now(),
-                    updated_at = datetime.now(),
-                    updated_at_relative = relative_time(datetime.now()),
-                )
-            ]
-        )
+        first_bot_id, second_bot_id, mock_bot_controller.fetch_chatbots = mock_bot_response_list
         
         mock_request = await self.common_mock_request(mock_request, "")
         
@@ -245,7 +251,7 @@ class TestAppConfig:
         assert response.status_code == 200
     
     @pytest.mark.asyncio
-    async def test_list_bots_method_post_message_failure(self, mock_slack_adapter, mock_request):
+    async def test_list_bots_method_post_message_failure(self, mock_slack_adapter, mock_request, mock_bot_response_list):
         mock_app, _, mock_bot_controller, slack_adapter = mock_slack_adapter
         
         mock_app.client.chat_postMessage = MagicMock(
@@ -254,33 +260,7 @@ class TestAppConfig:
             ]
         )
         
-        first_bot_id = uuid4()
-        second_bot_id = uuid4()
-        
-        mock_bot_controller.fetch_chatbots = MagicMock(
-            return_value=[
-                BotResponse(
-                    id = first_bot_id,
-                    name = "Bot A",
-                    system_prompt = "prompt A here",
-                    model = ModelEngine.OPENAI,
-                    adapter = MessageAdapter.SLACK,
-                    created_at = datetime.fromisocalendar(2024, 1, 1),
-                    updated_at = datetime.fromisocalendar(2024, 1, 1),
-                    updated_at_relative = relative_time(datetime.fromisocalendar(2024, 1, 1)),
-                ),
-                BotResponse(
-                    id = second_bot_id,
-                    name = "Bot B",
-                    system_prompt = "a much longer prompt B here",
-                    model = ModelEngine.OPENAI,
-                    adapter = MessageAdapter.SLACK,
-                    created_at = datetime.now(),
-                    updated_at = datetime.now(),
-                    updated_at_relative = relative_time(datetime.now()),
-                )
-            ]
-        )
+        _, _, mock_bot_controller.fetch_chatbots = mock_bot_response_list
         
         mock_request = await self.common_mock_request(mock_request, "")
 
