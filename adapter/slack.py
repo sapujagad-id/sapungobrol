@@ -3,10 +3,12 @@ from loguru import logger
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 from slack_sdk.errors import SlackApiError
+from bot import BotControllerV1
 
 class SlackAdapter:
-    def __init__(self, app: App) -> None:
+    def __init__(self, app: App, bot_controller: BotControllerV1) -> None:
         self.app = app
+        self.bot_controller = bot_controller
         self.handler = SlackRequestHandler(self.app)
         self.logger = logger.bind(service="SlackAdapter")
 
@@ -51,4 +53,6 @@ class SlackAdapter:
                     raise HTTPException(status_code=400, detail=f"Slack API Error : {delete_error}")
 
             raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")
-        
+    
+    async def list_bots(self, request: Request):
+        pass

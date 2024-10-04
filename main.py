@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     bot_view = BotViewV1(bot_controller, bot_service)
 
-    slack_adapter = SlackAdapter(slack_app)
+    slack_adapter = SlackAdapter(slack_app, bot_controller)
 
     app = FastAPI()
     
@@ -85,6 +85,9 @@ if __name__ == "__main__":
     )
     app.add_api_route(
         "/api/slack/ask", endpoint=slack_adapter.ask, methods=["POST"]
+    )
+    app.add_api_route(
+        "/api/slack/list-bots", endpoint=slack_adapter.list_bots, methods=["POST"]
     )
 
 
