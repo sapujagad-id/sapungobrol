@@ -24,7 +24,7 @@
         <div class="bg-white rounded shadow">
             <div class="flex justify-between items-center p-4 border-b">
                 <h2 class="text-xl font-semibold">List of Chatbots</h2>
-                <button class="bg-blue-600 text-white px-4 py-2 rounded">Create New</button>
+                <button class="bg-blue-600 text-white px-4 py-2 rounded" onclick="window.location.href='/create'">Create New</button>
             </div>
 
             <!-- Content Table -->
@@ -46,8 +46,19 @@
                         </td>
                         <td class="px-4 py-2">{{bot.adapter.value}}</td>
                         <td class="px-4 py-2">{{bot.model.value}}</td>
-                        <td class="px-4 py-2 text-right"><button>EDIT</button></td>
-                        <td class="px-4 py-2 text-right"><button>DEL</button></td>
+                        <td class="px-4 py-2 text-right">
+                            <button 
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" 
+                                onclick="window.location.href='/edit/{{ bot.id }}'">
+                                EDIT
+                            </button>
+                        </td>
+                        <td class="px-4 py-2 text-right">
+                            <button 
+                                class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-all">
+                                DEL
+                            </button>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

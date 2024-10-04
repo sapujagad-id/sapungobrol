@@ -18,6 +18,10 @@ class BotService(ABC):
     def update_chatbot(self, bot_id: str, request: BotUpdate):
         pass
 
+    @abstractmethod
+    def get_chatbot_by_id(self, bot_id: str):
+        pass
+
 
 class BotServiceV1(BotService):
     def __init__(self, repository: BotRepository) -> None:
@@ -39,3 +43,8 @@ class BotServiceV1(BotService):
         request.validate(bot)
 
         self.repository.update_bot(bot, request)
+
+    def get_chatbot_by_id(self, bot_id):
+        bot = self.repository.find_bot_by_id(bot_id)
+        return bot if bot else None
+        
