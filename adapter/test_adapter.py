@@ -194,7 +194,7 @@ class TestAppConfig:
         )
     
     @pytest.mark.asyncio
-    async def test_listbots_method(self, mock_slack_adapter, mock_request):
+    async def test_list_bots_method(self, mock_slack_adapter, mock_request):
         mock_app, _, mock_bot_controller, slack_adapter = mock_slack_adapter
         
         mock_app.client.chat_postMessage = MagicMock(
@@ -245,7 +245,7 @@ class TestAppConfig:
         assert response.status_code == 200
     
     @pytest.mark.asyncio
-    async def test_listbots_method_chat_postMessage_failure(self, mock_slack_adapter, mock_request):
+    async def test_list_bots_method_chat_postMessage_failure(self, mock_slack_adapter, mock_request):
         mock_app, _, mock_bot_controller, slack_adapter = mock_slack_adapter
         
         mock_app.client.chat_postMessage = MagicMock(
