@@ -54,9 +54,3 @@ class ChatOpenAI(Chat):
     def reset_history(self):
         """Reset the chat history."""
         self.history = [self._get_generate_system()]  
-
-if __name__ == "__main__":
-
-    chat = ChatOpenAI()
-    print(chat.generate_response("Jokowi is the president of Indonesia."))
-    print(chat.generate_response("Who is Prabowo?"))

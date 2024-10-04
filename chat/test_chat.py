@@ -147,3 +147,15 @@ class TestChat:
             chat.generate_response("Test query")
         
         assert str(excinfo.value) == "Error generating response: API error"
+
+    @patch('openai.ChatCompletion.create')
+    def test_insufficient_context(self, mock_create, chat, sample_insufficient_context_query, mock_openai_response_insufficient):
+        mock_create.return_value = mock_openai_response_insufficient
+        # Use an irrelevant context or no context
+        irrelevant_context = "This context does not contain relevant information."
+        response = chat.generate_response(sample_insufficient_context_query, irrelevant_context)
+
+        assert response == "I don't know"  # Expecting "I don't know"
+        mock_create.assert_called_once()
+        _, kwargs = mock_create.call_args
+        assert irrelevant_context in kwargs['messages'][1]['content']
