@@ -19,6 +19,7 @@ class ChatOpenAI(Chat):
             "role": "system",
             "content": """
                         You are an assistant that can only provide responses based on the provided context. 
+                        - - DO NOT USE AN EXTERNAL/GENERAL KNOWLEDGE, only answer based on provided context !!!
                         """
         }
 
