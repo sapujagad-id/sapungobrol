@@ -1,30 +1,40 @@
 import openai
-from config import AppConfig
 from abc import ABC, abstractmethod
 from chat.exceptions import ChatResponseGenerationError
+from config import AppConfig
 
 class Chat(ABC):
     @abstractmethod
     def generate_response(self, query: str, context: str = None) -> str:
-        """Generate a response based on the query and optional context."""
+        """Generate a response based on the query and current session's context."""
         pass
 
 class ChatOpenAI(Chat):
-    
+
     def __init__(self):
         config = AppConfig()
         openai.api_key = config.openai_api_key
-        self.history = []
+        self.history = [self._get_generate_system()]
 
-    def generate_response(self, query, context=None):
+    def _get_generate_system(self) -> dict:
+
+        return {
+            "role": "system",
+            "content": """
+                        You are an assistant that can only provide responses based on the PROVIDED CONTEXT. 
+                        DO NOT USE AN EXTERNAL/GENERAL KNOWLEDGE, only answer based on PROVIDED CONTEXT. !!!
+                        """
+        }
+
+    def generate_response(self, query: str, context: str = None) -> str:
         if not query:
-            return ""  
-        
+            return ""
+
         if context:
-            full_input = f"Given a context: {context}\n Given a query: {query}\n Please answer query based on the given context"
+            full_input = f"Given a context: {context}\n Given a query: {query}\n Please answer query based on the given context."
         else:
             full_input = query
-        
+
         self.history.append({"role": "user", "content": full_input})
         
         try:
@@ -42,4 +52,5 @@ class ChatOpenAI(Chat):
             raise ChatResponseGenerationError(f"Error generating response: {str(e)}")
             
     def reset_history(self):
-        self.history = []
+        """Reset the chat history."""
+        self.history = [self._get_generate_system()]  
