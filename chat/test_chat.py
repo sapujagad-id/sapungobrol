@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from .chat import ChatOpenAI
+from chat.exceptions import ChatResponseGenerationError
 from config import AppConfig
 
 @pytest.fixture
@@ -122,3 +123,12 @@ class TestChat:
         mock_create.assert_called_once()
         _, kwargs = mock_create.call_args
         assert irrelevant_context in kwargs['messages'][0]['content']
+        
+    @patch('openai.ChatCompletion.create')
+    def test_generate_response_failure(self, mock_create, chat):
+        mock_create.side_effect = Exception("API error")
+        
+        with pytest.raises(ChatResponseGenerationError) as excinfo:
+            chat.generate_response("Test query")
+        
+        assert str(excinfo.value) == "Error generating response: API error"

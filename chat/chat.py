@@ -1,6 +1,7 @@
 import openai
 from config import AppConfig
 from abc import ABC, abstractmethod
+from chat.exceptions import ChatResponseGenerationError
 
 class Chat(ABC):
     @abstractmethod
@@ -26,16 +27,19 @@ class ChatOpenAI(Chat):
         
         self.history.append({"role": "user", "content": full_input})
         
-        response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",
-            messages=self.history,
-        )
-        
-        assistant_response = response['choices'][0]['message']['content']
-        
-        self.history.append({"role": "assistant", "content": assistant_response})
-        
-        return assistant_response
-    
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-4o-mini",
+                messages=self.history,
+            )
+            
+            assistant_response = response['choices'][0]['message']['content']
+            
+            self.history.append({"role": "assistant", "content": assistant_response})
+            
+            return assistant_response
+        except Exception as e:
+            raise ChatResponseGenerationError(f"Error generating response: {str(e)}")
+            
     def reset_history(self):
         self.history = []
