@@ -10,20 +10,21 @@ class Chat(ABC):
         pass
 
 class ChatOpenAI(Chat):
+
     def __init__(self):
         config = AppConfig()
         openai.api_key = config.openai_api_key
-        self.history = []
+        self.history = [self._get_generate_system]
 
-        self.system_message = {
+    def _get_generate_system(self) -> dict:
+
+        return {
             "role": "system",
             "content": """
                         You are an assistant that can only provide responses based on the provided context. 
                         - - DO NOT USE AN EXTERNAL/GENERAL KNOWLEDGE, only answer based on provided context !!!
                         """
         }
-
-        self.history.append(self.system_message)
 
     def generate_response(self, query: str, context: str = None) -> str:
         if not query:
@@ -52,4 +53,4 @@ class ChatOpenAI(Chat):
             
     def reset_history(self):
         """Reset the chat history."""
-        self.history = [self.system_message]  
+        self.history = [self._get_generate_system]  
