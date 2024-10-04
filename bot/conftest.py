@@ -8,6 +8,7 @@ import pytest
 
 from bot.bot import BotResponse, MessageAdapter, ModelEngine
 from bot.helper import relative_time
+from bot.view import BotViewV1
 
 from .service import BotServiceV1
 from .repository import BotModel, PostgresBotRepository
@@ -51,6 +52,11 @@ def setup_database():
     BotModel.metadata.create_all(engine)
     yield engine
     BotModel.metadata.drop_all(engine)
+
+@pytest.fixture()
+def setup_view(setup_controller, setup_service):
+    view = BotViewV1(setup_controller, setup_service)
+    return view
     
 @pytest.fixture
 def setup_bots():
