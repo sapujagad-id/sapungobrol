@@ -137,7 +137,7 @@ class TestChat:
         assert response == 'Mocked response content'
         mock_create.assert_called_once()
         _, kwargs = mock_create.call_args
-        assert irrelevant_context in kwargs['messages'][0]['content']
+        assert irrelevant_context in kwargs['messages'][1]['content']
         
     @patch('openai.ChatCompletion.create')
     def test_generate_response_failure(self, mock_create, chat):
