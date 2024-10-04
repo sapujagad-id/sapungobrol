@@ -37,7 +37,7 @@ if __name__ == "__main__":
   
     chatbot_openai = ChatOpenAI()
 
-    slack_adapter = SlackAdapter(slack_app, chatbot_openai)
+    slack_adapter = SlackAdapter(slack_app, chatbot_openai, bot_controller)
 
     app = FastAPI()
     
@@ -88,6 +88,9 @@ if __name__ == "__main__":
     )
     app.add_api_route(
         "/api/slack/ask", endpoint=slack_adapter.ask, methods=["POST"]
+    )
+    app.add_api_route(
+        "/api/slack/list-bots", endpoint=slack_adapter.list_bots, methods=["POST"]
     )
 
 

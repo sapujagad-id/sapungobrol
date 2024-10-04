@@ -3,14 +3,16 @@ from loguru import logger
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 from slack_sdk.errors import SlackApiError
+from bot.controller import BotController
 from chat.chat import Chat
 
 class SlackAdapter:
-    def __init__(self, app: App, chatbot: Chat) -> None:
+    def __init__(self, app: App, chatbot: Chat, bot_controller: BotController) -> None:
         self.app = app
+        self.chatbot = chatbot
+        self.bot_controller = bot_controller
         self.handler = SlackRequestHandler(self.app)
         self.logger = logger.bind(service="SlackAdapter")
-        self.chatbot = chatbot
 
     # Function to listen for events on Slack. No need to test this since this is purely dependent on
     # Bolt
@@ -61,4 +63,19 @@ class SlackAdapter:
                     raise HTTPException(status_code=400, detail=f"Slack API Error : {delete_error}")
 
             raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")
+    
+    async def list_bots(self, request: Request):
+        data = await request.form()
+    
+        channel_id = data.get("channel_id")
         
+        bot_responses = self.bot_controller.fetch_chatbots()
+        
+        response_text = f"{len(bot_responses)} Active Bot(s)"
+        response_text += ''.join([f'\n- {bot_response.name} ({bot_response.id})' for bot_response in bot_responses])
+        
+        try:
+            self.app.client.chat_postMessage(channel=channel_id, text=response_text)
+            return Response(status_code=200)
+        except SlackApiError as e:
+            raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")

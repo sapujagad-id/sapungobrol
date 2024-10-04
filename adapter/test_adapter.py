@@ -3,6 +3,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import Request, HTTPException
 from .slack import SlackAdapter
 from slack_sdk.errors import SlackApiError
+from datetime import datetime
+from uuid import uuid4
+from bot.bot import BotResponse, MessageAdapter, ModelEngine
+from bot.controller import BotController
+from bot.helper import relative_time
 from chat.chat import ChatOpenAI
 
 
@@ -13,13 +18,46 @@ class TestAppConfig:
         with patch('slack_bolt.App') as MockApp:
             mock_app = MockApp()
             mock_chatbot = MagicMock(spec=ChatOpenAI)
-            slack_adapter = SlackAdapter(mock_app, mock_chatbot)
-            return mock_app, mock_chatbot, slack_adapter
+            mock_bot_controller = MagicMock(spec=BotController)
+            slack_adapter = SlackAdapter(mock_app, mock_chatbot, mock_bot_controller)
+            return mock_app, mock_chatbot, mock_bot_controller, slack_adapter
 
     @pytest.fixture
     def mock_request(self):
         mock_request = MagicMock(spec=Request)
         return mock_request
+    
+    @pytest.fixture
+    def mock_bot_response_list(self):
+        first_bot_id = uuid4()
+        second_bot_id = uuid4()
+        
+        mock_bot_response_list = MagicMock(
+            return_value=[
+                BotResponse(
+                    id = first_bot_id,
+                    name = "Bot A",
+                    system_prompt = "prompt A here",
+                    model = ModelEngine.OPENAI,
+                    adapter = MessageAdapter.SLACK,
+                    created_at = datetime.fromisocalendar(2024, 1, 1),
+                    updated_at = datetime.fromisocalendar(2024, 1, 1),
+                    updated_at_relative = relative_time(datetime.fromisocalendar(2024, 1, 1)),
+                ),
+                BotResponse(
+                    id = second_bot_id,
+                    name = "Bot B",
+                    system_prompt = "a much longer prompt B here",
+                    model = ModelEngine.OPENAI,
+                    adapter = MessageAdapter.SLACK,
+                    created_at = datetime.now(),
+                    updated_at = datetime.now(),
+                    updated_at_relative = relative_time(datetime.now()),
+                )
+            ]
+        )
+        
+        return first_bot_id, second_bot_id, mock_bot_response_list
 
     async def common_mock_request(self, mock_request, text):
         mock_request.form = AsyncMock(return_value={
@@ -31,7 +69,7 @@ class TestAppConfig:
 
     @pytest.mark.asyncio
     async def test_ask_method(self, mock_slack_adapter, mock_request):
-        mock_app, mock_chatbot, slack_adapter = mock_slack_adapter
+        mock_app, mock_chatbot, _, slack_adapter = mock_slack_adapter
 
         # Mock Slack API calls
         mock_app.client.chat_postMessage = MagicMock(
@@ -59,7 +97,7 @@ class TestAppConfig:
 
     @pytest.mark.asyncio
     async def test_missing_parameter_incomplete_text(self, mock_slack_adapter, mock_request):
-        mock_app, _, slack_adapter = mock_slack_adapter
+        mock_app, _, _, slack_adapter = mock_slack_adapter
 
         mock_request = await self.common_mock_request(mock_request, "12")
 
@@ -71,7 +109,7 @@ class TestAppConfig:
 
     @pytest.mark.asyncio
     async def test_chat_post_message_failure(self, mock_slack_adapter, mock_request):
-        mock_app, _, slack_adapter = mock_slack_adapter
+        mock_app, _, _, slack_adapter = mock_slack_adapter
 
         mock_app.client.chat_postMessage = MagicMock(
             side_effect=[
@@ -95,7 +133,7 @@ class TestAppConfig:
 
     @pytest.mark.asyncio
     async def test_chat_post_message_and_delete_failure(self, mock_slack_adapter, mock_request):
-        mock_app, _, slack_adapter = mock_slack_adapter
+        mock_app, _, _, slack_adapter = mock_slack_adapter
 
         mock_app.client.chat_postMessage = MagicMock(
             side_effect=[
@@ -121,7 +159,7 @@ class TestAppConfig:
 
     @pytest.mark.asyncio
     async def test_success_integration_ask_chat(self, mock_slack_adapter, mock_request):
-        mock_app, mock_chatbot, slack_adapter = mock_slack_adapter
+        mock_app, mock_chatbot, _, slack_adapter = mock_slack_adapter
 
         mock_app.client.users_info = MagicMock(
             return_value={"user": {"profile": {"display_name": "Test User"}}}
@@ -148,7 +186,7 @@ class TestAppConfig:
     @pytest.mark.asyncio
     @patch('chat.chat.ChatOpenAI.generate_response')
     async def test_failing_integration_ask_chat_empty_query(self, mock_generate_response, mock_slack_adapter, mock_request):
-        mock_app, _, slack_adapter = mock_slack_adapter
+        mock_app, _, _, slack_adapter = mock_slack_adapter
 
         mock_generate_response.return_value = ""
 
@@ -163,7 +201,7 @@ class TestAppConfig:
 
     @pytest.mark.asyncio
     async def test_edge_case_no_context_in_chat(self, mock_slack_adapter, mock_request):
-        mock_app, mock_chatbot, slack_adapter = mock_slack_adapter
+        mock_app, mock_chatbot, _, slack_adapter = mock_slack_adapter
 
         mock_app.client.users_info = MagicMock(
             return_value={"user": {"profile": {"display_name": "Test User"}}}
@@ -186,3 +224,48 @@ class TestAppConfig:
             ts="1234567890.123456",
             text="I'm not sure how to answer that."
         )
+    
+    @pytest.mark.asyncio
+    async def test_list_bots_method(self, mock_slack_adapter, mock_request, mock_bot_response_list):
+        mock_app, _, mock_bot_controller, slack_adapter = mock_slack_adapter
+        
+        mock_app.client.chat_postMessage = MagicMock(
+            side_effect=[
+                {"ts": "1234567890.123456"},
+            ]
+        )
+        
+        first_bot_id, second_bot_id, mock_bot_controller.fetch_chatbots = mock_bot_response_list
+        
+        mock_request = await self.common_mock_request(mock_request, "")
+        
+        response = await slack_adapter.list_bots(mock_request)
+
+        assert mock_app.client.chat_postMessage.call_count == 1
+        
+        mock_app.client.chat_postMessage.assert_any_call(
+            channel="C12345678",
+            text=f"2 Active Bot(s)\n- Bot A ({first_bot_id})\n- Bot B ({second_bot_id})"
+        )
+        
+        assert response.status_code == 200
+    
+    @pytest.mark.asyncio
+    async def test_list_bots_method_post_message_failure(self, mock_slack_adapter, mock_request, mock_bot_response_list):
+        mock_app, _, mock_bot_controller, slack_adapter = mock_slack_adapter
+        
+        mock_app.client.chat_postMessage = MagicMock(
+            side_effect=[
+                SlackApiError("Error posting message", response={}),
+            ]
+        )
+        
+        _, _, mock_bot_controller.fetch_chatbots = mock_bot_response_list
+        
+        mock_request = await self.common_mock_request(mock_request, "")
+
+        with pytest.raises(HTTPException) as excinfo:
+            await slack_adapter.list_bots(mock_request)
+        assert excinfo.value.status_code == 400
+        assert "Slack API Error" in excinfo.value.detail
+        assert mock_app.client.chat_postMessage.call_count == 1
