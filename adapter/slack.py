@@ -55,4 +55,26 @@ class SlackAdapter:
             raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")
     
     async def list_bots(self, request: Request):
-        pass
+        data = await request.form()
+    
+        channel_id = data.get("channel_id")
+        user_id = data.get("user_id")
+        
+        bot_responses = self.bot_controller.fetch_chatbots()[0]
+        
+        response_text = f"{len(bot_responses)} Active Bots:"
+        response_text += ''.join([f'\n- {bot_response['name']}' for bot_response in bot_responses])
+        
+        try:
+            response = self.app.client.chat_postMessage(channel=channel_id, text=response_text)
+            thread_ts = response["ts"]
+            return Response(status_code=200)
+
+        except SlackApiError as e:
+            if 'thread_ts' in locals():
+                try:
+                    self.app.client.chat_delete(channel=channel_id, ts=thread_ts)
+                except SlackApiError as delete_error:
+                    raise HTTPException(status_code=400, detail=f"Slack API Error : {delete_error}")
+
+            raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")

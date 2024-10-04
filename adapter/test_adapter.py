@@ -157,8 +157,7 @@ class TestAppConfig:
                 
                 mock_app.client.chat_postMessage = MagicMock(
                     side_effect=[
-                        {"ts": "1234567890.123456"},  
-                        {"ok": True} 
+                        {"ts": "1234567890.123456"},
                     ]
                 )
                 
