@@ -26,6 +26,7 @@ class TestAppConfig:
 
     def test_config_default_port(self, monkeypatch):
         monkeypatch.setenv("PORT", "")
+        monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
 
         config = AppConfig()
 
@@ -43,7 +44,9 @@ class TestAppConfig:
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()
 
-    def test_config(self):
+    def test_config(self, monkeypatch):
+        monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
+        
         config = AppConfig()
 
         assert config.log_level == "info"
@@ -51,6 +54,7 @@ class TestAppConfig:
         assert config.port == 8000
         assert config.slack_bot_token == "xoxb-slack-bot-token"
         assert config.slack_signing_secret == "slack-signing-secret"
+        assert config.openai_api_key == "test-openai-api-key"
 
     def test_parse_log_level(self):
         assert parse_log_level("info") == "INFO"
@@ -72,13 +76,6 @@ class TestAppConfig:
 
         with logger.catch():
             raise ValueError
-
-    def test_configure_openai(self, monkeypatch):
-
-        monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
-
-        config = AppConfig()
-        assert config.openai_api_key == "test-openai-api-key"
 
     def test_configure_empty_openai(self, monkeypatch):
         monkeypatch.setenv("OPENAI_API_KEY", "")
