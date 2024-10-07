@@ -97,7 +97,7 @@ class SlackAdapter:
 
         channel_id = data.get("channel_id")
 
-        bot_responses = self.bot_service.get_chatbots()
+        bot_responses = self.bot_service.get_chatbots(0, 10)
 
         response_text = f"{len(bot_responses)} Active Bot(s)"
         response_text += "".join(
