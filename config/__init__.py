@@ -52,7 +52,11 @@ class AppConfig:
         self.openai_api_key, found = self.validate_env_var("OPENAI_API_KEY")
         if not found:
             invalid = True
-            
+        
+        self.anthropic_api_key, found = self.validate_env_var("ANTHROPIC_API_KEY")
+        if not found:
+            invalid = True
+
         if invalid:
             raise ValueError("invalid app config")
 
