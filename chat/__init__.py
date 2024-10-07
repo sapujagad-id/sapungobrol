@@ -2,7 +2,7 @@ import openai as op
 
 from bot import ModelEngine
 
-from .openai import ChatOpenAI
+from .openai_chat import ChatOpenAI
 from .engine import ChatEngine
 from .anthropic_chat import ChatAnthropic
 

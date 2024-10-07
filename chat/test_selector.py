@@ -3,7 +3,7 @@ import pytest
 
 from bot import ModelEngine
 from . import ChatEngineSelector
-from .openai import ChatOpenAI
+from .openai_chat import ChatOpenAI
 
 
 class TestChatEngineSelector:
