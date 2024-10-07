@@ -21,7 +21,7 @@ class ChatAnthropic(ChatEngine):
         self.history.append({"role": "user", "content": full_input})
         
         try:
-            response = Anthropic().messages.create(
+            response = self.client.messages.create(
                 model="claude-3-5-sonnet-20240620",
                 max_tokens = 1024,
                 messages=self.history,
@@ -41,10 +41,4 @@ class ChatAnthropic(ChatEngine):
     
     def reset_history(self):
         """Reset the chat history."""
-        self.history = [self._get_generate_system()]
-
-if __name__=="__main__":
-    
-    chat = ChatAnthropic()
-    print(chat.generate_response("Jokowi is the president of Indonesia"))
-    print(chat.generate_response("Siapa itu Jokowi?"))
+        self.history = []
