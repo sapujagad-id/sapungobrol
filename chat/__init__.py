@@ -4,7 +4,7 @@ from bot import ModelEngine
 
 from .openai import ChatOpenAI
 from .engine import ChatEngine
-
+from .anthropic_chat import ChatAnthropic
 
 class ChatEngineSelector:
     def __init__(self, openai_api_key: str) -> None:
