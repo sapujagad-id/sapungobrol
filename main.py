@@ -5,6 +5,9 @@ from fastapi.staticfiles import StaticFiles
 from slack_bolt import App
 
 from adapter import SlackAdapter
+from auth.controller import AuthControllerV1
+from auth.repository import PostgresAuthRepository
+from auth.service import AuthServiceV1
 from bot.view import BotViewV1
 from config import AppConfig, configure_logger
 from chat import ChatEngineSelector
@@ -34,6 +37,12 @@ if __name__ == "__main__":
     bot_controller = BotControllerV1(bot_service)
 
     bot_view = BotViewV1(bot_controller, bot_service)
+    
+    auth_repository = PostgresAuthRepository(sessionmaker)
+    
+    auth_service = AuthServiceV1(auth_repository)
+    
+    auth_controller = AuthControllerV1(auth_service)
 
     engine_selector = ChatEngineSelector(openai_api_key=config.openai_api_key)
 
@@ -90,6 +99,30 @@ if __name__ == "__main__":
     app.add_api_route("/api/slack/ask", endpoint=slack_adapter.ask, methods=["POST"])
     app.add_api_route(
         "/api/slack/list-bots", endpoint=slack_adapter.list_bots, methods=["POST"]
+    )
+    
+    app.add_api_route(
+        "/login/google",
+        endpoint=auth_controller.login_google, 
+        methods=["GET"],
+    )
+    
+    app.add_api_route(
+        "/api/auth/callback/google",
+        endpoint=auth_controller.auth_google,
+        methods=["GET"],
+    )
+    
+    app.add_api_route(
+        "/api/auth/token",
+        endpoint=auth_controller.get_google_token,
+        methods=["GET"],
+    )
+    
+    app.add_api_route(
+        "/api/auth/logout",
+        endpoint=auth_controller.logout,
+        methods=["GET"],
     )
 
     uvicorn.run(app, host="0.0.0.0", port=config.port)
