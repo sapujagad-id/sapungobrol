@@ -10,7 +10,7 @@ from bot.bot import BotResponse, MessageAdapter, ModelEngine
 from bot.service import BotService
 from bot.helper import relative_time
 from chat import ChatEngineSelector
-from chat.openai import ChatOpenAI
+from chat.openai import ChatOpenAI, ChatResponseGenerationError
 
 
 class TestSlackAdapter:
@@ -196,19 +196,18 @@ class TestSlackAdapter:
         )
 
     @pytest.mark.asyncio
-    @patch("chat.openai.ChatOpenAI.generate_response")
     async def test_failing_integration_ask_chat_empty_query(
-        self, mock_generate_response, mock_slack_adapter, mock_request
+        self, mock_slack_adapter, mock_request
     ):
-        mock_app, _, _, slack_adapter = mock_slack_adapter
+        mock_app, mock_chatbot, _, slack_adapter = mock_slack_adapter
 
-        mock_generate_response = MagicMock(return_value="")
+        mock_chatbot.generate_response = MagicMock(return_value="")
 
         mock_request = await self.common_mock_request(mock_request, "")
 
         res = await slack_adapter.ask(mock_request)
         assert res["text"] == "Missing parameter in the request."
-        mock_generate_response.assert_not_called()
+        mock_chatbot.generate_response.assert_not_called()
         mock_app.client.chat_postMessage.assert_not_called()
 
     @pytest.mark.asyncio
