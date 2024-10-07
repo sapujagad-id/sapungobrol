@@ -1,19 +1,12 @@
 import openai
-from abc import ABC, abstractmethod
+
+from .engine import ChatEngine
 from chat.exceptions import ChatResponseGenerationError
-from config import AppConfig
 
-class Chat(ABC):
-    @abstractmethod
-    def generate_response(self, query: str, context: str = None) -> str:
-        """Generate a response based on the query and current session's context."""
-        pass
 
-class ChatOpenAI(Chat):
+class ChatOpenAI(ChatEngine):
 
     def __init__(self):
-        config = AppConfig()
-        openai.api_key = config.openai_api_key
         self.history = [self._get_generate_system()]
 
     def _get_generate_system(self) -> dict:
@@ -23,7 +16,7 @@ class ChatOpenAI(Chat):
             "content": """
                         You are an assistant that can only provide responses based on the PROVIDED CONTEXT. 
                         DO NOT USE AN EXTERNAL/GENERAL KNOWLEDGE, only answer based on PROVIDED CONTEXT. !!!
-                        """
+                        """,
         }
 
     def generate_response(self, query: str, context: str = None) -> str:
@@ -36,21 +29,21 @@ class ChatOpenAI(Chat):
             full_input = query
 
         self.history.append({"role": "user", "content": full_input})
-        
+
         try:
             response = openai.ChatCompletion.create(
                 model="gpt-4o-mini",
                 messages=self.history,
             )
-            
-            assistant_response = response['choices'][0]['message']['content']
-            
+
+            assistant_response = response["choices"][0]["message"]["content"]
+
             self.history.append({"role": "assistant", "content": assistant_response})
-            
+
             return assistant_response
         except Exception as e:
             raise ChatResponseGenerationError(f"Error generating response: {str(e)}")
-            
+
     def reset_history(self):
         """Reset the chat history."""
-        self.history = [self._get_generate_system()]  
+        self.history = [self._get_generate_system()]
