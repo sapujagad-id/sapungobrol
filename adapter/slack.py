@@ -2,11 +2,15 @@ from fastapi import Request, Response, HTTPException
 from loguru import logger
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
-
+from slack_sdk.errors import SlackApiError
+from bot.controller import BotController
+from chat.chat import Chat
 
 class SlackAdapter:
-    def __init__(self, app: App) -> None:
+    def __init__(self, app: App, chatbot: Chat, bot_controller: BotController) -> None:
         self.app = app
+        self.chatbot = chatbot
+        self.bot_controller = bot_controller
         self.handler = SlackRequestHandler(self.app)
         self.logger = logger.bind(service="SlackAdapter")
 
@@ -28,11 +32,50 @@ class SlackAdapter:
             _, question = parts
         else:
             raise HTTPException(status_code=400, detail="Missing parameter in the request.")
-
-            
-        user_info = self.app.client.users_info(user=user_id)
-        display_name = user_info["user"]["profile"]["display_name"]
         
-        question = f"{question} \n\n-{display_name}"
+        question = f"<@{user_id}> asked: \n\n\"{question}\" "
 
-        self.app.client.chat_postMessage(channel=channel_id, text=question)
+        try:
+            response = self.app.client.chat_postMessage(channel=channel_id, text=question)
+            thread_ts = response["ts"]
+            
+            loading_message = self.app.client.chat_postMessage(
+                channel=channel_id,
+                text=":hourglass_flowing_sand: Processing your request, please wait...",
+                thread_ts=thread_ts
+            )
+            
+            chatbot_response = self.chatbot.generate_response(query=question)
+            
+            self.app.client.chat_update(
+                channel=channel_id,
+                ts=loading_message["ts"],
+                text=chatbot_response
+            )
+            
+            return Response(status_code=200)
+
+        except SlackApiError as e:
+            if 'thread_ts' in locals():
+                try:
+                    self.app.client.chat_delete(channel=channel_id, ts=thread_ts)
+                except SlackApiError as delete_error:
+                    raise HTTPException(status_code=400, detail=f"Slack API Error : {delete_error}")
+
+            raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")
+    
+    async def list_bots(self, request: Request):
+        data = await request.form()
+    
+        channel_id = data.get("channel_id")
+        
+        bot_responses = self.bot_controller.fetch_chatbots()
+        
+        response_text = f"{len(bot_responses)} Active Bot(s)"
+        response_text += ''.join([f'\n- {bot_response.name} ({bot_response.id})' for bot_response in bot_responses])
+        
+        try:
+            self.app.client.chat_postMessage(channel=channel_id, text=response_text)
+            return Response(status_code=200)
+        except SlackApiError as e:
+            raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")

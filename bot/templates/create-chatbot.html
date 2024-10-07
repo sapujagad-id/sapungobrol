@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Chatbot - Broom.id</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/js/chatbotForm.js"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm" role="navigation" aria-label="site menu">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="/assets/broom-logo.png" alt="Broom.id Logo" class="h-4 mx-4">
+                <h1 class="text-lg font-semibold">Create Chatbot</h1>
+            </div>
+            <div class="flex items-center">
+                <img src="avatar.png" alt="Avatar" class="h-8 w-8 rounded-full">
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto mt-8 px-4">
+        <form id="chatbot-form" method="POST" class="bg-white shadow-md rounded-lg p-6" onsubmit="submitForm(event)">
+            <div class="mb-4">
+                <label for="name" class="block text-gray-700 text-sm font-bold mb-2">Chatbot Name</label>
+                <input type="text" id="name" name="name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter chatbot name">
+            </div>
+            
+            <div class="mb-4">
+                <label for="system_prompt" class="block text-gray-700 text-sm font-bold mb-2">System Prompt</label>
+                <textarea id="system_prompt" name="system_prompt" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" rows="4" placeholder="Enter system prompt"></textarea>
+            </div>
+            
+            <div class="mb-4">
+                <label for="model" class="block text-gray-700 text-sm font-bold mb-2">Model</label>
+                <select id="model" name="model" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    {% for model in model_engines %}
+                        <option value="{{ model }}">{{ model }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mb-4">
+                <label for="adapter" class="block text-gray-700 text-sm font-bold mb-2">Adapter</label>
+                <select id="adapter" name="adapter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    {% for adapter in message_adapters %}
+                        <option value="{{ adapter }}">{{ adapter }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex items-center justify-end">
+                <button id="create-bot-button" type="submit" 
+                        class="text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-all" 
+                        style="background-color: #2a4365;" 
+                        onmouseover="this.style.backgroundColor='#1e3150'" 
+                        onmouseout="this.style.backgroundColor='#2a4365'"
+                        onfocus="this.style.backgroundColor='#1e3150'" 
+                        onblur="this.style.backgroundColor='#2a4365'">
+                    Create Chatbot
+                </button>
+            </div>
+        </form>
+    </main>
+</body>
+</html>
