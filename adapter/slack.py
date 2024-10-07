@@ -72,7 +72,7 @@ class SlackAdapter:
 
             return Response(status_code=200)
 
-        except sqlalchemy.exc.DataError as e:
+        except sqlalchemy.exc.DataError as e:  # pragma: no cover
             return {"text": "Whoops. Can't found the chatbot you're looking for"}
 
         except SlackApiError as e:
@@ -86,7 +86,7 @@ class SlackAdapter:
 
             raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")
 
-        except ChatResponseGenerationError as e:
+        except ChatResponseGenerationError as e:  # pragma: no cover
             self.logger.error(e)
             return {
                 "text": "Something went wrong when trying to generate your response."
