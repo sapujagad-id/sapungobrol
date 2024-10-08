@@ -15,7 +15,7 @@ def sample_context():
 
 @pytest.fixture
 def chat():
-    return ChatAnthropic()
+    return ChatAnthropic(api_key="random-str")
 
 
 class TestChatAnthropic:
