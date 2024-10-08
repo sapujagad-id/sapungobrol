@@ -1,6 +1,7 @@
 import pytest
-from chat.exceptions import ChatResponseGenerationError
 from .anthropic_chat import ChatAnthropic
+from unittest.mock import patch, MagicMock
+from chat.exceptions import ChatResponseGenerationError
 
 
 @pytest.fixture
@@ -48,3 +49,23 @@ class TestChatAnthropic:
 
         assert response == ""
         mocker.patch.object(chat, "generate_response").assert_not_called()
+    
+    @patch("anthropic.resources.Messages.create")
+    def test_api_call_mock(self, mock_create, chat, sample_query):
+        mock_create.return_value = MagicMock(content=[MagicMock(text="Mocked response content")])
+        
+        chat.generate_response(sample_query)
+        
+        mock_create.assert_called_once()
+        _, kwargs = mock_create.call_args
+        assert kwargs["model"] == "claude-3-haiku-20240307"
+        assert kwargs["max_tokens"] == 1024
+        
+    @patch("anthropic.resources.Messages.create")
+    def test_generate_response_failure(self, mock_create, chat):
+        mock_create.side_effect = Exception("API error")
+
+        with pytest.raises(ChatResponseGenerationError) as excinfo:
+            chat.generate_response("Test query")
+
+        assert str(excinfo.value) == "Error generating response: API error"
