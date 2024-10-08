@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     bot_view = BotViewV1(bot_controller, bot_service)
 
-    engine_selector = ChatEngineSelector(openai_api_key=config.openai_api_key)
+    engine_selector = ChatEngineSelector(openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key)
 
     slack_adapter = SlackAdapter(slack_app, engine_selector, bot_service)
 
