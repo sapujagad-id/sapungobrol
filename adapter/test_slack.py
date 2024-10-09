@@ -10,7 +10,7 @@ from bot.bot import BotResponse, MessageAdapter, ModelEngine
 from bot.service import BotService
 from bot.helper import relative_time
 from chat import ChatEngineSelector
-from chat.openai import ChatOpenAI, ChatResponseGenerationError
+from chat.openai_chat import ChatOpenAI
 
 
 class TestSlackAdapter:

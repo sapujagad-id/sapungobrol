@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch
-from .openai import ChatOpenAI
+from .openai_chat import ChatOpenAI
 from chat.exceptions import ChatResponseGenerationError
 
 
