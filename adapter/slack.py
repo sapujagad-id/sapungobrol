@@ -37,7 +37,7 @@ class SlackAdapter:
 
         parts = parameter.split(" ", 1)
         if len(parts) == 2:
-            bot_id, question = parts
+            bot_slug, question = parts
         else:
             return {
                 "text": "Missing parameter in the request.",
@@ -46,7 +46,7 @@ class SlackAdapter:
         question = f'<@{user_id}> asked: \n\n"{question}" '
 
         try:
-            chatbot = self.bot_service.get_chatbot_by_id(bot_id=bot_id)
+            chatbot = self.bot_service.get_chatbot_by_slug(slug=bot_slug)
 
             if chatbot is None:
                 return {"text": "Whoops. Can't found the chatbot you're looking for."}
@@ -102,7 +102,7 @@ class SlackAdapter:
         response_text = f"{len(bot_responses)} Active Bot(s)"
         response_text += "".join(
             [
-                f"\n- {bot_response.name} ({bot_response.id})"
+                f"\n- {bot_response.name} ({bot_response.slug})"
                 for bot_response in bot_responses
             ]
         )
