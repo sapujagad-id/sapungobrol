@@ -14,8 +14,6 @@ class GoogleCredentials(BaseModel):
   client_secret: str
   redirect_uri: str
   
-  
-  
 class NoTokenSupplied(Exception):
   pass
 
