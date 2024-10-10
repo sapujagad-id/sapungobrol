@@ -11,3 +11,16 @@ CREATE TABLE bots (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE TYPE login_methods AS ENUM('GOOGLE');
+
+CREATE TABLE users (
+    id UUID PRIMARY KEY,
+    sub VARCHAR(127) NOT NULL,
+    name VARCHAR(127) NOT NULL,
+    picture VARCHAR(255) NOT NULL,
+    email VARCHAR(127) NOT NULL,
+    email_verified BOOLEAN NOT NULL,
+    login_method login_methods NOT NULL DEFAULT 'GOOGLE',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

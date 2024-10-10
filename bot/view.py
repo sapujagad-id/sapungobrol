@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
+from jinja2 import Environment
+import jinja2
 
 from bot.service import BotService
 
@@ -26,7 +28,12 @@ class BotView(ABC):
 class BotViewV1(BotView):    
     def __init__(self, controller: BotController, service: BotService) -> None:
         super().__init__()
-        self.templates = Jinja2Templates(directory="bot/templates")
+        self.templates = Jinja2Templates(
+            env=Environment(
+                loader=jinja2.FileSystemLoader('bot/templates'),
+                autoescape=True,
+            )
+        )
         self.controller = controller
         self.service = service
     
