@@ -112,3 +112,12 @@ class SlackAdapter:
             return Response(status_code=200)
         except SlackApiError as e:
             raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")
+    
+    def event_message(self, event, say):
+        pass
+    
+    def event_message_replied(self, event, say):
+        pass
+        
+    def bot_replied(self, event, say):
+        pass
