@@ -7,6 +7,7 @@ from jose import ExpiredSignatureError, JWTError
 from loguru import logger
 import requests
 
+from auth.dto import ProfileResponse
 from auth.service import AuthService
 from auth.user import GoogleUserInfo
 from auth.exceptions import NoTokenSupplied, UserNotFound
@@ -14,19 +15,19 @@ from config import AppConfig
 
 class AuthController(ABC):
   @abstractmethod
-  async def logout():
+  async def logout(self):
     pass
   
   @abstractmethod
-  async def login_redirect_google():
+  async def login_redirect_google(self) -> RedirectResponse:
     pass
   
   @abstractmethod
-  async def authorize_google(code: str):
+  async def authorize_google(self, request: Request, code: str) -> Response:
     pass
   
   @abstractmethod
-  async def user_profile_google(token: str):
+  async def user_profile_google(self, request: Request) -> ProfileResponse:
     pass
 
 class AuthControllerV1(AuthController):
@@ -35,7 +36,7 @@ class AuthControllerV1(AuthController):
     self.service = service
     self.logger = logger.bind(service="AuthController")
     
-  def logout(self, request: Request):
+  def logout(self):
     response = RedirectResponse("/")
     response.delete_cookie("token")
     return response
