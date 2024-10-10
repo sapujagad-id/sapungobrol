@@ -1,5 +1,5 @@
-from fastapi.responses import RedirectResponse
-from fastapi import HTTPException, Request
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi import HTTPException, Request, Response
 from fastapi.testclient import TestClient
 
 import pytest
@@ -8,6 +8,12 @@ from unittest.mock import Mock
 from jose import ExpiredSignatureError, JWTError
 from auth.exceptions import NoTokenSupplied, UserNotFound
 from auth.service import AuthServiceV1
+
+def test_logout(setup_controller):
+    response = setup_controller.logout()
+    assert isinstance(response, Response)
+    assert response.headers["location"] == "/"
+    assert response.status_code == 307
 
 def test_login_redirect_google(setup_controller, setup_service):
     setup_service.login_redirect_google.return_value = RedirectResponse(url="/redirect-url")

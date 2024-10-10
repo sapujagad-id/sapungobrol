@@ -2,7 +2,7 @@ from datetime import datetime
 import enum
 from pydantic import UUID4, BaseModel
 
-from .exceptions import InvalidEmail, InvalidLoginMethod, InvalidName, InvalidPictureURL, InvalidUUID, SubNotFound
+from .exceptions import InvalidEmail, InvalidName, InvalidPictureURL, SubNotFound
 
 class LoginMethod(str, enum.Enum):
   GOOGLE = "Google"
