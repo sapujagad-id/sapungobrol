@@ -52,7 +52,7 @@ jobs:
       - name: Get number of changed migration files
         id: migration-changes
         run: |
-          MIGRATION_CHANGES_LIST=${{ steps.migration-changes-list.outputs.changed_files }}
+          MIGRATION_CHANGES_LIST='${{ steps.migration-changes-list.outputs.changed_files }}'
           MIGRATION_CHANGES_COUNT=$(echo $MIGRATION_CHANGES_LIST | jq length)
           echo "count=$MIGRATION_CHANGES_COUNT" >> "$GITHUB_OUTPUT"
 
