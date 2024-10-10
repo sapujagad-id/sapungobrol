@@ -9,7 +9,7 @@ import requests
 
 from auth.service import AuthService
 from auth.user import GoogleUserInfo
-from auth.dto import NoTokenSupplied, UserNotFound
+from auth.exceptions import NoTokenSupplied, UserNotFound
 from config import AppConfig
 
 class AuthController(ABC):

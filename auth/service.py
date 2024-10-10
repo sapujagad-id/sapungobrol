@@ -9,7 +9,7 @@ from loguru import logger
 import requests
 
 from auth.repository import AuthRepository
-from auth.dto import GoogleCredentials, LoginResponse, NoTokenSupplied, ProfileResponse, UserNotFound
+from auth.dto import GoogleCredentials, ProfileResponse
 from auth.user import GoogleUserInfo
 from jose import jwt
 
