@@ -35,3 +35,11 @@ class AuthServiceV1(AuthService):
       self.base_url = base_url
       self.logger = logger.bind(service="AuthService")
       
+    def authorize_google(self, request, user_info_json) -> Response:
+      raise NotImplementedError()
+    
+    def login_redirect_google(self) -> Response:
+      raise NotImplementedError()
+    
+    def get_user_profile(self, token) -> ProfileResponse:
+      raise NotImplementedError()
