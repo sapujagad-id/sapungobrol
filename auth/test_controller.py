@@ -61,7 +61,7 @@ def test_user_profile_google_token_expired(setup_controller, setup_service):
     with pytest.raises(HTTPException) as excinfo:
         setup_controller.user_profile_google(request)
     assert excinfo.value.status_code == 400
-    assert excinfo.value.detail == "Invalid token signature" # todo
+    assert excinfo.value.detail == "Your token has expired, please login again"
 
 def test_user_profile_google_user_not_found(setup_controller, setup_service):
     request = Mock()

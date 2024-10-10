@@ -56,10 +56,10 @@ class AuthControllerV1(AuthController):
       response = self.service.get_user_profile(token)
     except NoTokenSupplied:
       raise HTTPException(status_code=401, detail="You are not authenticated")
+    except ExpiredSignatureError:
+      raise HTTPException(status_code=400, detail="Your token has expired, please login again")    
     except JWTError:
       raise HTTPException(status_code=400, detail="Invalid token signature")
-    except ExpiredSignatureError:
-      raise HTTPException(status_code=400, detail="Your token has expired, please login again")
     except UserNotFound:
       raise HTTPException(status_code=404, detail="User not found")
     return response
