@@ -34,16 +34,16 @@ class TestSlackAdapter:
 
     @pytest.fixture
     def mock_bot_response_list(self):
-        first_bot_slug = "first-bot"
-        second_bot_slug = "second-bot"
+        first_bot_id = uuid4()
+        second_bot_id = uuid4()
 
         mock_bot_response_list = MagicMock(
             return_value=[
                 BotResponse(
-                    id=uuid4(),
+                    id=first_bot_id,
                     name="Bot A",
                     system_prompt="prompt A here",
-                    slug=first_bot_slug,
+                    slug="bot-a",
                     model=ModelEngine.OPENAI,
                     adapter=MessageAdapter.SLACK,
                     created_at=datetime.fromisocalendar(2024, 1, 1),
@@ -53,10 +53,10 @@ class TestSlackAdapter:
                     ),
                 ),
                 BotResponse(
-                    id=uuid4(),
+                    id=second_bot_id,
                     name="Bot B",
                     system_prompt="a much longer prompt B here",
-                    slug=second_bot_slug,
+                    slug="bot-b",
                     model=ModelEngine.OPENAI,
                     adapter=MessageAdapter.SLACK,
                     created_at=datetime.now(),
@@ -66,7 +66,7 @@ class TestSlackAdapter:
             ]
         )
 
-        return first_bot_slug, second_bot_slug, mock_bot_response_list
+        return first_bot_id, second_bot_id, mock_bot_response_list
 
     async def common_mock_request(self, mock_request, text):
         mock_request.form = AsyncMock(
@@ -256,7 +256,7 @@ class TestSlackAdapter:
             ]
         )
 
-        mock_bot_service.get_chatbot_by_slug = MagicMock(return_value=None)
+        mock_bot_service.get_chatbot_by_id = MagicMock(return_value=None)
 
         req = await self.common_mock_request(
             mock_request, "12 Explain quantum computing"
@@ -277,7 +277,7 @@ class TestSlackAdapter:
             ]
         )
 
-        first_bot_slug, second_bot_slug, mock_bot_service.get_chatbots = (
+        first_bot_id, second_bot_id, mock_bot_service.get_chatbots = (
             mock_bot_response_list
         )
 
@@ -289,7 +289,7 @@ class TestSlackAdapter:
 
         mock_app.client.chat_postMessage.assert_any_call(
             channel="C12345678",
-            text=f"2 Active Bot(s)\n- Bot A ({first_bot_slug})\n- Bot B ({second_bot_slug})",
+            text=f"2 Active Bot(s)\n- Bot A ({first_bot_id})\n- Bot B ({second_bot_id})",
         )
 
         assert response.status_code == 200
