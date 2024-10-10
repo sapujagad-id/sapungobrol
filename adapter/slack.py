@@ -22,6 +22,7 @@ class SlackAdapter:
         self.bot_service = bot_service
         self.handler = SlackRequestHandler(self.app)
         self.logger = logger.bind(service="SlackAdapter")
+        self.app_user_id = self.app.client.auth_test()['user_id']
 
     # Function to listen for events on Slack. No need to test this since this is purely dependent on
     # Bolt
@@ -112,3 +113,22 @@ class SlackAdapter:
             return Response(status_code=200)
         except SlackApiError as e:
             raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")
+    
+    def event_message(self, event, say):
+        if 'thread_ts' in event:
+            self.event_message_replied(event, say)
+    
+    def event_message_replied(self, event, say):
+        parent_message = self.app.client.conversations_history(
+            channel=event['channel'],
+            inclusive=True,
+            oldest=event['thread_ts'],
+            limit=1
+        )
+        parent_user, parent_text = parent_message['messages'][0]['user'], parent_message['messages'][0]['text']
+        
+        if parent_user == self.app_user_id and 'asked' in parent_text:
+            self.bot_replied(event, say)
+        
+    def bot_replied(self, event, say):
+        say("To be implemented", thread_ts = event['thread_ts'])
