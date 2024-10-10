@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from fastapi import HTTPException
 
-from .bot import BotCreate, BotNotFound, BotUpdate, NameIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
+from .bot import BotCreate, BotNotFound, BotUpdate, NameIsRequired, SlugIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
 from .service import BotService
 
 
@@ -39,6 +39,8 @@ class BotControllerV1(BotController):
             raise HTTPException(status_code=400, detail="Unsupported model")
         except UnsupportedAdapter:
             raise HTTPException(status_code=400, detail="Unsupported message adapter")
+        except SlugIsRequired:
+            raise HTTPException(status_code=400, detail="Slug is required")
         except Exception:
             raise HTTPException(status_code=500, detail="Something went wrong")
         
@@ -54,6 +56,8 @@ class BotControllerV1(BotController):
             raise HTTPException(status_code=400, detail="Unsupported model")
         except UnsupportedAdapter:
             raise HTTPException(status_code=400, detail="Unsupported message adapter")
+        except SlugIsRequired:
+            raise HTTPException(status_code=400, detail="Slug is required")
         except BotNotFound:
             raise HTTPException(status_code=400, detail="Bot not found")
         except Exception:
