@@ -48,10 +48,10 @@ class PostgresAuthRepository(AuthRepository):
         self.logger = logger.bind(service="PostgresAuthRepository")
         
     def find_user_by_sub(self, sub: str) -> UserModel | None:
-        pass
+        raise NotImplementedError()
             
     def find_user_by_email(self, email: str) -> UserModel | None:
-        pass
+        raise NotImplementedError()
             
     def add_google_user(self, user_info_json: GoogleUserInfo) -> None:
-        pass
+        raise NotImplementedError()
