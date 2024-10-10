@@ -27,6 +27,7 @@ class TestAppConfig:
     def test_config_default_port(self, monkeypatch):
         monkeypatch.setenv("PORT", "")
         monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")
 
         config = AppConfig()
 
@@ -46,6 +47,7 @@ class TestAppConfig:
 
     def test_config(self, monkeypatch):
         monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")
         
         config = AppConfig()
 
@@ -107,6 +109,12 @@ class TestAppConfig:
             
     def test_config_empty_base_url(self, monkeypatch):
         monkeypatch.setenv("BASE_URL", "")
+
+        with pytest.raises(ValueError, match="invalid app config"):
+            AppConfig()
+    
+    def test_configure_empty_openai(self, monkeypatch):
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "")
 
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()

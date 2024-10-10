@@ -68,7 +68,11 @@ class AppConfig:
         self.base_url, found = self.validate_env_var("BASE_URL")
         if not found:
             invalid = True
-            
+        
+        self.anthropic_api_key, found = self.validate_env_var("ANTHROPIC_API_KEY")
+        if not found:
+            invalid = True
+
         if invalid:
             raise ValueError("invalid app config")
 
