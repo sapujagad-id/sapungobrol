@@ -53,6 +53,22 @@ class AppConfig:
         if not found:
             invalid = True
             
+        self.google_client_id, found = self.validate_env_var("GOOGLE_CLIENT_ID")
+        if not found:
+            invalid = True
+        
+        self.google_client_secret, found = self.validate_env_var("GOOGLE_CLIENT_SECRET")
+        if not found:
+            invalid = True
+        
+        self.google_redirect_uri, found = self.validate_env_var("GOOGLE_REDIRECT_URI")
+        if not found:
+            invalid = True
+            
+        self.base_url, found = self.validate_env_var("BASE_URL")
+        if not found:
+            invalid = True
+            
         if invalid:
             raise ValueError("invalid app config")
 
