@@ -41,6 +41,7 @@ class Bot(BaseModel):
     created_at: datetime
     updated_at: datetime
     adapter: MessageAdapter
+    slug: str
 
     model_config = ConfigDict(from_attributes=True)
     
@@ -52,6 +53,7 @@ class BotCreate(BaseModel):
     system_prompt: str
     model: str
     adapter: str
+    slug: str
 
     def validate(self):
         if self.adapter not in MessageAdapter._value2member_map_:
@@ -60,6 +62,8 @@ class BotCreate(BaseModel):
             raise NameIsRequired
         if len(self.system_prompt) == 0:
             raise SystemPromptIsRequired
+        if len(self.slug) == 0:
+            raise SlugIsRequired
         if self.model not in ModelEngine._value2member_map_:
             raise UnsupportedModel
         
@@ -68,6 +72,7 @@ class BotUpdate(BaseModel):
     system_prompt: Optional[str] = None
     model: Optional[str] = None
     adapter: Optional[str] = None
+    slug: Optional[str] = None
 
     def validate(self, bot):
         if self.adapter and self.adapter not in MessageAdapter._value2member_map_:
@@ -76,6 +81,8 @@ class BotUpdate(BaseModel):
             raise NameIsRequired
         if self.system_prompt is not None and len(self.system_prompt) == 0:
             raise SystemPromptIsRequired
+        if self.slug is not None and len(self.slug) == 0:
+            raise SlugIsRequired
         if self.model and self.model not in ModelEngine._value2member_map_:
             raise UnsupportedModel
         if not bot:

@@ -1,3 +1,5 @@
-h1:l/DYuOjPLDIrjtBC+B7O9yPSGQSDhElmav8tYQJo8cM=
+h1:b4sp1Eey1DYpNVd6pBSRyLXuzzcfo2ncEcX5wH/eWw0=
 20240923095223_create_bots.sql h1:b+ptk5RBZ/UlKGp9lfjOmVwsitN804Qsncs4VSdVBbs=
 20240925055750_add_bot_message_adapter_column.sql h1:kC0ahrjuFiHEEqSDaIv531y4QwP5Q1bN19mchJs8Dcs=
+20241008085339_add_enum_anthropic.sql h1:16XtKIn8uwOcIOoZ1M42VVBAXhM0fz+NGgqD2JNrl8E=
+20241010120845_add_slug_field.sql h1:06xE/NwygoisTexf9p0Kb/ZIVZUXipzFSXpJmWTPtdE=

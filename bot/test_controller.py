@@ -11,14 +11,17 @@ class TestBotControllerFetch:
             name="Bot A",
             system_prompt="some system prompt",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="bot-a"  # Added slug
         )
         setup_controller.create_chatbot(create_request)
+        
         create_request = BotCreate(
             name="Bot B",
             system_prompt="alternative system prompt",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="bot-b"  # Added slug
         )
         setup_controller.create_chatbot(create_request)
         
@@ -38,11 +41,12 @@ class TestBotControllerFetch:
             name="Bot Z",
             system_prompt="some very very long Z prompt",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="bot-z"  # Added slug
         )
-        setup_controller.create_chatbot(bot)
-        setup_controller.create_chatbot(bot)
-        setup_controller.create_chatbot(bot)
+        for i in range(3):
+            bot.slug = f"bot-{i}"
+            setup_controller.create_chatbot(bot)
         
         response = setup_controller.fetch_chatbots(0, 2)
         assert len(response) == 2
@@ -54,7 +58,8 @@ class TestBotControllerCreate:
             name="Bot A",
             system_prompt="some system prompt",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="bot-a"  # Added slug
         )
         
         response = setup_controller.create_chatbot(create_request)
@@ -63,13 +68,15 @@ class TestBotControllerCreate:
         bot = setup_controller.service.repository.find_bots(0, 10)
         assert bot[0].name == "Bot A"
         assert bot[0].system_prompt == "some system prompt"
-        
+        assert bot[0].slug == "bot-a"  # Check slug
+
     def test_create_chatbot_name_required(self, setup_controller):
         create_request = BotCreate(
             name="",
             system_prompt="some system prompt",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="bot-a"  # Added slug
         )
         
         with pytest.raises(HTTPException) as exc:
@@ -83,7 +90,8 @@ class TestBotControllerCreate:
             name="Bot A",
             system_prompt="",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="bot-a"  # Added slug
         )
         
         with pytest.raises(HTTPException) as exc:
@@ -97,7 +105,8 @@ class TestBotControllerCreate:
             name="Bot A",
             system_prompt="some system prompt",
             model="Llama2.5",
-            adapter="Slack"
+            adapter="Slack",
+            slug="bot-a"  # Added slug
         )
         
         with pytest.raises(HTTPException) as exc:
@@ -111,7 +120,8 @@ class TestBotControllerCreate:
             name="Bot A",
             system_prompt="some system prompt",
             model="OpenAI",
-            adapter="WeChat"
+            adapter="WeChat",
+            slug="bot-a"  # Added slug
         )
         
         with pytest.raises(HTTPException) as exc:
@@ -127,7 +137,8 @@ class TestBotControllerCreate:
             name="Bot A",
             system_prompt="some system prompt",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="bot-a"  # Added slug
         )
         
         with pytest.raises(HTTPException) as exc:
@@ -142,7 +153,8 @@ class TestBotControllerUpdate:
             name="Old Bot",
             system_prompt="Old prompt",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="old-bot"  # Added slug
         )
         
         setup_controller.create_chatbot(create_request)
@@ -152,7 +164,8 @@ class TestBotControllerUpdate:
             name="Updated Bot",
             system_prompt="Updated prompt",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="updated-bot"  # Added slug
         )
         response = setup_controller.update_chatbot(created_bot[0].id, bot_update_request)
         assert response == {"detail": "Bot updated successfully!"}
@@ -160,6 +173,7 @@ class TestBotControllerUpdate:
         updated_bot = setup_controller.service.repository.find_bots(0, 10)
         assert updated_bot[0].name == "Updated Bot"
         assert updated_bot[0].system_prompt == "Updated prompt"
+        assert updated_bot[0].slug == "updated-bot"  # Check slug
         
     def test_update_chatbot_name_required(self, setup_controller):
         controller = setup_controller
@@ -168,7 +182,8 @@ class TestBotControllerUpdate:
             name="",
             system_prompt="Updated prompt",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="updated-bot"  # Added slug
         )
 
         with pytest.raises(HTTPException) as exc:
@@ -184,7 +199,8 @@ class TestBotControllerUpdate:
             name="Updated Bot",
             system_prompt="",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="updated-bot"  # Added slug
         )
 
         with pytest.raises(HTTPException) as exc:
@@ -200,7 +216,8 @@ class TestBotControllerUpdate:
             name="Updated Bot",
             system_prompt="Updated prompt",
             model="UnsupportedModel",
-            adapter="Slack"
+            adapter="Slack",
+            slug="updated-bot"  # Added slug
         )
 
         with pytest.raises(HTTPException) as exc:
@@ -216,7 +233,8 @@ class TestBotControllerUpdate:
             name="Updated Bot",
             system_prompt="Updated prompt",
             model="OpenAI",
-            adapter="UnsupportedAdapter"
+            adapter="UnsupportedAdapter",
+            slug="updated-bot"  # Added slug
         )
 
         with pytest.raises(HTTPException) as exc:
@@ -232,14 +250,15 @@ class TestBotControllerUpdate:
             name="Updated Bot",
             system_prompt="Updated prompt",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="updated-bot"  # Added slug
         )
 
         with pytest.raises(HTTPException) as exc:
             controller.update_chatbot("some-uuid", bot_update_request)
 
         assert exc.value.status_code == 500
-        
+
     def test_update_chatbot_slug_required(self, setup_controller):
         controller = setup_controller
 
