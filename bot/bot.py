@@ -20,6 +20,9 @@ class UnsupportedModel(Exception):
 class UnsupportedAdapter(Exception):
     pass
 
+class SlugIsRequired(Exception):
+    pass
+
 
 class ModelEngine(str, enum.Enum):
     OPENAI = "OpenAI"

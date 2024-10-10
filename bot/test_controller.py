@@ -239,3 +239,20 @@ class TestBotControllerUpdate:
             controller.update_chatbot("some-uuid", bot_update_request)
 
         assert exc.value.status_code == 500
+        
+    def test_update_chatbot_slug_required(self, setup_controller):
+        controller = setup_controller
+
+        bot_update_request = BotUpdate(
+            name="Bot A",
+            system_prompt="Updated prompt",
+            model="OpenAI",
+            adapter="Slack",
+            slug=""  
+        )
+
+        with pytest.raises(HTTPException) as exc:
+            controller.update_chatbot(uuid4(), bot_update_request)
+        
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "Slug is required"
