@@ -27,6 +27,7 @@ class BotModel(Base):
     adapter = Column(Enum(MessageAdapter, validate_strings=True), nullable=False)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    slug = Column(String(255), unique=True)
 
     def __repr__(self):
         return f"Bot id:{self.id}"
@@ -49,6 +50,10 @@ class BotRepository(ABC):
     def update_bot(self, bot, bot_update: BotUpdate):
         pass
 
+    @abstractmethod
+    def find_bot_by_slug(self, slug):
+        pass
+
 
 class PostgresBotRepository(BotRepository):
     def __init__(self, session: sessionmaker) -> None:
@@ -61,6 +66,13 @@ class PostgresBotRepository(BotRepository):
             for bot in bots:
                 bot.updated_at_relative = relative_time(bot.updated_at)
             return bots
+        
+    def find_bot_by_slug(self, slug):
+        with self.create_session() as session:
+            with self.logger.catch(
+                message=f"Bot with slug:{slug} not found", reraise=True
+            ):
+                return session.query(BotModel).filter(BotModel.slug == slug).first()
 
     def find_bot_by_id(self, bot_id):
         with self.create_session() as session:
@@ -82,10 +94,10 @@ class PostgresBotRepository(BotRepository):
             with self.logger.catch(message="update bot error", reraise=True):
                 session.add(bot)
 
-                bot.name = bot_update.name
-                bot.system_prompt = bot_update.system_prompt
-                bot.model = bot_update.model
-                bot.adapter = bot_update.adapter
+                for field, value in vars(bot_update).items():
+                    if hasattr(bot, field):
+                        setattr(bot, field, value)
+
                 bot.updated_at = datetime.now()
 
                 session.commit()
