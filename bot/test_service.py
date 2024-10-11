@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from fastapi import HTTPException
 import pytest
 
-from .bot import BotCreate, BotNotFound, BotUpdate, NameIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
+from .bot import BotCreate, BotNotFound, BotUpdate, NameIsRequired, SlugIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
 from .service import BotService, BotServiceV1
 from .repository import BotModel, PostgresBotRepository
 from .controller import BotControllerV1
@@ -15,7 +15,8 @@ class TestBotServiceGetBotById:
             name="Test Bot",
             system_prompt="Test prompt",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="test-bot"  # Added slug
         )
         
         setup_service.create_chatbot(create_request)
@@ -29,10 +30,36 @@ class TestBotServiceGetBotById:
         assert found_bot.system_prompt == create_request.system_prompt
         assert found_bot.model == create_request.model
         assert found_bot.adapter == create_request.adapter
+        assert found_bot.slug == create_request.slug  # Check slug
 
     def test_find_bot_by_id_not_found(self, setup_service: BotService):
         bot = setup_service.get_chatbot_by_id(uuid4())
         assert bot == None
+
+class TestBotServiceGetBotBySlug:
+    def test_find_bot_by_slug_success(self, setup_service: BotService):
+        create_request = BotCreate(
+            name="Test Bot",
+            system_prompt="Test prompt",
+            model="OpenAI",
+            adapter="Slack",
+            slug="test-bot"  # Use a specific slug
+        )
+        
+        setup_service.create_chatbot(create_request)
+
+        found_bot = setup_service.get_chatbot_by_slug("test-bot")  # Call the new method
+
+        assert found_bot is not None
+        assert found_bot.name == create_request.name
+        assert found_bot.system_prompt == create_request.system_prompt
+        assert found_bot.model == create_request.model
+        assert found_bot.adapter == create_request.adapter
+        assert found_bot.slug == create_request.slug  # Check slug
+
+    def test_find_bot_by_slug_not_found(self, setup_service: BotService):
+        bot = setup_service.get_chatbot_by_slug("non-existent-slug")
+        assert bot is None
 
 class TestBotServiceUpdate:
     def test_update_chatbot_success(self, setup_service: BotService):
@@ -40,7 +67,8 @@ class TestBotServiceUpdate:
             name="Old Bot",
             system_prompt="Old prompt",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="old-bot"  # Added slug
         )
         
         setup_service.create_chatbot(create_request)
@@ -50,20 +78,23 @@ class TestBotServiceUpdate:
             name="Updated Bot",
             system_prompt="Updated prompt",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="updated-bot"  # Added slug
         )
         setup_service.update_chatbot(bots[0].id, bot_update_request)
 
         updated_bot = setup_service.repository.find_bots(0, 10)
         assert updated_bot[0].name == "Updated Bot"
         assert updated_bot[0].system_prompt == "Updated prompt"
+        assert updated_bot[0].slug == "updated-bot"  # Check slug
         
     def test_update_chatbot_name_required(self, setup_service: BotService):
         bot_update_request = BotUpdate(
             name="",
             system_prompt="Updated prompt",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="updated-bot"  # Added slug
         )
 
         with pytest.raises(NameIsRequired):
@@ -74,7 +105,8 @@ class TestBotServiceUpdate:
             name="Updated Bot",
             system_prompt="",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="updated-bot"  # Added slug
         )
 
         with pytest.raises(SystemPromptIsRequired):
@@ -85,7 +117,8 @@ class TestBotServiceUpdate:
             name="Updated Bot",
             system_prompt="Updated prompt",
             model="UnsupportedModel",
-            adapter="Slack"
+            adapter="Slack",
+            slug="updated-bot"  # Added slug
         )
 
         with pytest.raises(UnsupportedModel):
@@ -96,7 +129,8 @@ class TestBotServiceUpdate:
             name="Updated Bot",
             system_prompt="Updated prompt",
             model="OpenAI",
-            adapter="UnsupportedAdapter"
+            adapter="UnsupportedAdapter",
+            slug="updated-bot"  # Added slug
         )
 
         with pytest.raises(UnsupportedAdapter):
@@ -107,8 +141,21 @@ class TestBotServiceUpdate:
             name="Updated Bot",
             system_prompt="Updated prompt",
             model="OpenAI",
-            adapter="Slack"
+            adapter="Slack",
+            slug="updated-bot"  # Added slug
         )
 
         with pytest.raises(BotNotFound):
+            setup_service.update_chatbot(uuid4(), bot_update_request)
+
+    def test_update_chatbot_slug_required(self, setup_service: BotService):
+        bot_update_request = BotUpdate(
+            name="Updated Bot",
+            system_prompt="Halo",
+            model="OpenAI",
+            adapter="Slack",
+            slug =""
+        )
+
+        with pytest.raises(SlugIsRequired):
             setup_service.update_chatbot(uuid4(), bot_update_request)

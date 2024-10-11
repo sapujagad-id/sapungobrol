@@ -3,8 +3,9 @@ function validateForm() {
     const systemPrompt = document.getElementById('system_prompt').value;
     const model = document.getElementById('model').value;
     const adapter = document.getElementById('adapter').value;
+    const slug = document.getElementById('slug').value
 
-    if (name === "" || systemPrompt === "" || model === "" || adapter === "") {
+    if (name === "" || systemPrompt === "" || model === "" || adapter === "" || slug === "") {
         return false;
     }
 
@@ -18,7 +19,7 @@ function isValidInput(input) {
 }
 
 async function submitForm(event, bot_id = null) {
-    event.preventDefault();  // Prevent the form from submitting the old way (e.g., to /edit/{bot_id})
+    event.preventDefault();  
 
     // Validate form inputs
     if (!validateForm()) {
@@ -26,19 +27,17 @@ async function submitForm(event, bot_id = null) {
         return;
     }
 
-    // Collect form data
     const formData = {
         name: document.getElementById('name').value,
         system_prompt: document.getElementById('system_prompt').value,
         model: document.getElementById('model').value,
-        adapter: document.getElementById('adapter').value
+        adapter: document.getElementById('adapter').value,
+        slug: document.getElementById('slug').value
     };
 
-    // Determine the method and URL
     let method = bot_id ? 'PATCH' : 'POST';  // PATCH if bot_id exists, POST otherwise
     let url = bot_id ? `/api/bots/${bot_id}` : '/api/bots';  // Use bot_id if editing, otherwise create new
 
-    // Send the request to the correct API endpoint
     const response = await fetch(url, {
         method: method,  
         headers: {
@@ -49,7 +48,6 @@ async function submitForm(event, bot_id = null) {
 
     const result = await response.json();
 
-    // Handle response
     if (response.ok) {
         alert(bot_id ? 'Chatbot updated successfully!' : 'Chatbot created successfully!');
         window.location.href = '/';

@@ -1,4 +1,4 @@
-CREATE TYPE model_engines AS ENUM ('OPENAI');
+CREATE TYPE model_engines AS ENUM ('OPENAI', 'ANTHROPIC');
 
 CREATE TYPE message_adapters AS ENUM('SLACK');
 
@@ -9,7 +9,8 @@ CREATE TABLE bots (
     model model_engines NOT NULL,
     adapter message_adapters NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    slug VARCHAR(255)
 );
 
 CREATE TYPE login_methods AS ENUM('GOOGLE');

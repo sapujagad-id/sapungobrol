@@ -22,6 +22,10 @@ class BotService(ABC):
     def get_chatbot_by_id(self, bot_id: str):
         pass
 
+    @abstractmethod
+    def get_chatbot_by_slug(self, slug: str):
+        pass
+
 
 class BotServiceV1(BotService):
     def __init__(self, repository: BotRepository) -> None:
@@ -46,4 +50,8 @@ class BotServiceV1(BotService):
 
     def get_chatbot_by_id(self, bot_id):
         bot = self.repository.find_bot_by_id(bot_id)
+        return bot if bot else None
+    
+    def get_chatbot_by_slug(self, slug):
+        bot = self.repository.find_bot_by_slug(slug)
         return bot if bot else None
