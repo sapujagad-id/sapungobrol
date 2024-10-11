@@ -1,4 +1,5 @@
 import sqlalchemy
+import threading
 
 from fastapi import Request, Response, HTTPException
 from loguru import logger
@@ -6,7 +7,7 @@ from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 from slack_sdk.errors import SlackApiError
 from bot.service import BotService
-from chat import ChatEngineSelector
+from chat import ChatEngineSelector, ChatEngine
 from chat.exceptions import ChatResponseGenerationError
 
 
@@ -27,6 +28,24 @@ class SlackAdapter:
     # Bolt
     async def handle_events(self, req: Request):  # pragma: no cover
         return await self.handler.handle(req)
+
+    def send_generated_response(
+        self, channel: str, ts: str, engine: ChatEngine, question: str
+    ):
+        try:
+            self.logger.info("generating response")
+
+            chatbot_response = engine.generate_response(query=question)
+
+            self.logger.info("sending generated response")
+
+            self.app.client.chat_update(channel=channel, ts=ts, text=chatbot_response)
+
+        except ChatResponseGenerationError as e:  # pragma: no cover
+            self.logger.error(e)
+            return {
+                "text": "Something went wrong when trying to generate your response."
+            }
 
     async def ask(self, request: Request):
         data = await request.form()
@@ -64,11 +83,17 @@ class SlackAdapter:
 
             bot_engine = self.engine_selector.select_engine(engine_type=chatbot.model)
 
-            chatbot_response = bot_engine.generate_response(query=question)
-
-            self.app.client.chat_update(
-                channel=channel_id, ts=loading_message["ts"], text=chatbot_response
+            send_response_thread = threading.Thread(
+                target=self.send_generated_response,
+                kwargs={
+                    "channel": channel_id,
+                    "ts": loading_message["ts"],
+                    "engine": bot_engine,
+                    "question": question,
+                },
             )
+
+            send_response_thread.start()
 
             return Response(status_code=200)
 
@@ -85,12 +110,6 @@ class SlackAdapter:
                     )
 
             raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")
-
-        except ChatResponseGenerationError as e:  # pragma: no cover
-            self.logger.error(e)
-            return {
-                "text": "Something went wrong when trying to generate your response."
-            }
 
     async def list_bots(self, request: Request):
         data = await request.form()
