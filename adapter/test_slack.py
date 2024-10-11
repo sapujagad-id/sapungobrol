@@ -112,9 +112,10 @@ class TestSlackAdapter:
             "C12345678", "1234567890.654321", mock_chatbot, "How are you?"
         )
 
-        assert (
-            response["text"]
-            == "Something went wrong when trying to generate your response."
+        mock_app.client.chat_update.assert_called_once_with(
+            channel="C12345678",
+            ts="1234567890.654321",
+            text="Something went wrong when trying to generate your response.",
         )
 
     @pytest.mark.asyncio
