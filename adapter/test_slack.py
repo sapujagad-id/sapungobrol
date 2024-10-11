@@ -1,5 +1,5 @@
 import pytest
-import sqlalchemy
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import Request, HTTPException
 from .slack import SlackAdapter
@@ -9,12 +9,11 @@ from uuid import uuid4
 from bot.bot import BotResponse, MessageAdapter, ModelEngine
 from bot.service import BotService
 from bot.helper import relative_time
-from chat import ChatEngineSelector
-from chat.openai_chat import ChatOpenAI
+from chat import ChatEngineSelector, ChatOpenAI
+from chat.exceptions import ChatResponseGenerationError
 
 
 class TestSlackAdapter:
-
     @pytest.fixture
     def mock_slack_adapter(self):
         with patch("slack_bolt.App") as MockApp:
@@ -79,6 +78,49 @@ class TestSlackAdapter:
         return mock_request
 
     @pytest.mark.asyncio
+    async def test_send_generated_response(self, mock_slack_adapter):
+        mock_app, mock_chatbot, _, slack_adapter = mock_slack_adapter
+
+        # Mock Slack API calls
+        mock_app.client.chat_postMessage = MagicMock(
+            side_effect=[{"ts": "1234567890.123456"}, {"ts": "1234567890.654321"}]
+        )
+        mock_chatbot.generate_response = MagicMock(
+            return_value="Chatbot Reply: I'm fine, thank you!"
+        )
+
+        slack_adapter.send_generated_response(
+            "C12345678", "1234567890.654321", mock_chatbot, "How are you?"
+        )
+        mock_app.client.chat_update.assert_called_once_with(
+            channel="C12345678",
+            ts="1234567890.654321",
+            text="Chatbot Reply: I'm fine, thank you!",
+        )
+
+    @pytest.mark.asyncio
+    async def test_send_generated_response_generation_error(self, mock_slack_adapter):
+        mock_app, mock_chatbot, _, slack_adapter = mock_slack_adapter
+
+        # Mock Slack API calls
+        mock_app.client.chat_postMessage = MagicMock(
+            side_effect=[{"ts": "1234567890.123456"}, {"ts": "1234567890.654321"}]
+        )
+        mock_chatbot.generate_response = MagicMock(
+            side_effect=ChatResponseGenerationError
+        )
+
+        response = slack_adapter.send_generated_response(
+            "C12345678", "1234567890.654321", mock_chatbot, "How are you?"
+        )
+
+        mock_app.client.chat_update.assert_called_once_with(
+            channel="C12345678",
+            ts="1234567890.654321",
+            text="Something went wrong when trying to generate your response.",
+        )
+
+    @pytest.mark.asyncio
     async def test_ask_method(self, mock_slack_adapter, mock_request):
         mock_app, mock_chatbot, _, slack_adapter = mock_slack_adapter
 
@@ -96,11 +138,6 @@ class TestSlackAdapter:
         assert mock_app.client.chat_postMessage.call_count == 2
         mock_app.client.chat_postMessage.assert_any_call(
             channel="C12345678", text='<@U12345678> asked: \n\n"How are you?" '
-        )
-        mock_app.client.chat_update.assert_called_once_with(
-            channel="C12345678",
-            ts="1234567890.654321",
-            text="Chatbot Reply: I'm fine, thank you!",
         )
         assert response.status_code == 200
 
@@ -186,6 +223,8 @@ class TestSlackAdapter:
 
         await slack_adapter.ask(mock_request)
 
+        time.sleep(1)
+
         mock_chatbot.generate_response.assert_called_once_with(
             query='<@U12345678> asked: \n\n"How is the weather?" '
         )
@@ -231,6 +270,8 @@ class TestSlackAdapter:
         )
 
         await slack_adapter.ask(mock_request)
+
+        time.sleep(1)
 
         mock_chatbot.generate_response.assert_called_once_with(
             query='<@U12345678> asked: \n\n"Explain quantum computing" '
