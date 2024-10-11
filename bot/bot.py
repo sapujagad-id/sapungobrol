@@ -23,6 +23,7 @@ class UnsupportedAdapter(Exception):
 
 class ModelEngine(str, enum.Enum):
     OPENAI = "OpenAI"
+    ANTHROPIC = "Anthropic"
 
 
 class MessageAdapter(str, enum.Enum):

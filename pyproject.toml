@@ -25,4 +25,8 @@ env = [
     "DATABASE_URL=postgresql://postgres:postgres@localhost:5433",
     "SLACK_BOT_TOKEN=xoxb-slack-bot-token",
     "SLACK_SIGNING_SECRET=slack-signing-secret",
+    "GOOGLE_CLIENT_ID=123123213-xxxxxxxc.apps.googleusercontent.com",
+    "GOOGLE_CLIENT_SECRET=GOXXX=xxx",
+    "GOOGLE_REDIRECT_URI=https://sapungobrol.xxxx.com/api/auth/callback/google",
+    "BASE_URL=https://sapungobrol.xxxx.com",
 ]
