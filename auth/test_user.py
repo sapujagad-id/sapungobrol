@@ -73,15 +73,14 @@ class TestUserValidation:
             picture="https://example.com/profile.jpg",
             email="manusia@gmail.com",
             email_verified=True,
-            login_method="INVALID_METHOD",  # Invalid login method
+            login_method="INVALID_METHOD",
             created_at=datetime.now()
           )
-          request.validate()
 
     def test_empty_id(self):
         with pytest.raises(ValidationError):
           request = User(
-              id=None,  # Invalid UUID
+              id=None,
               sub="some_sub",
               name="Seorang",
               picture="https://example.com/profile.jpg",
@@ -90,7 +89,6 @@ class TestUserValidation:
               login_method=LoginMethod.GOOGLE,
               created_at=datetime.now()
           )          
-          request.validate()
 
     def test_valid_user(self):
         request = User(
@@ -103,5 +101,5 @@ class TestUserValidation:
             login_method=LoginMethod.GOOGLE,
             created_at=datetime.now()
         )
-        # Should not raise any exceptions
+        # Should not raise any exception
         request.validate()
