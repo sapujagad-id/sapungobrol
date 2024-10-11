@@ -315,3 +315,77 @@ class TestSlackAdapter:
         assert excinfo.value.status_code == 400
         assert "Slack API Error" in excinfo.value.detail
         assert mock_app.client.chat_postMessage.call_count == 1
+    
+    def test_event_message_without_thread(self, mock_slack_adapter):
+        _, _, _, slack_adapter = mock_slack_adapter
+        
+        mock_say = MagicMock()
+
+        event = {
+            "type": "message",
+            "channel": "C123ABC456",
+            "user": "U123ABC456",
+            "text": "Hello world",
+            "ts": "1355517523.000005"
+        }
+
+        slack_adapter.event_message_replied = MagicMock()
+
+        slack_adapter.event_message(event, mock_say)
+
+        slack_adapter.event_message_replied.assert_not_called()
+        
+    def test_event_message_with_thread_wrong_user(self, mock_slack_adapter):
+        _, _, _, slack_adapter = mock_slack_adapter
+        
+        mock_say = MagicMock()
+
+        event = {"thread_ts": "1355517523.000005", "channel": "C123ABC456"}
+
+        slack_adapter.app.client.conversations_history.return_value = {
+            "messages": [
+                {"user": "U123NONBOT", "text": '<@U07N64EUJ8Y> asked:\n\n"hello"'}
+            ]
+        }
+
+        slack_adapter.bot_replied = MagicMock()
+
+        slack_adapter.event_message(event, mock_say)
+
+        slack_adapter.bot_replied.assert_not_called()
+
+    def test_event_message_with_thread_wrong_parent_message(self, mock_slack_adapter):
+        _, _, _, slack_adapter = mock_slack_adapter
+        
+        mock_say = MagicMock()
+
+        event = {"thread_ts": "1355517523.000005", "channel": "C123ABC456"}
+
+        slack_adapter.app.client.conversations_history.return_value = {
+            "messages": [
+                {"user": slack_adapter.app_user_id, "text": "This is a random message"}
+            ]
+        }
+
+        slack_adapter.bot_replied = MagicMock()
+
+        slack_adapter.event_message(event, mock_say)
+
+        slack_adapter.bot_replied.assert_not_called()
+
+    def test_event_message_with_thread_bot_replied(self, mock_slack_adapter):
+        _, _, _, slack_adapter = mock_slack_adapter
+        
+        mock_say = MagicMock()
+
+        event = {"thread_ts": "1355517523.000005", "channel": "C123ABC456"}
+
+        slack_adapter.app.client.conversations_history.return_value = {
+            "messages": [
+                {"user": slack_adapter.app_user_id, "text": '<@U07N64EUJ8Y> asked:\n\n"hello"'}
+            ]
+        }
+
+        slack_adapter.event_message(event, mock_say)
+
+        mock_say.assert_called_once_with("To be implemented", thread_ts="1355517523.000005")

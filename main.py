@@ -38,6 +38,8 @@ if __name__ == "__main__":
     engine_selector = ChatEngineSelector(openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key)
 
     slack_adapter = SlackAdapter(slack_app, engine_selector, bot_service)
+    
+    slack_app.event("message")(slack_adapter.event_message)
 
     app = FastAPI()
 
