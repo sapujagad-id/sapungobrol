@@ -66,29 +66,29 @@ class TestUserValidation:
 
     def test_invalid_login_method(self):
         with pytest.raises(ValidationError):
-          request = User(
-            id=uuid4(),
-            sub="some_sub",
-            name="Seorang",
-            picture="https://example.com/profile.jpg",
-            email="manusia@gmail.com",
-            email_verified=True,
-            login_method="INVALID_METHOD",
-            created_at=datetime.now()
-          )
+            User(
+                id=uuid4(),
+                sub="some_sub",
+                name="Seorang",
+                picture="https://example.com/profile.jpg",
+                email="manusia@gmail.com",
+                email_verified=True,
+                login_method="INVALID_METHOD",
+                created_at=datetime.now()
+            )
 
     def test_empty_id(self):
         with pytest.raises(ValidationError):
-          request = User(
-              id=None,
-              sub="some_sub",
-              name="Seorang",
-              picture="https://example.com/profile.jpg",
-              email="manusia@gmail.com",
-              email_verified=True,
-              login_method=LoginMethod.GOOGLE,
-              created_at=datetime.now()
-          )          
+            User(
+                id=None,
+                sub="some_sub",
+                name="Seorang",
+                picture="https://example.com/profile.jpg",
+                email="manusia@gmail.com",
+                email_verified=True,
+                login_method=LoginMethod.GOOGLE,
+                created_at=datetime.now()
+            )          
 
     def test_valid_user(self):
         request = User(
