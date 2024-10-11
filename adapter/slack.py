@@ -43,9 +43,11 @@ class SlackAdapter:
 
         except ChatResponseGenerationError as e:  # pragma: no cover
             self.logger.error(e)
-            return {
-                "text": "Something went wrong when trying to generate your response."
-            }
+            self.app.client.chat_update(
+                channel=channel,
+                ts=ts,
+                text="Something went wrong when trying to generate your response.",
+            )
 
     async def ask(self, request: Request):
         data = await request.form()
