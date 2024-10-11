@@ -147,6 +147,22 @@ class TestBotControllerCreate:
         assert exc.value.status_code == 500
         assert exc.value.detail == "Something went wrong"
 
+    def test_create_chatbot_slug_required(self, setup_controller):
+        create_request = BotCreate(
+            name="Bot A",
+            system_prompt="some system prompt",
+            model="OpenAI",
+            adapter="Slack",
+            slug=""  
+        )
+        
+        with pytest.raises(HTTPException) as exc:
+            setup_controller.create_chatbot(create_request)
+        
+        
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "Slug is required"
+
 class TestBotControllerUpdate:
     def test_update_chatbot_success(self, setup_controller):
         create_request = BotCreate(
