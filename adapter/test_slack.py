@@ -110,7 +110,7 @@ class TestSlackAdapter:
             side_effect=ChatResponseGenerationError
         )
 
-        response = slack_adapter.send_generated_response(
+        slack_adapter.send_generated_response(
             "C12345678", "1234567890.654321", mock_chatbot, "How are you?"
         )
 
