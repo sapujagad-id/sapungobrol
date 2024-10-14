@@ -39,7 +39,7 @@ class BotRepository(ABC):
         pass
 
     @abstractmethod
-    def find_bot_by_id(self, bot_id):
+    def find_bot_by_id(self, bot_id: str) -> BotModel:
         pass
 
     @abstractmethod
