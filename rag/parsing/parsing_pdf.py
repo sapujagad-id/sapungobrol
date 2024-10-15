@@ -1,8 +1,10 @@
+from processor import FileProcessor
 from llama_index.readers.file.docs.base import PDFReader
 from pathlib import Path
 from llama_index.core.node_parser import SentenceSplitter
 
-class PDFProcessor:
+class PDFProcessor(FileProcessor):
+    
     def __init__(self, document_path: str, chunk_size: int = 200, chunk_overlap: int = 0):
         self.document_path = Path(document_path)
         self.chunk_size = chunk_size
@@ -20,6 +22,7 @@ class PDFProcessor:
         documents = self.load_document()
         return self.get_nodes(documents)
 
-if __name__=="__main__":
-    processor = PDFProcessor("data/ppl_testing_pdf.pdf")
-    nodes = processor.process()
+# if __name__=="__main__":
+#     processor = PDFProcessor("data/ppl_testing_pdf.pdf")
+#     nodes = processor.process()
+#     print(len(nodes))
