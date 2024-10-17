@@ -13,6 +13,8 @@ from chat.exceptions import ChatResponseGenerationError
 
 
 class SlackAdapter:
+    MISSING_CHATBOT_ERROR = "Whoops. Can't find the chatbot you're looking for."
+    
     def __init__(
         self,
         app: App,
@@ -72,7 +74,7 @@ class SlackAdapter:
             chatbot = self.bot_service.get_chatbot_by_slug(slug=bot_slug)
 
             if chatbot is None:
-                return {"text": "Whoops. Can't find the chatbot you're looking for."}
+                return {"text": self.MISSING_CHATBOT_ERROR}
 
             response = self.app.client.chat_postMessage(
                 channel=channel_id,
@@ -114,7 +116,7 @@ class SlackAdapter:
             return Response(status_code=200)
 
         except sqlalchemy.exc.DataError as e:  # pragma: no cover
-            return {"text": "Whoops. Can't find the chatbot you're looking for."}
+            return {"text": self.MISSING_CHATBOT_ERROR}
 
         except SlackApiError as e:
             if "thread_ts" in locals():
@@ -173,6 +175,6 @@ class SlackAdapter:
         chatbot = self.bot_service.get_chatbot_by_slug(slug=bot_slug)
         
         if chatbot is None:
-            return {"text": "Whoops. Can't find the chatbot you're looking for."}
+            return {"text": self.MISSING_CHATBOT_ERROR}
                 
         return asyncio.run(self.process_chatbot_request(chatbot, question, channel_id, thread_ts))
