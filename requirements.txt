@@ -70,3 +70,4 @@ websockets==13.0.1
 yarl==1.13.1
 anthropic==0.35.0
 llama-index==0.11.18
+pinecone==5.3.1
