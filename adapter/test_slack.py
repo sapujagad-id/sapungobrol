@@ -1,7 +1,7 @@
 import pytest
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
-from fastapi import Request, HTTPException
+from fastapi import Request, HTTPException, Response
 from .slack import SlackAdapter
 from slack_sdk.errors import SlackApiError
 from datetime import datetime
@@ -73,6 +73,12 @@ class TestSlackAdapter:
                 "channel_id": "C12345678",
                 "user_id": "U12345678",
                 "text": text,
+                "metadata" : {
+                    "event_type": "bot-slug",
+                    "event_payload": {
+                        "bot_slug": "12"
+                    }
+                }
             }
         )
         return mock_request
@@ -81,12 +87,11 @@ class TestSlackAdapter:
     async def test_send_generated_response(self, mock_slack_adapter):
         mock_app, mock_chatbot, _, slack_adapter = mock_slack_adapter
 
-        # Mock Slack API calls
         mock_app.client.chat_postMessage = MagicMock(
             side_effect=[{"ts": "1234567890.123456"}, {"ts": "1234567890.654321"}]
         )
         mock_chatbot.generate_response = MagicMock(
-            return_value="Chatbot Reply: I'm fine, thank you!"
+            return_value="I'm fine, thank you!"
         )
 
         slack_adapter.send_generated_response(
@@ -95,7 +100,7 @@ class TestSlackAdapter:
         mock_app.client.chat_update.assert_called_once_with(
             channel="C12345678",
             ts="1234567890.654321",
-            text="Chatbot Reply: I'm fine, thank you!",
+            text="I'm fine, thank you!",
         )
 
     @pytest.mark.asyncio
@@ -124,22 +129,68 @@ class TestSlackAdapter:
     async def test_ask_method(self, mock_slack_adapter, mock_request):
         mock_app, mock_chatbot, _, slack_adapter = mock_slack_adapter
 
-        # Mock Slack API calls
         mock_app.client.chat_postMessage = MagicMock(
-            side_effect=[{"ts": "1234567890.123456"}, {"ts": "1234567890.654321"}]
+            return_value={"ts": "1234567890.123456"}
         )
+
         mock_chatbot.generate_response = MagicMock(
             return_value="Chatbot Reply: I'm fine, thank you!"
         )
+        
+        slack_adapter.process_chatbot_request = AsyncMock(
+            return_value=Response(status_code=200)
+        )
 
         mock_request = await self.common_mock_request(mock_request, "12 How are you?")
+        
         response = await slack_adapter.ask(mock_request)
 
-        assert mock_app.client.chat_postMessage.call_count == 2
-        mock_app.client.chat_postMessage.assert_any_call(
-            channel="C12345678", text='<@U12345678> asked: \n\n"How are you?" '
+        mock_app.client.chat_postMessage.assert_called_once_with(
+            channel="C12345678",
+            text='<@U12345678> asked: \n\n"How are you?" ',
+            metadata={
+                "event_type": "bot-slug",
+                "event_payload": {
+                    "bot_slug": "12"
+                }
+            }
         )
         assert response.status_code == 200
+        
+    @pytest.mark.asyncio
+    async def test_ask_method_slack_api_error(self, mock_slack_adapter, mock_request):
+        mock_app, mock_chatbot, _, slack_adapter = mock_slack_adapter
+
+        mock_app.client.chat_postMessage = MagicMock(
+            side_effect=SlackApiError("Error posting message", response={}),
+        )
+
+        mock_chatbot.generate_response = MagicMock(
+            return_value="Chatbot Reply: I'm fine, thank you!"
+        )
+        
+        slack_adapter.process_chatbot_request = AsyncMock(
+            return_value=Response(status_code=200)
+        )
+
+        mock_request = await self.common_mock_request(mock_request, "12 How are you?")
+        
+        with pytest.raises(HTTPException) as exc_info:
+            await slack_adapter.ask(mock_request)
+
+        assert exc_info.value.status_code == 400
+        assert "Slack API Error" in str(exc_info.value.detail)
+
+        mock_app.client.chat_postMessage.assert_called_once_with(
+            channel="C12345678",
+            text='<@U12345678> asked: \n\n"How are you?" ',
+            metadata={
+                "event_type": "bot-slug",
+                "event_payload": {
+                    "bot_slug": "12"
+                }
+            }
+        )
 
     @pytest.mark.asyncio
     async def test_missing_parameter_incomplete_text(
@@ -230,7 +281,14 @@ class TestSlackAdapter:
         )
         assert mock_app.client.chat_postMessage.call_count == 2
         mock_app.client.chat_postMessage.assert_any_call(
-            channel="C12345678", text='<@U12345678> asked: \n\n"How is the weather?" '
+            channel="C12345678", 
+            text='<@U12345678> asked: \n\n"How is the weather?" ',
+            metadata={
+                "event_type": "bot-slug",
+                "event_payload": {
+                    "bot_slug": "12"
+                }
+            }
         )
         mock_app.client.chat_update.assert_called_once_with(
             channel="C12345678", ts="1234567890.123456", text="Chatbot Response: Hello!"
@@ -261,6 +319,7 @@ class TestSlackAdapter:
         mock_app.client.chat_postMessage = MagicMock(
             return_value={"ts": "1234567890.123456"}
         )
+        
         mock_chatbot.generate_response = MagicMock(
             return_value="I'm not sure how to answer that."
         )
@@ -280,6 +339,12 @@ class TestSlackAdapter:
         mock_app.client.chat_postMessage.assert_any_call(
             channel="C12345678",
             text='<@U12345678> asked: \n\n"Explain quantum computing" ',
+            metadata={
+                "event_type": "bot-slug",
+                "event_payload": {
+                    "bot_slug": "12"
+                }
+            }
         )
         mock_app.client.chat_update.assert_called_once_with(
             channel="C12345678",
@@ -304,7 +369,7 @@ class TestSlackAdapter:
         )
 
         res = await slack_adapter.ask(req)
-        assert res["text"] == "Whoops. Can't found the chatbot you're looking for."
+        assert res["text"] == "Whoops. Can't find the chatbot you're looking for."
 
     @pytest.mark.asyncio
     async def test_list_bots_method(
@@ -360,8 +425,6 @@ class TestSlackAdapter:
     def test_event_message_without_thread(self, mock_slack_adapter):
         _, _, _, slack_adapter = mock_slack_adapter
         
-        mock_say = MagicMock()
-
         event = {
             "type": "message",
             "channel": "C123ABC456",
@@ -372,15 +435,13 @@ class TestSlackAdapter:
 
         slack_adapter.event_message_replied = MagicMock()
 
-        slack_adapter.event_message(event, mock_say)
+        slack_adapter.event_message(event)
 
         slack_adapter.event_message_replied.assert_not_called()
         
     def test_event_message_with_thread_wrong_user(self, mock_slack_adapter):
         _, _, _, slack_adapter = mock_slack_adapter
         
-        mock_say = MagicMock()
-
         event = {"thread_ts": "1355517523.000005", "channel": "C123ABC456"}
 
         slack_adapter.app.client.conversations_history.return_value = {
@@ -391,15 +452,13 @@ class TestSlackAdapter:
 
         slack_adapter.bot_replied = MagicMock()
 
-        slack_adapter.event_message(event, mock_say)
+        slack_adapter.event_message(event)
 
         slack_adapter.bot_replied.assert_not_called()
 
     def test_event_message_with_thread_wrong_parent_message(self, mock_slack_adapter):
         _, _, _, slack_adapter = mock_slack_adapter
         
-        mock_say = MagicMock()
-
         event = {"thread_ts": "1355517523.000005", "channel": "C123ABC456"}
 
         slack_adapter.app.client.conversations_history.return_value = {
@@ -410,23 +469,103 @@ class TestSlackAdapter:
 
         slack_adapter.bot_replied = MagicMock()
 
-        slack_adapter.event_message(event, mock_say)
+        slack_adapter.event_message(event)
 
         slack_adapter.bot_replied.assert_not_called()
 
     def test_event_message_with_thread_bot_replied(self, mock_slack_adapter):
-        _, _, _, slack_adapter = mock_slack_adapter
+        mock_app, _, _, slack_adapter = mock_slack_adapter
         
-        mock_say = MagicMock()
-
-        event = {"thread_ts": "1355517523.000005", "channel": "C123ABC456"}
-
-        slack_adapter.app.client.conversations_history.return_value = {
+        event = {"thread_ts": "1355517523.000005", 
+                 "channel": "C123ABC456",
+                 "text" : "How are you?"}
+        
+        parent_messages = {
             "messages": [
-                {"user": slack_adapter.app_user_id, "text": '<@U07N64EUJ8Y> asked:\n\n"hello"'}
+                {
+                    "user": slack_adapter.app_user_id, 
+                    "text": '<@U07N64EUJ8Y> asked:\n\n"hello"',
+                    "metadata" : {
+                        "event_payload" : {
+                            "bot_slug" : 12
+                        }
+                    }
+                }
+            ]
+        }
+        
+        slack_adapter.bot_replied = MagicMock()
+
+        slack_adapter.app.client.conversations_history.return_value = parent_messages
+        
+        slack_adapter.event_message_replied(event)
+        
+        mock_app.client.conversations_history.assert_called_once_with(
+            channel="C123ABC456",
+            inclusive=True,
+            oldest="1355517523.000005",
+            limit=1,
+            include_all_metadata=True
+        )
+        
+        slack_adapter.bot_replied.assert_called_once_with(event, mock_app.client.conversations_history.return_value)
+
+    def test_bot_replied(self, mock_slack_adapter):
+        _, mock_chatbot, _, slack_adapter = mock_slack_adapter
+        
+        event = {"thread_ts": "1355517523.000005", 
+                 "channel": "C123ABC456",
+                 "text" : "How are you?"}
+        
+        parent_messages = {
+            "messages": [
+                {
+                    "user": slack_adapter.app_user_id, 
+                    "text": '<@U07N64EUJ8Y> asked:\n\n"hello"',
+                    "metadata" : {
+                        "event_payload" : {
+                            "bot_slug" : "test-bot"
+                        }
+                    }
+                }
             ]
         }
 
-        slack_adapter.event_message(event, mock_say)
+        slack_adapter.bot_service.get_chatbot_by_slug = MagicMock(return_value=mock_chatbot)
 
-        mock_say.assert_called_once_with("To be implemented", thread_ts="1355517523.000005")
+        slack_adapter.process_chatbot_request = AsyncMock(return_value={"status_code": 200})
+
+        response = slack_adapter.bot_replied(event, parent_messages)
+
+        slack_adapter.bot_service.get_chatbot_by_slug.assert_called_once_with(slug="test-bot")
+        slack_adapter.process_chatbot_request.assert_called_once_with(
+            mock_chatbot, "How are you?", "C123ABC456", "1355517523.000005"
+        )
+        assert response == {"status_code": 200}
+        
+    def test_bot_replied_chatbot_not_found(self, mock_slack_adapter):
+        _, _, _, slack_adapter = mock_slack_adapter
+
+        slack_adapter.bot_service.get_chatbot_by_slug = MagicMock(return_value=None)
+
+        event = {"thread_ts": "1355517523.000005", 
+                 "channel": "C123ABC456",
+                 "text" : "How are you?"}
+        parent_messages = {
+            "messages": [
+                {
+                    "user": slack_adapter.app_user_id, 
+                    "text": '<@U07N64EUJ8Y> asked:\n\n"hello"',
+                    "metadata" : {
+                        "event_payload" : {
+                            "bot_slug" : "non-existent-bot"
+                        }
+                    }
+                }
+            ]
+        }
+        response = slack_adapter.bot_replied(event, parent_messages)
+
+        slack_adapter.bot_service.get_chatbot_by_slug.assert_called_once_with(slug="non-existent-bot")
+        assert response == {"text": "Whoops. Can't find the chatbot you're looking for."}
+

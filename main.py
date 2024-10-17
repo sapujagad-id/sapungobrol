@@ -55,6 +55,9 @@ if __name__ == "__main__":
 
     slack_adapter = SlackAdapter(slack_app, engine_selector, bot_service)
     
+    async def handle_event_message(event):
+        await slack_adapter.event_message(event)
+
     slack_app.event("message")(slack_adapter.event_message)
 
     app = FastAPI()
