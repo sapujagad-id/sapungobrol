@@ -32,7 +32,6 @@ class PineconeHandler:
                   region=self.region
                 )
             )
-            print(f"Created new index '{self.index_name}'.")
         
         return pc.Index(self.index_name)
 
