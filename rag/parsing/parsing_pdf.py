@@ -21,8 +21,3 @@ class PDFProcessor(FileProcessor):
     def process(self):
         documents = self.load_document()
         return self.get_nodes(documents)
-
-# if __name__=="__main__":
-#     processor = PDFProcessor("data/ppl_testing_pdf.pdf")
-#     nodes = processor.process()
-#     print(len(nodes))
