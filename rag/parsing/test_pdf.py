@@ -1,12 +1,12 @@
 import pytest
 from unittest.mock import MagicMock
 from pathlib import Path
-from parsing_pdf import PDFProcessor
+from rag.parsing.parsing_pdf import PDFProcessor
 
 @pytest.fixture
 def mock_pdf_reader(mocker):
     """Mock the PDFReader."""
-    mock_pdf_reader = mocker.patch('parsing_pdf.PDFReader')
+    mock_pdf_reader = mocker.patch('rag.parsing.parsing_pdf.PDFReader')
     instance = mock_pdf_reader.return_value
     instance.load_data.return_value = ["Mocked Document Content"]
     return instance
@@ -14,7 +14,7 @@ def mock_pdf_reader(mocker):
 @pytest.fixture
 def mock_sentence_splitter(mocker):
     """Mock the SentenceSplitter."""
-    mock_sentence_splitter = mocker.patch('parsing_pdf.SentenceSplitter')
+    mock_sentence_splitter = mocker.patch('rag.parsing.parsing_pdf.SentenceSplitter')
     instance = mock_sentence_splitter.return_value
     instance.get_nodes_from_documents.return_value = ["Mocked Node"]
     return instance
