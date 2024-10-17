@@ -58,6 +58,8 @@ def test_pinecone_node_storage_empty_nodes(mock_pinecone_handler, mock_openai_em
 
 def test_pinecone_node_storage_openai_failure(mock_pinecone_handler, mocker):
     """Test OpenAI embedding failure."""
+    mocker.patch('openai.embeddings.create', side_effect=Exception("OpenAI error"))
+
     storage = PineconeNodeStorage(pinecone_handler=mock_pinecone_handler)
     nodes = ["This will fail"]
 
