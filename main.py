@@ -85,6 +85,13 @@ if __name__ == "__main__":
         status_code=status.HTTP_200_OK,
     )
     app.add_api_route(
+        "/api/bots/slug",
+        lambda q: bot_controller.check_slug_exist(q),
+        methods=["GET"],
+        status_code=status.HTTP_200_OK,
+        name="Check Is Slug Exist"
+    )
+    app.add_api_route(
         "/api/slack/events", endpoint=slack_adapter.handle_events, methods=["POST"]
     )
     app.add_api_route("/api/slack/ask", endpoint=slack_adapter.ask, methods=["POST"])

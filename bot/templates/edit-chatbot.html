@@ -9,17 +9,8 @@
 </head>
 <body class="bg-gray-100">
     <!-- Navbar -->
-    <nav class="bg-white shadow-sm" role="navigation" aria-label="site menu">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center">
-                <img src="/assets/broom-logo.png" alt="Broom.id Logo" class="h-4 mx-4">
-                <h1 class="text-lg font-semibold">Edit Chatbot</h1>
-            </div>
-            <div class="flex items-center">
-                <img src="avatar.png" alt="Avatar" class="h-8 w-8 rounded-full">
-            </div>
-        </div>
-    </nav>
+    {% set title = 'Edit Chatbot' %}
+    {% include 'navbar.html'  %}
 
     <main class="container mx-auto mt-8 px-4">
         <form id="chatbot-form" method="POST" class="bg-white shadow-md rounded-lg p-6" onsubmit="submitForm(event, '{{ bot.id if bot.id else null }}')">
@@ -35,7 +26,13 @@
 
             <div class="mb-4">
                 <label for="slug" class="block text-gray-700 text-sm font-bold mb-2">Slug</label>
-                <textarea id="slug" name="slug" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"  placeholder="Enter chatbot slug">{{ bot.slug }}</textarea>
+                <div class="flex items-center">
+                    <textarea id="slug" name="slug" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"  placeholder="Enter chatbot slug">{{ bot.slug }}</textarea>
+                    <button type="button" id="check-slug-button" class="ml-2 bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-all" onclick="checkSlug()">
+                        Check Slug
+                    </button>
+                </div>
+                <p id="slug-verification-result" class="mt-2 text-sm text-red-500"></p>
             </div>
             
             <div class="mb-4">
