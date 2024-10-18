@@ -81,7 +81,7 @@ class AuthServiceV1(AuthService):
       if not user:
         self.repository.add_google_user(user_info_json)
       
-      # check if the email is a valid broom email TODO
+      # check if the email is a valid broom email
       if not user_info_json["email"].endswith("@broom.id"):
           raise HTTPException(status_code=401, detail="Invalid email, must be a Broom.id email")
 

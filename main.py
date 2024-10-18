@@ -133,7 +133,7 @@ if __name__ == "__main__":
     )
     
     app.add_api_route(
-        "/api/auth/logout",
+        "/logout",
         endpoint=auth_controller.logout,
         response_class=RedirectResponse,
         methods=["GET"],
