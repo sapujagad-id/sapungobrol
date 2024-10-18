@@ -29,12 +29,13 @@ class AuthService(ABC):
       pass
   
 class AuthServiceV1(AuthService):
-    def __init__(self, repository: AuthRepository, google_credentials: GoogleCredentials, base_url: str) -> None:
+    def __init__(self, repository: AuthRepository, google_credentials: GoogleCredentials, base_url: str, jwt_secret: str) -> None:
       super().__init__()
       self.repository = repository
       self.google_credentials = google_credentials
       self.base_url = base_url
       self.logger = logger.bind(service="AuthService")
+      self.jwt_secret = jwt_secret
       
     def login_redirect_google(self) -> Response:
       query_params = urlencode({
@@ -92,7 +93,7 @@ class AuthServiceV1(AuthService):
           "email": user_info_json["email"],
           "exp": datetime.now(UTC) + timedelta(hours=3),
         },
-        "some_jwt_secret_here", # TODO
+        self.jwt_secret,
       )
       
       # redirect to page based on state
@@ -117,7 +118,7 @@ class AuthServiceV1(AuthService):
       
       decoded = jwt.decode(
         token=token, 
-        key="some_jwt_secret_here",
+        key=self.jwt_secret,
         algorithms=["HS256"],
       )
         

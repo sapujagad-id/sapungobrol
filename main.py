@@ -47,7 +47,7 @@ if __name__ == "__main__":
     
     auth_repository = PostgresAuthRepository(sessionmaker)
     
-    auth_service = AuthServiceV1(auth_repository, google_credentials, config.base_url)
+    auth_service = AuthServiceV1(auth_repository, google_credentials, config.base_url, config.jwt_secret_key)
     
     auth_controller = AuthControllerV1(auth_service)
 

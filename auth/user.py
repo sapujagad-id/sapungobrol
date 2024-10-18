@@ -1,6 +1,6 @@
 from datetime import datetime
 import enum
-from typing import TypedDict
+from typing_extensions import TypedDict
 from pydantic import UUID4, BaseModel
 
 from .exceptions import InvalidEmail, InvalidName, InvalidPictureURL, SubNotFound

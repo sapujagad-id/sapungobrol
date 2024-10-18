@@ -70,7 +70,6 @@ class TestAuthRepository:
             email_verified=True,
         )
 
-        # Test adding a new user
         setup_repository.add_google_user(user_info)
         added_user = session.query(UserModel).filter(UserModel.sub == "new-sub").first()
 

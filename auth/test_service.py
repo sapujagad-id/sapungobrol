@@ -1,10 +1,7 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from fastapi.responses import RedirectResponse
-from fastapi.testclient import TestClient
 import pytest
-from fastapi import HTTPException, Request
-import requests
-from auth.dto import GoogleCredentials, LoginResponse, ProfileResponse
+from fastapi import HTTPException
 from auth.exceptions import NoTokenSupplied, UserNotFound
 from auth.repository import AuthRepository
 from auth.service import AuthServiceV1
@@ -28,7 +25,7 @@ class TestAuthService:
     
     @patch('requests.post')
     @patch('requests.get')
-    def test_authorize_google_success(self, mock_get, mock_post, setup_real_service):
+    def test_authorize_google_success(self, mock_get, mock_post, setup_real_service: AuthServiceV1):
         mock_post.return_value.json.return_value = {"access_token": "fake_access_token"}
         mock_post.return_value.raise_for_status.return_value = None
 
@@ -50,7 +47,7 @@ class TestAuthService:
 
         # Verify JWT token
         token = response.headers['set-cookie'].split(';')[0].split('=')[1]
-        decoded = jwt.decode(token, "some_jwt_secret_here", algorithms=["HS256"])
+        decoded = jwt.decode(token, setup_real_service.jwt_secret, algorithms=["HS256"])
         assert decoded['sub'] == "12345"
         assert decoded['email'] == "test@broom.id"
 
@@ -93,12 +90,12 @@ class TestAuthService:
         assert response.status_code == 302 or 307
         assert "token" in response.headers['set-cookie']
 
-    def test_get_user_profile_success(self, setup_real_service: AuthServiceV1, setup_repository: AuthRepository):
+    def test_get_user_profile_success(self, setup_real_service: AuthServiceV1, setup_jwt_secret: str):
         token = jwt.encode({
             "sub": "test_sub", 
             "email": "test@broom.id", 
             "exp": datetime.now(UTC) + timedelta(hours=3)},
-            "some_jwt_secret_here"
+            setup_jwt_secret
         )
         user_info = GoogleUserInfo(
             sub="test_sub",
@@ -123,7 +120,7 @@ class TestAuthService:
             "sub": "non_existent_sub", 
             "email": "nonexistent@broom.id",
             "exp": datetime.now(UTC) + timedelta(hours=3)},
-            "some_jwt_secret_here",
+            setup_real_service.jwt_secret,
         )
         with pytest.raises(UserNotFound):
             setup_real_service.get_user_profile(token)
