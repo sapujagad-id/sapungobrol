@@ -82,8 +82,8 @@ class AuthServiceV1(AuthService):
         self.repository.add_google_user(user_info_json)
       
       # check if the email is a valid broom email TODO
-      # if not user_info_json["email"].endswith("@broom.id"):
-      #     raise HTTPException(status_code=401, detail="Invalid email, must be a Broom.id email")
+      if not user_info_json["email"].endswith("@broom.id"):
+          raise HTTPException(status_code=401, detail="Invalid email, must be a Broom.id email")
 
       # generate our own access token
       jwt_token = jwt.encode(
