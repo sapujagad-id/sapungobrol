@@ -24,6 +24,8 @@ class BotController(ABC):
 
 
 class BotControllerV1(BotController):
+    GENERAL_ERROR_MESSAGE = "Something went wrong"
+    
     def __init__(self, service: BotService) -> None:
         super().__init__()
         self.service = service
@@ -46,7 +48,7 @@ class BotControllerV1(BotController):
         except SlugIsRequired:
             raise HTTPException(status_code=400, detail="Slug is required")
         except Exception:
-            raise HTTPException(status_code=500, detail="Something went wrong")
+            raise HTTPException(status_code=500, detail=self.GENERAL_ERROR_MESSAGE)
         
     def update_chatbot(self, bot_id, request: BotUpdate):
         try:
@@ -65,7 +67,7 @@ class BotControllerV1(BotController):
         except BotNotFound:
             raise HTTPException(status_code=400, detail="Bot not found")
         except Exception:
-            raise HTTPException(status_code=500, detail="Something went wrong")
+            raise HTTPException(status_code=500, detail=self.GENERAL_ERROR_MESSAGE)
     
     def delete_chatbot(self, bot_id):
         try:
@@ -74,4 +76,4 @@ class BotControllerV1(BotController):
         except BotNotFound:
             raise HTTPException(status_code=400, detail="Bot not found")
         except Exception:
-            raise HTTPException(status_code=500, detail="Something went wrong")
+            raise HTTPException(status_code=500, detail=self.GENERAL_ERROR_MESSAGE)
