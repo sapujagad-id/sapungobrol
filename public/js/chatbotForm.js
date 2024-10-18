@@ -55,4 +55,33 @@ async function submitForm(event, bot_id = null) {
         alert(`Error: ${result.detail}`);
     }
 }
+async function checkSlug() {
+    const slug = document.getElementById('slug').value;
+    const resultElement = document.getElementById('slug-verification-result');
+
+    if (slug === "") {
+        resultElement.textContent = "Slug cannot be empty.";
+        resultElement.classList.remove('text-green-500');
+        resultElement.classList.add('text-red-500');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/bots/slug?q=${encodeURIComponent(slug)}`);
+        const data = await response.json();
+        console.log(data)
+        if (data.detail) {
+            resultElement.textContent = "Slug already exists. Please choose another.";
+            resultElement.classList.remove('text-green-500');
+            resultElement.classList.add('text-red-500');
+        } else {
+            resultElement.textContent = "Slug is unique!";
+            resultElement.classList.remove('text-red-500');
+            resultElement.classList.add('text-green-500');
+        }
+    } catch (error) {
+        resultElement.textContent = "Error checking slug. Please try again.";
+        resultElement.classList.add('text-red-500');
+    }
+}
 
