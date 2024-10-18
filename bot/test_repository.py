@@ -57,6 +57,14 @@ class TestBotRepository:
         assert updated_bot.name == bot_update_data.name
         assert updated_bot.system_prompt == bot_update_data.system_prompt
         assert updated_bot.slug == bot_update_data.slug  # Check slug
+    
+    def test_delete_bot(self, setup_repository, bot_create_data):
+        setup_repository.create_bot(bot_create_data)
+        bots = setup_repository.find_bots(skip=0, limit=10)
+        bot = bots[0]
+
+        setup_repository.delete_bot(bot)
+        assert len(setup_repository.find_bots(skip=0, limit=10)) == 0
 
     def test_find_bots(self, setup_repository, bot_create_data):
         # Create multiple bots

@@ -291,3 +291,37 @@ class TestBotControllerUpdate:
         
         assert exc.value.status_code == 400
         assert exc.value.detail == "Slug is required"
+
+class TestBotControllerDelete:
+    def test_delete_chatbot_success(self, setup_controller):
+        create_request = BotCreate(
+            name="Bot",
+            system_prompt="prompt",
+            model="OpenAI",
+            adapter="Slack",
+            slug="bot"  # Added slug
+        )
+        
+        setup_controller.create_chatbot(create_request)
+        created_bot = setup_controller.fetch_chatbots(0, 10)
+        
+        response = setup_controller.delete_chatbot(created_bot[0].id)
+        assert response == {"detail": "Bot deleted successfully!"}
+
+        updated_bot = setup_controller.service.repository.find_bots(0, 10)
+        assert len(updated_bot) == 0
+    
+    def test_delete_chatbot_not_found(self, setup_controller):
+        with pytest.raises(HTTPException) as exc:
+            setup_controller.delete_chatbot(uuid4())
+        
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "Bot not found"
+    
+    def test_delete_chatbot_general_exception(self, setup_controller):
+        controller = setup_controller
+
+        with pytest.raises(HTTPException) as exc:
+            controller.delete_chatbot("some-uuid")
+
+        assert exc.value.status_code == 500
