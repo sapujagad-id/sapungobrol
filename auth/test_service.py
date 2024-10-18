@@ -70,7 +70,7 @@ class TestAuthService:
         mock_post.return_value.raise_for_status.return_value = None
         mock_get.return_value.json.return_value = {
             "sub": "12345",
-            "email": "existing@example.com",
+            "email": "existing@broom.id",
             "name": "Existing User"
         }
         mock_get.return_value.raise_for_status.return_value = None
@@ -78,7 +78,7 @@ class TestAuthService:
         # Set up an existing user
         setup_real_service.repository.add_google_user({
             "sub": "12345",
-            "email": "existing@example.com",
+            "email": "existing@broom.id",
             "email_verified": True,
             "name": "Existing User",
             "given_name": "Existing User",
