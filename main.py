@@ -104,7 +104,7 @@ if __name__ == "__main__":
     )
     app.add_api_route(
         "/api/bots/{bot_id}",
-        endpoint=bot_controller.update_chatbot,
+        endpoint=bot_controller.delete_chatbot,
         methods=["DELETE"],
         status_code=status.HTTP_204_NO_CONTENT,
     )
