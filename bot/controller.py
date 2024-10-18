@@ -17,6 +17,10 @@ class BotController(ABC):
     @abstractmethod
     def update_chatbot(self, bot_id, request: BotUpdate):
         pass
+    
+    @abstractmethod
+    def delete_chatbot(self, bot_id):
+        pass
 
 
 class BotControllerV1(BotController):
@@ -62,3 +66,6 @@ class BotControllerV1(BotController):
             raise HTTPException(status_code=400, detail="Bot not found")
         except Exception:
             raise HTTPException(status_code=500, detail="Something went wrong")
+    
+    def delete_chatbot(self, bot_id):
+        pass

@@ -49,6 +49,10 @@ class BotRepository(ABC):
     @abstractmethod
     def update_bot(self, bot, bot_update: BotUpdate):
         pass
+    
+    @abstractmethod
+    def delete_bot(self, bot):
+        pass
 
     @abstractmethod
     def find_bot_by_slug(self, slug):
@@ -102,3 +106,6 @@ class PostgresBotRepository(BotRepository):
 
                 session.commit()
                 return bot
+    
+    def delete_bot(self, bot):
+        pass

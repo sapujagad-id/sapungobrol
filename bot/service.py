@@ -17,6 +17,10 @@ class BotService(ABC):
     @abstractmethod
     def update_chatbot(self, bot_id: str, request: BotUpdate):
         pass
+    
+    @abstractmethod
+    def delete_chatbot(self, bot_id: str):
+        pass
 
     @abstractmethod
     def get_chatbot_by_id(self, bot_id: str):
@@ -42,11 +46,13 @@ class BotServiceV1(BotService):
         self.repository.create_bot(request)
 
     def update_chatbot(self, bot_id, request: BotUpdate):
-
         bot = self.repository.find_bot_by_id(bot_id)
         request.validate(bot)
 
         self.repository.update_bot(bot, request)
+    
+    def delete_chatbot(self, bot_id: str):
+        pass
 
     def get_chatbot_by_id(self, bot_id):
         bot = self.repository.find_bot_by_id(bot_id)

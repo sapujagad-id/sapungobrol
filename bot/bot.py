@@ -87,3 +87,4 @@ class BotUpdate(BaseModel):
             raise UnsupportedModel
         if not bot:
             raise BotNotFound
+        
