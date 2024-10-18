@@ -50,3 +50,19 @@ def test_process(mock_pdf_reader, mock_sentence_splitter):
     assert result == ["Mocked Node"]
     mock_pdf_reader.load_data.assert_called_once_with(file=Path("dummy_path"))
     mock_sentence_splitter.get_nodes_from_documents.assert_called_once_with(documents=["Mocked Document Content"])
+    
+def test_load_document_exception(mock_pdf_reader):
+    """Test the load_document method when an exception is raised."""
+    mock_pdf_reader.load_data.side_effect = Exception("PDF loading error")
+    processor = PDFProcessor("dummy_path")
+    with pytest.raises(RuntimeError, match="Failed to load document: PDF loading error"):
+        processor.load_document()
+
+def test_get_nodes_exception(mock_sentence_splitter):
+    """Test the get_nodes method when an exception is raised."""
+    mock_sentence_splitter.get_nodes_from_documents.side_effect = Exception("Node extraction error")
+    processor = PDFProcessor("dummy_path")
+    documents = ["Mocked Document Content"]
+    with pytest.raises(RuntimeError, match="Failed to get nodes from documents: Node extraction error"):
+        processor.get_nodes(documents)
+
