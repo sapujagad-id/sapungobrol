@@ -13,10 +13,16 @@ class PDFProcessor(FileProcessor):
         self.splitting_parser = SentenceSplitter(chunk_size=self.chunk_size, chunk_overlap=self.chunk_overlap)
 
     def load_document(self):
-        return self.pdf_reader.load_data(file=self.document_path)
+        try:
+            return self.pdf_reader.load_data(file=self.document_path)
+        except Exception as e:
+            raise RuntimeError(f"Failed to load document: {str(e)}")
 
     def get_nodes(self, documents):
-        return self.splitting_parser.get_nodes_from_documents(documents=documents)
+        try:
+            return self.splitting_parser.get_nodes_from_documents(documents=documents)
+        except Exception as e:
+            raise RuntimeError(f"Failed to get nodes from documents: {str(e)}")
 
     def process(self):
         documents = self.load_document()
