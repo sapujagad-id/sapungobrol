@@ -2,7 +2,7 @@ from abc import abstractmethod, ABC
 from loguru import logger
 
 from .repository import BotRepository
-from .bot import BotResponse, BotCreate, BotUpdate
+from .bot import BotResponse, BotCreate, BotUpdate, BotNotFound
 
 
 class BotService(ABC):
@@ -52,7 +52,12 @@ class BotServiceV1(BotService):
         self.repository.update_bot(bot, request)
     
     def delete_chatbot(self, bot_id: str):
-        pass
+        bot = self.repository.find_bot_by_id(bot_id)
+        
+        if not bot:
+            raise BotNotFound
+
+        self.repository.delete_bot(bot)
 
     def get_chatbot_by_id(self, bot_id):
         bot = self.repository.find_bot_by_id(bot_id)

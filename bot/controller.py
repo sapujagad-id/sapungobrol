@@ -68,4 +68,10 @@ class BotControllerV1(BotController):
             raise HTTPException(status_code=500, detail="Something went wrong")
     
     def delete_chatbot(self, bot_id):
-        pass
+        try:
+            self.service.delete_chatbot(bot_id)
+            return {"detail": "Bot deleted successfully!"}
+        except BotNotFound:
+            raise HTTPException(status_code=400, detail="Bot not found")
+        except Exception:
+            raise HTTPException(status_code=500, detail="Something went wrong")

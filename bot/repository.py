@@ -108,4 +108,8 @@ class PostgresBotRepository(BotRepository):
                 return bot
     
     def delete_bot(self, bot):
-        pass
+        with self.create_session() as session:
+            with self.logger.catch(message="delete bot error", reraise=True):
+                session.delete(bot)
+
+                session.commit()
