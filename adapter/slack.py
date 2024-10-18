@@ -162,9 +162,10 @@ class SlackAdapter:
             limit=1,
             include_all_metadata=True
         )
-        parent_user, parent_text = parent_message['messages'][0]['user'], parent_message['messages'][0]['text']
         
-        if parent_user == self.app_user_id and 'asked' in parent_text:
+        parent_user = parent_message['messages'][0]['user']
+        
+        if parent_user == self.app_user_id and parent_message['messages'][0].get("metadata") != None:
             self.bot_replied(event, parent_message)
         
     def bot_replied(self, event, parent_message):
