@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import MagicMock, patch
 from rag.vectordb.node_storage import PineconeNodeStorage
 from rag.vectordb.pinecone_handler import PineconeHandler
-import openai
 from pinecone.core.openapi.shared.exceptions import UnauthorizedException
 
 
