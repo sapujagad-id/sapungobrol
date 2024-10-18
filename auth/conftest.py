@@ -38,7 +38,10 @@ def setup_google_credentials():
 @pytest.fixture()
 def setup_service():
     """Set up a mocked service."""
-    return Mock(spec=AuthServiceV1)
+    service = Mock(spec=AuthServiceV1)
+    service.repository = Mock(spec=PostgresAuthRepository)
+    
+    return service
 
 @pytest.fixture()
 def setup_real_service(setup_repository, setup_google_credentials):
