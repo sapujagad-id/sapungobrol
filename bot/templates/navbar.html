@@ -6,18 +6,15 @@
             <h1 class="text-lg font-semibold">{{ title | default('Default Title') }}</h1>
         </div>
         <div class="flex items-center relative">
-            {% if not user_logged_in %}
-                <!-- User avatar with dropdown -->
+            {% if user_logged_in %}
                 <div class="relative">
                     <div class="relative flex items-center" id="userMenuButton">
                         <img src="avatar.png" alt="Avatar" class="h-8 w-8 rounded-full">
-                        <!-- Down arrow icon beside the avatar -->
                         <svg class="w-4 h-4 ml-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     
                     </div>
-                    <!-- Dropdown Menu -->
                     <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20">
                         <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
                         <a href="/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
@@ -25,14 +22,12 @@
                     </div>
                 </div>
                 <script>
-                    // Toggle dropdown visibility
                     document.getElementById('userMenuButton').addEventListener('click', function () {
                         var dropdown = document.getElementById('userDropdown');
                         dropdown.classList.toggle('hidden');
                     });
                 </script>
             {% else %}
-                <!-- Login button -->
                 <a href="/login" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Login</a>
             {% endif %}
         </div>
