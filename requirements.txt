@@ -33,7 +33,7 @@ markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 mdurl==0.1.2
 multidict==6.1.0
-openai==0.28.0
+openai==1.51.2
 packaging==24.1
 pluggy==1.5.0
 psycopg2==2.9.9
@@ -70,3 +70,5 @@ uvloop==0.20.0 ; sys_platform != 'win32'
 watchfiles==0.24.0
 websockets==13.0.1
 yarl==1.13.1
+llama-index==0.11.18
+pinecone==5.3.1
