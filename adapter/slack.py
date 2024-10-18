@@ -1,5 +1,6 @@
 import sqlalchemy
 import threading
+import asyncio
 
 from fastapi import Request, Response, HTTPException
 from loguru import logger
@@ -12,6 +13,8 @@ from chat.exceptions import ChatResponseGenerationError
 
 
 class SlackAdapter:
+    MISSING_CHATBOT_ERROR = "Whoops. Can't find the chatbot you're looking for."
+    
     def __init__(
         self,
         app: App,
@@ -66,18 +69,30 @@ class SlackAdapter:
             }
 
         question = f'<@{user_id}> asked: \n\n"{question}" '
-
+        
         try:
             chatbot = self.bot_service.get_chatbot_by_slug(slug=bot_slug)
 
             if chatbot is None:
-                return {"text": "Whoops. Can't found the chatbot you're looking for."}
+                return {"text": self.MISSING_CHATBOT_ERROR}
 
             response = self.app.client.chat_postMessage(
-                channel=channel_id, text=question
+                channel=channel_id,
+                text=question,
+                metadata={
+                    "event_type": "bot-slug",
+                    "event_payload": {
+                        "bot_slug": bot_slug
+                    }
+                },
             )
-            thread_ts = response["ts"]
+            return await self.process_chatbot_request(chatbot, question, channel_id, response["ts"])
+        
+        except SlackApiError as e:
+            raise HTTPException(status_code=400, detail=f"Slack API Error: {e}")
 
+    async def process_chatbot_request(self, chatbot, question, channel_id, thread_ts):
+        try:
             loading_message = self.app.client.chat_postMessage(
                 channel=channel_id,
                 text=":hourglass_flowing_sand: Processing your request, please wait...",
@@ -101,7 +116,7 @@ class SlackAdapter:
             return Response(status_code=200)
 
         except sqlalchemy.exc.DataError as e:  # pragma: no cover
-            return {"text": "Whoops. Can't found the chatbot you're looking for"}
+            return {"text": self.MISSING_CHATBOT_ERROR}
 
         except SlackApiError as e:
             if "thread_ts" in locals():
@@ -109,10 +124,10 @@ class SlackAdapter:
                     self.app.client.chat_delete(channel=channel_id, ts=thread_ts)
                 except SlackApiError as delete_error:
                     raise HTTPException(
-                        status_code=400, detail=f"Slack API Error : {delete_error}"
+                        status_code=400, detail=f"Slack API Error: {delete_error}"
                     )
 
-            raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")
+            raise HTTPException(status_code=400, detail=f"Slack API Error: {e}")
 
     async def list_bots(self, request: Request):
         data = await request.form()
@@ -135,21 +150,32 @@ class SlackAdapter:
         except SlackApiError as e:
             raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")
     
-    def event_message(self, event, say):
+    def event_message(self, event):
         if 'thread_ts' in event:
-            self.event_message_replied(event, say)
+            self.event_message_replied(event)
     
-    def event_message_replied(self, event, say):
+    def event_message_replied(self, event):
         parent_message = self.app.client.conversations_history(
             channel=event['channel'],
             inclusive=True,
             oldest=event['thread_ts'],
-            limit=1
+            limit=1,
+            include_all_metadata=True
         )
-        parent_user, parent_text = parent_message['messages'][0]['user'], parent_message['messages'][0]['text']
         
-        if parent_user == self.app_user_id and 'asked' in parent_text:
-            self.bot_replied(event, say)
+        parent_user = parent_message['messages'][0]['user']
         
-    def bot_replied(self, event, say):
-        say("To be implemented", thread_ts = event['thread_ts'])
+        if parent_user == self.app_user_id and parent_message['messages'][0].get("metadata") != None:
+            self.bot_replied(event, parent_message)
+        
+    def bot_replied(self, event, parent_message):
+        bot_slug = parent_message["messages"][0]["metadata"]["event_payload"]["bot_slug"]
+        question = event['text']
+        thread_ts = event['thread_ts']
+        channel_id = event["channel"]
+        chatbot = self.bot_service.get_chatbot_by_slug(slug=bot_slug)
+        
+        if chatbot is None:
+            return {"text": self.MISSING_CHATBOT_ERROR}
+                
+        return asyncio.run(self.process_chatbot_request(chatbot, question, channel_id, thread_ts))
