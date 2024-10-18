@@ -125,4 +125,6 @@ class AuthServiceV1(AuthService):
       user = self.repository.find_user_by_email(decoded['email'])
       if not user:
         raise UserNotFound
-      return {"data": user}
+      return ProfileResponse(
+        data=user,
+      )
