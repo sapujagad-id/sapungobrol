@@ -38,7 +38,7 @@ class TestAuthService:
             "email_verified": True,
             "name": "Test User",
             "given_name": "Test User",
-            "picture": "http://newuser.com/icon.png",
+            "picture": "https://newuser.com/icon.png",
         }
         mock_get.return_value.raise_for_status.return_value = None
         mock_request = MockRequest(cookies={})
@@ -104,7 +104,7 @@ class TestAuthService:
             sub="test_sub",
             name="New User",
             given_name="anewuser",
-            picture="http://newuser.com/pic.png",
+            picture="https://newuser.com/pic.png",
             email="test@broom.id",
             email_verified=True,
         )
