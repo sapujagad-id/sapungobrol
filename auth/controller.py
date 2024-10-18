@@ -38,7 +38,10 @@ class AuthControllerV1(AuthController):
     
   def logout(self):
     response = RedirectResponse("/")
-    response.delete_cookie("token")
+    try:
+      response.delete_cookie("token")
+    except:
+      pass
     return response
     
   def login_redirect_google(self):

@@ -29,4 +29,5 @@ env = [
     "GOOGLE_CLIENT_SECRET=GOXXX=xxx",
     "GOOGLE_REDIRECT_URI=https://sapungobrol.xxxx.com/api/auth/callback/google",
     "BASE_URL=https://sapungobrol.xxxx.com",
+    "JWT_SECRET_KEY=some_arbitrary_secret_here",
 ]

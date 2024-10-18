@@ -1,10 +1,11 @@
+from typing_extensions import TypedDict
 from pydantic import BaseModel
 from auth.user import User
 
 class LoginResponse(BaseModel):
   access_token: str
 
-class ProfileResponse(BaseModel):
+class ProfileResponse(TypedDict):
   data: User
 
 class GoogleCredentials(BaseModel):
