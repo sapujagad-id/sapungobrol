@@ -103,6 +103,12 @@ if __name__ == "__main__":
         status_code=status.HTTP_200_OK,
     )
     app.add_api_route(
+        "/api/bots/{bot_id}",
+        endpoint=bot_controller.delete_chatbot,
+        methods=["DELETE"],
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
+    app.add_api_route(
         "/api/slack/events", endpoint=slack_adapter.handle_events, methods=["POST"]
     )
     app.add_api_route("/api/slack/ask", endpoint=slack_adapter.ask, methods=["POST"])
