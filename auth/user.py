@@ -1,5 +1,6 @@
 from datetime import datetime
 import enum
+from typing_extensions import TypedDict
 from pydantic import UUID4, BaseModel
 
 from .exceptions import InvalidEmail, InvalidName, InvalidPictureURL, SubNotFound
@@ -31,7 +32,7 @@ class User(BaseModel):
     # if not self.id:
     #   raise InvalidUUID()
   
-class GoogleUserInfo(BaseModel):
+class GoogleUserInfo(TypedDict):
   sub: str
   name: str
   given_name: str

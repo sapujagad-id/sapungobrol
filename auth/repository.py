@@ -48,10 +48,34 @@ class PostgresAuthRepository(AuthRepository):
         self.logger = logger.bind(service="PostgresAuthRepository")
         
     def find_user_by_sub(self, sub: str) -> UserModel | None:
-        raise NotImplementedError()
+        with self.create_session() as session:
+            with self.logger.catch(
+                message=f"User with sub: {sub} not found", 
+                reraise=True,
+            ):
+                return session.query(UserModel).filter(UserModel.sub == sub).first()
             
     def find_user_by_email(self, email: str) -> UserModel | None:
-        raise NotImplementedError()
+        with self.create_session() as session:
+            with self.logger.catch(
+                message=f"User with email: {email} not found", 
+                reraise=True,
+            ):
+                assert isinstance(session, Session) 
+                return session.query(UserModel).filter(UserModel.email == email).first()
             
     def add_google_user(self, user_info_json: GoogleUserInfo) -> None:
-        raise NotImplementedError()
+        with self.create_session() as session:
+            with self.logger.catch(message="create user error", reraise=True):
+                assert isinstance(session, Session)
+                user = UserModel(
+                    id = uuid4(),
+                    sub = user_info_json['sub'],
+                    name = user_info_json['name'],
+                    picture = user_info_json['picture'],
+                    email = user_info_json['email'],
+                    email_verified = user_info_json['email_verified'],
+                    login_method = LoginMethod.GOOGLE,
+                )
+                session.add(user)
+                session.commit()

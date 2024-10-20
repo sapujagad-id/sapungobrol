@@ -72,6 +72,10 @@ class AppConfig:
         self.anthropic_api_key, found = self.validate_env_var("ANTHROPIC_API_KEY")
         if not found:
             invalid = True
+            
+        self.jwt_secret_key, found = self.validate_env_var("JWT_SECRET_KEY")
+        if not found:
+            invalid = True
 
         if invalid:
             raise ValueError("invalid app config")
