@@ -1,4 +1,4 @@
-# from anthropic import Anthropic
+from anthropic import Anthropic
 from .engine import ChatEngine
 
 class ChatAnthropic(ChatEngine):
