@@ -1,4 +1,4 @@
-from processor import FileProcessor
+from .processor import FileProcessor
 from pathlib import Path
 from llama_index.core.prompts import ChatPromptTemplate
 from llama_index.core.bridge.pydantic import BaseModel, Field
