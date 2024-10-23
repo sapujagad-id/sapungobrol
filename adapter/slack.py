@@ -1,4 +1,5 @@
 import sqlalchemy
+import threading
 
 from fastapi import Request, Response, HTTPException
 from loguru import logger
@@ -6,7 +7,7 @@ from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 from slack_sdk.errors import SlackApiError
 from bot.service import BotService
-from chat import ChatEngineSelector
+from chat import ChatEngineSelector, ChatEngine
 from chat.exceptions import ChatResponseGenerationError
 
 
@@ -22,11 +23,32 @@ class SlackAdapter:
         self.bot_service = bot_service
         self.handler = SlackRequestHandler(self.app)
         self.logger = logger.bind(service="SlackAdapter")
+        self.app_user_id = self.app.client.auth_test()['user_id']
 
     # Function to listen for events on Slack. No need to test this since this is purely dependent on
     # Bolt
     async def handle_events(self, req: Request):  # pragma: no cover
         return await self.handler.handle(req)
+
+    def send_generated_response(
+        self, channel: str, ts: str, engine: ChatEngine, question: str
+    ):
+        try:
+            self.logger.info("generating response")
+
+            chatbot_response = engine.generate_response(query=question)
+
+            self.logger.info("sending generated response")
+
+            self.app.client.chat_update(channel=channel, ts=ts, text=chatbot_response)
+
+        except ChatResponseGenerationError as e:  # pragma: no cover
+            self.logger.error(e)
+            self.app.client.chat_update(
+                channel=channel,
+                ts=ts,
+                text="Something went wrong when trying to generate your response.",
+            )
 
     async def ask(self, request: Request):
         data = await request.form()
@@ -37,7 +59,7 @@ class SlackAdapter:
 
         parts = parameter.split(" ", 1)
         if len(parts) == 2:
-            bot_id, question = parts
+            bot_slug, question = parts
         else:
             return {
                 "text": "Missing parameter in the request.",
@@ -46,7 +68,7 @@ class SlackAdapter:
         question = f'<@{user_id}> asked: \n\n"{question}" '
 
         try:
-            chatbot = self.bot_service.get_chatbot_by_id(bot_id=bot_id)
+            chatbot = self.bot_service.get_chatbot_by_slug(slug=bot_slug)
 
             if chatbot is None:
                 return {"text": "Whoops. Can't found the chatbot you're looking for."}
@@ -64,11 +86,17 @@ class SlackAdapter:
 
             bot_engine = self.engine_selector.select_engine(engine_type=chatbot.model)
 
-            chatbot_response = bot_engine.generate_response(query=question)
-
-            self.app.client.chat_update(
-                channel=channel_id, ts=loading_message["ts"], text=chatbot_response
+            send_response_thread = threading.Thread(
+                target=self.send_generated_response,
+                kwargs={
+                    "channel": channel_id,
+                    "ts": loading_message["ts"],
+                    "engine": bot_engine,
+                    "question": question,
+                },
             )
+
+            send_response_thread.start()
 
             return Response(status_code=200)
 
@@ -86,12 +114,6 @@ class SlackAdapter:
 
             raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")
 
-        except ChatResponseGenerationError as e:  # pragma: no cover
-            self.logger.error(e)
-            return {
-                "text": "Something went wrong when trying to generate your response."
-            }
-
     async def list_bots(self, request: Request):
         data = await request.form()
 
@@ -102,7 +124,7 @@ class SlackAdapter:
         response_text = f"{len(bot_responses)} Active Bot(s)"
         response_text += "".join(
             [
-                f"\n- {bot_response.name} ({bot_response.id})"
+                f"\n- {bot_response.name} ({bot_response.slug})"
                 for bot_response in bot_responses
             ]
         )
@@ -112,3 +134,22 @@ class SlackAdapter:
             return Response(status_code=200)
         except SlackApiError as e:
             raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")
+    
+    def event_message(self, event, say):
+        if 'thread_ts' in event:
+            self.event_message_replied(event, say)
+    
+    def event_message_replied(self, event, say):
+        parent_message = self.app.client.conversations_history(
+            channel=event['channel'],
+            inclusive=True,
+            oldest=event['thread_ts'],
+            limit=1
+        )
+        parent_user, parent_text = parent_message['messages'][0]['user'], parent_message['messages'][0]['text']
+        
+        if parent_user == self.app_user_id and 'asked' in parent_text:
+            self.bot_replied(event, say)
+        
+    def bot_replied(self, event, say):
+        say("To be implemented", thread_ts = event['thread_ts'])

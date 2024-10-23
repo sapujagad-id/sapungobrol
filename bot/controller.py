@@ -17,9 +17,15 @@ class BotController(ABC):
     @abstractmethod
     def update_chatbot(self, bot_id, request: BotUpdate):
         pass
+    
+    @abstractmethod
+    def delete_chatbot(self, bot_id):
+        pass
 
 
 class BotControllerV1(BotController):
+    GENERAL_ERROR_MESSAGE = "Something went wrong"
+    
     def __init__(self, service: BotService) -> None:
         super().__init__()
         self.service = service
@@ -44,7 +50,8 @@ class BotControllerV1(BotController):
         except SlugIsExist:
             raise HTTPException(status_code=400, detail="Slug is exist")
         except Exception:
-            raise HTTPException(status_code=500, detail="Something went wrong")
+            raise HTTPException(status_code=500, detail=self.GENERAL_ERROR_MESSAGE)
+        
         
         
     def update_chatbot(self, bot_id, request: BotUpdate):
@@ -66,7 +73,16 @@ class BotControllerV1(BotController):
         except SlugIsExist:
             raise HTTPException(status_code=400, detail="Slug is exist")
         except Exception:
-            raise HTTPException(status_code=500, detail="Something went wrong")
+            raise HTTPException(status_code=500, detail=self.GENERAL_ERROR_MESSAGE)
+    
+    def delete_chatbot(self, bot_id):
+        try:
+            self.service.delete_chatbot(bot_id)
+            return {"detail": "Bot deleted successfully!"}
+        except BotNotFound:
+            raise HTTPException(status_code=400, detail="Bot not found")
+        except Exception:
+            raise HTTPException(status_code=500, detail=self.GENERAL_ERROR_MESSAGE)
         
     def check_slug_exist(self, slug: str):
         exists = self.service.is_slug_exist(slug)

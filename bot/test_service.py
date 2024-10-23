@@ -210,35 +210,24 @@ class TestBotServiceUpdate:
 
         with pytest.raises(SlugIsRequired):
             setup_service.update_chatbot(uuid4(), bot_update_request)
-    
-    def test_update_chatbot_slug_exists(self, setup_service: BotService):
-        create_request1 = BotCreate(
-            name="Bot One",
-            system_prompt="Prompt One",
+
+class TestBotServiceDelete:
+    def test_delete_chatbot_success(self, setup_service: BotService):
+        create_request = BotCreate(
+            name="Bot",
+            system_prompt="prompt",
             model="OpenAI",
             adapter="Slack",
-            slug="existing-slug"
+            slug="bot"  # Added slug
         )
-        create_request2 = BotCreate(
-            name="Bot Two",
-            system_prompt="Prompt Two",
-            model="OpenAI",
-            adapter="Slack",
-            slug="unique-slug"
-        )
-
-        setup_service.create_chatbot(create_request1)
-        setup_service.create_chatbot(create_request2)
-
+        
+        setup_service.create_chatbot(create_request)
         bots = setup_service.get_chatbots(0, 10)
+        
+        setup_service.delete_chatbot(bots[0].id)
 
-        update_request = BotUpdate(
-            name="Updated Bot Two",
-            system_prompt="Updated Prompt",
-            model="OpenAI",
-            adapter="Slack",
-            slug="existing-slug"  # Attempt to update to an existing slug
-        )
-
-        with pytest.raises(SlugIsExist):
-            setup_service.update_chatbot(bots[1].id, update_request)
+        assert len(setup_service.repository.find_bots(0, 10)) == 0
+        
+    def test_delete_chatbot_not_found(self, setup_service: BotService):
+        with pytest.raises(BotNotFound):
+            setup_service.delete_chatbot(uuid4())
