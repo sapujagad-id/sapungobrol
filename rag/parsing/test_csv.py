@@ -70,3 +70,10 @@ def test_process(mock_openai_llm, mock_csv_data):
     
     # Ensure that the document was loaded and table info was generated
     mock_openai_llm.structured_predict.assert_called_once()
+
+def test_get_table_info_no_df():
+    """Test _get_table_info raises a RuntimeError when DataFrame is not loaded."""
+    processor = CSVProcessor("dummy_path")
+    processor.df = None  # Ensure that df is not loaded
+    with pytest.raises(RuntimeError, match="DataFrame is not loaded."):
+        processor._get_table_info()
