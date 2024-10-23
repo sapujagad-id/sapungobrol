@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from fastapi import HTTPException
 
-from .bot import BotCreate, BotNotFound, BotUpdate, NameIsRequired, SlugIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
+from .bot import BotCreate, BotNotFound, BotUpdate, NameIsRequired, SlugIsExist, SlugIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
 from .service import BotService
 
 
@@ -47,8 +47,12 @@ class BotControllerV1(BotController):
             raise HTTPException(status_code=400, detail="Unsupported message adapter")
         except SlugIsRequired:
             raise HTTPException(status_code=400, detail="Slug is required")
+        except SlugIsExist:
+            raise HTTPException(status_code=400, detail="Slug is exist")
         except Exception:
             raise HTTPException(status_code=500, detail=self.GENERAL_ERROR_MESSAGE)
+        
+        
         
     def update_chatbot(self, bot_id, request: BotUpdate):
         try:
@@ -66,6 +70,8 @@ class BotControllerV1(BotController):
             raise HTTPException(status_code=400, detail="Slug is required")
         except BotNotFound:
             raise HTTPException(status_code=400, detail="Bot not found")
+        except SlugIsExist:
+            raise HTTPException(status_code=400, detail="Slug is exist")
         except Exception:
             raise HTTPException(status_code=500, detail=self.GENERAL_ERROR_MESSAGE)
     
@@ -77,3 +83,7 @@ class BotControllerV1(BotController):
             raise HTTPException(status_code=400, detail="Bot not found")
         except Exception:
             raise HTTPException(status_code=500, detail=self.GENERAL_ERROR_MESSAGE)
+        
+    def check_slug_exist(self, slug: str):
+        exists = self.service.is_slug_exist(slug)
+        return {"detail": exists}

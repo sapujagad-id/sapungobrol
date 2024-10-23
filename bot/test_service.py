@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from fastapi import HTTPException
 import pytest
 
-from .bot import BotCreate, BotNotFound, BotUpdate, NameIsRequired, SlugIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
+from .bot import BotCreate, BotNotFound, BotUpdate, NameIsRequired, SlugIsExist, SlugIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
 from .service import BotService, BotServiceV1
 from .repository import BotModel, PostgresBotRepository
 from .controller import BotControllerV1
@@ -60,6 +60,57 @@ class TestBotServiceGetBotBySlug:
     def test_find_bot_by_slug_not_found(self, setup_service: BotService):
         bot = setup_service.get_chatbot_by_slug("non-existent-slug")
         assert bot is None
+
+    def test_is_slug_exist_success(self, setup_service: BotService):
+        create_request = BotCreate(
+            name="Test Bot",
+            system_prompt="Test prompt",
+            model="OpenAI",
+            adapter="Slack",
+            slug="test-bot"  # Use a specific slug
+        )
+        
+        # Create a bot to ensure the slug exists
+        setup_service.create_chatbot(create_request)
+
+        # Now check if the slug exists
+        exists = setup_service.is_slug_exist("test-bot")
+        assert exists is True
+
+    def test_is_slug_exist_not_found(self, setup_service: BotService):
+        # Check a slug that doesn't exist
+        exists = setup_service.is_slug_exist("non-existent-slug")
+        assert exists is False
+
+    def test_is_slug_exist_error_handling(self, mocker, setup_service: BotService):
+        # Mock the repository method to raise an exception
+        mocker.patch.object(setup_service.repository, 'find_bot_by_slug', side_effect=Exception("Database error"))
+
+        exists = setup_service.is_slug_exist("error-prone-slug")
+        assert exists is False
+
+class TestBotServiceCreate:
+    def test_create_chatbot_slug_failed(self, setup_service: BotService):
+        create_request1 = BotCreate(
+            name="First Bot",
+            system_prompt="First prompt",
+            model="OpenAI",
+            adapter="Slack",
+            slug="unique-bot"
+        )
+        
+        setup_service.create_chatbot(create_request1)
+
+        create_request2 = BotCreate(
+            name="Second Bot",
+            system_prompt="Second prompt",
+            model="OpenAI",
+            adapter="Slack",
+            slug="unique-bot"  # Attempt to create with the same slug
+        )
+
+        with pytest.raises(SlugIsExist):
+            setup_service.create_chatbot(create_request2)
 
 class TestBotServiceUpdate:
     def test_update_chatbot_success(self, setup_service: BotService):
