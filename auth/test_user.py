@@ -14,12 +14,26 @@ class TestUserValidation:
             sub="",
             name="Seorang",
             picture="https://example.com/profile.jpg",
-            email="manusia@gmail.com",
+            email="manusia@broom.id",
             email_verified=True,
             login_method=LoginMethod.GOOGLE,
             created_at=datetime.now()
         )
         with pytest.raises(SubNotFound):
+            request.validate()
+            
+    def test_non_broom_email(self):
+        request = User(
+            id=uuid4(),
+            sub="some_sub",
+            name="Seorang",
+            picture="https://example.com/profile.jpg",
+            email="me@gmail.com",
+            email_verified=True,
+            login_method=LoginMethod.GOOGLE,
+            created_at=datetime.now()
+        )
+        with pytest.raises(InvalidEmail):
             request.validate()
 
     def test_empty_email(self):
@@ -42,7 +56,7 @@ class TestUserValidation:
             sub="some_sub",
             name="",
             picture="https://example.com/profile.jpg",
-            email="manusia@gmail.com",
+            email="manusia@broom.id",
             email_verified=True,
             login_method=LoginMethod.GOOGLE,
             created_at=datetime.now()
@@ -56,7 +70,7 @@ class TestUserValidation:
             sub="some_sub",
             name="Seorang",
             picture="invalid_url",
-            email="manusia@gmail.com",
+            email="manusia@broom.id",
             email_verified=True,
             login_method=LoginMethod.GOOGLE,
             created_at=datetime.now()
@@ -71,7 +85,7 @@ class TestUserValidation:
                 sub="some_sub",
                 name="Seorang",
                 picture="https://example.com/profile.jpg",
-                email="manusia@gmail.com",
+                email="manusia@broom.id",
                 email_verified=True,
                 login_method="INVALID_METHOD",
                 created_at=datetime.now()
@@ -84,7 +98,7 @@ class TestUserValidation:
                 sub="some_sub",
                 name="Seorang",
                 picture="https://example.com/profile.jpg",
-                email="manusia@gmail.com",
+                email="manusia@broom.id",
                 email_verified=True,
                 login_method=LoginMethod.GOOGLE,
                 created_at=datetime.now()
@@ -96,7 +110,7 @@ class TestUserValidation:
             sub="some_sub",
             name="Seorang",
             picture="https://example.com/profile.jpg",
-            email="manusia@gmail.com",
+            email="manusia@broom.id",
             email_verified=True,
             login_method=LoginMethod.GOOGLE,
             created_at=datetime.now()

@@ -23,6 +23,8 @@ class User(BaseModel):
       raise SubNotFound()
     if not self.email:
       raise InvalidEmail()
+    if not self.email.endswith("broom.id"):
+      raise InvalidEmail("Email must be a Broom.id email")
     if not self.name:
       raise InvalidName()
     if self.picture is not None and not self.picture.startswith("http"):
