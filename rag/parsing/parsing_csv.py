@@ -1,4 +1,4 @@
-from .processor import FileProcessor
+from processor import FileProcessor
 from pathlib import Path
 from llama_index.core.prompts import ChatPromptTemplate
 from llama_index.core.bridge.pydantic import BaseModel, Field
@@ -60,3 +60,8 @@ class CSVProcessor(FileProcessor):
         self.df = self._load_document()
         table_info = self._get_table_info()
         return table_info
+    
+if __name__=="__main__":  # noqa
+    csv_processor = CSVProcessor('data/ppl_data_testing - Sheet1.csv')
+    file = csv_processor._load_document()
+    print(file)
