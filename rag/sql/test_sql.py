@@ -3,7 +3,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from rag.sql.db_loader import load_csv_to_db
-from rag.sql.query_engine import get_table_schema, setup_query_engine, check_db_data
+from rag.sql.query_engine import (check_db_data, get_table_schema,
+                                  setup_query_engine, run_query)
 
 
 @pytest.fixture
@@ -24,26 +25,6 @@ def mock_inspect(mocker):
         {'name': 'Total Value Approved'}
     ]
     return mock_inspector
-  
-@pytest.fixture
-def mock_openai(mocker):
-    """Mock the OpenAI model."""
-    mock_openai = mocker.patch('rag.sql.query_engine.OpenAI')
-    return mock_openai.return_value
-
-
-@pytest.fixture
-def mock_create_engine(mocker):
-    """Mock the SQLAlchemy create_engine function."""
-    mock_engine = mocker.patch('rag.sql.query_engine.create_engine')
-    return mock_engine.return_value
-
-
-@pytest.fixture
-def mock_sql_database(mocker):
-    """Mock the SQLDatabase object."""
-    mock_sql_database = mocker.patch('rag.sql.query_engine.SQLDatabase')
-    return mock_sql_database.return_value
 
 
 @pytest.fixture
@@ -51,14 +32,6 @@ def mock_nlsql_query_engine(mocker):
     """Mock the NLSQLTableQueryEngine."""
     mock_query_engine = mocker.patch('rag.sql.query_engine.NLSQLTableQueryEngine')
     return mock_query_engine.return_value
-
-
-@pytest.fixture
-def mock_get_table_schema(mocker):
-    """Mock the get_table_schema function."""
-    mock_schema = mocker.patch('rag.sql.query_engine.get_table_schema')
-    mock_schema.return_value = ['Disbursement Week', 'Num Loan', 'Total Value Approved']
-    return mock_schema
 
 
 @pytest.fixture
@@ -132,3 +105,36 @@ def test_check_db_data(mock_create_engine, mock_connection):
     check_db_data()
     
     mock_connection.execute.return_value.fetchmany.assert_called_once_with(10)
+    
+def test_run_query(mock_nlsql_query_engine):
+    """Test running a query."""
+    
+    mock_nlsql_query_engine.query.return_value = MagicMock(response="Mocked response")
+    
+    with patch('rag.sql.query_engine.setup_query_engine') as mock_setup_query_engine:
+        mock_setup_query_engine.return_value = (
+            mock_nlsql_query_engine,
+            ['Disbursement Week', 'Num Loan', 'Total Value Approved']
+        )
+
+        query_str = "What is the total value approved for the week of September 23, 2024?"
+
+        response = run_query(query_str)
+
+        assert response == "Mocked response"
+        mock_nlsql_query_engine.query.assert_called_once()
+
+        expected_prompt = """
+    You are querying a table with the following columns: 
+    Disbursement Week, Num Loan, Total Value Approved.
+    
+    When generating SQL queries, note that the table is in an SQLite database. In SQLite, column names containing spaces must be enclosed in double quotes.
+
+    Based on this, generate a SQL query to retrieve the data.
+
+    Question: What is the total value approved for the week of September 23, 2024?
+    """.strip()
+
+        actual_prompt = mock_nlsql_query_engine.query.call_args[0][0].strip()
+
+        assert actual_prompt == expected_prompt
