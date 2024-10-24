@@ -55,10 +55,10 @@ def run_query(query_str: str):
     return response.response
   
 
-if __name__ == "__main__":  # noqa
+if __name__ == "__main__":  # pragma: no cover
   engine = load_csv_to_db('data/ppl_data_testing - Sheet1.csv')
   
-  # check_db_data()
+  check_db_data()
   
   query = "What is the total value approved for the week of September 23, 2024?"
   
