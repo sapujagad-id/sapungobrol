@@ -1,4 +1,4 @@
-from processor import FileProcessor
+from rag.parsing.processor import FileProcessor
 from pathlib import Path
 from llama_index.core.prompts import ChatPromptTemplate
 from llama_index.core.bridge.pydantic import BaseModel, Field
@@ -14,7 +14,7 @@ class CSVProcessor(FileProcessor):
     
     def __init__(self, document_path):
         self.document_path = Path(document_path)
-        self.llm = OpenAI(model="gpt-3.5-turbo")
+        self.llm = OpenAI(model="gpt-4o-mini")
         self.df = None  # Initialize dataframe attribute
 
     def _get_prompt_template(self):
@@ -37,7 +37,8 @@ class CSVProcessor(FileProcessor):
     def _load_document(self):
         """Loads the CSV document into a pandas DataFrame."""
         try:
-            return pd.read_csv(self.document_path)
+            self.df = pd.read_csv(self.document_path)
+            return self.df
         except Exception as e:
             raise RuntimeError(f"Failed to load document: {str(e)}")
 
