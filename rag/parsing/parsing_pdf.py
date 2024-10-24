@@ -12,7 +12,7 @@ class PDFProcessor(FileProcessor):
         self.pdf_reader = PDFReader(return_full_document=True)
         self.splitting_parser = SentenceSplitter(chunk_size=self.chunk_size, chunk_overlap=self.chunk_overlap)
 
-    def load_document(self):
+    def _load_document(self):
         try:
             return self.pdf_reader.load_data(file=self.document_path)
         except Exception as e:
@@ -25,5 +25,5 @@ class PDFProcessor(FileProcessor):
             raise RuntimeError(f"Failed to get nodes from documents: {str(e)}")
 
     def process(self):
-        documents = self.load_document()
+        documents = self._load_document()
         return self.get_nodes(documents)
