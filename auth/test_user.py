@@ -28,7 +28,7 @@ class TestUserValidation:
             sub="some_sub",
             name="Seorang",
             picture="https://example.com/profile.jpg",
-            email="",
+            email="me@gmail.com",
             email_verified=True,
             login_method=LoginMethod.GOOGLE,
             created_at=datetime.now()
