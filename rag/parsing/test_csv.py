@@ -2,7 +2,8 @@ import pytest
 from unittest.mock import MagicMock, patch
 from pathlib import Path
 import pandas as pd
-from rag.parsing.parsing_csv import CSVProcessor, TableInfo
+from rag.parsing.processor import TableInfo
+from rag.parsing.parsing_csv import CSVProcessor
 
 @pytest.fixture
 def mock_openai_llm(mocker):

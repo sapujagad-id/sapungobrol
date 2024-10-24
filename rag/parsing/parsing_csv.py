@@ -1,14 +1,9 @@
-from rag.parsing.processor import FileProcessor
+from rag.parsing.processor import FileProcessor, TableInfo
 from pathlib import Path
 from llama_index.core.prompts import ChatPromptTemplate
-from llama_index.core.bridge.pydantic import BaseModel, Field
 from llama_index.llms.openai import OpenAI
 from llama_index.core.llms import ChatMessage
 import pandas as pd
-
-class TableInfo(BaseModel):
-    table_name: str = Field(..., description="Unique table name (must use underscores and NO spaces)")
-    table_summary: str = Field(..., description="Short, concise summary/caption of the table")
 
 class CSVProcessor(FileProcessor):
     
