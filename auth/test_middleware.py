@@ -1,62 +1,46 @@
-from types import coroutine
 import pytest
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from unittest.mock import Mock
-from jose import jwt
-from bot.conftest import setup_jwt_secret
-from config import AppConfig
-from auth.middleware import login_required 
-from fastapi.responses import JSONResponse
+from auth.conftest import setup_controller, setup_jwt_secret
+from auth.middleware import login_required
+import bot
+import bot.conftest
+from bot.view import BotViewV1
 
-# Sample app to use for testing
-app = FastAPI()
 
-# Mock function to decorate
-@app.get("/protected")
-@login_required
-async def protected_route(request: Request):
-    return JSONResponse(content={"message": "You are logged in!"})
+@pytest.fixture()
+def setup_bot_view(setup_service):
+    """Setup the BotViewV1 with mocked controller and service."""
+    view = BotViewV1(bot.conftest.setup_service, bot.conftest.setup_controller, setup_controller)
+    
+    return view
 
-@pytest.fixture
-def setup_app():
-    return app
+class TestLoginRequired:
+    
+    @pytest.mark.asyncio
+    async def test_login_required_valid_token(self, setup_bot_view, valid_token):
+        request = Mock(spec=Request)
+        request.cookies = {"token": valid_token}
+        response = await setup_bot_view.show_list_chatbots(request=request)
 
-@pytest.fixture
-def valid_token(setup_jwt_secret):
-    # Generate a valid JWT token for testing
-    return jwt.encode({"sub": "user_id"}, key="some_arbitrary_string_here", algorithm="HS256")
+        assert response
 
-@pytest.fixture
-def invalid_token(setup_jwt_secret):
-    # Generate an invalid JWT token (e.g., altered or expired)
-    return "invalid.token.string"
+    @pytest.mark.asyncio
+    async def test_login_required_no_token(self, setup_bot_view):
+        request = Mock(spec=Request)
+        request.cookies = {}
 
-@pytest.mark.asyncio
-async def test_login_required_valid_token(setup_app, valid_token, setup_jwt_secret):
-    request = Mock(spec=Request)
-    request.cookies = {"token": valid_token}
+        response = await setup_bot_view.show_list_chatbots(request=request)
 
-    # response = await protected_route(request=request, jwt_secret_key=setup_jwt_secret)
+        assert isinstance(response, RedirectResponse)
+        assert response.status_code == 302
 
-    assert True
+    @pytest.mark.asyncio
+    async def test_login_required_invalid_token(self, invalid_token, setup_bot_view):
+        request = Mock(spec=Request)
+        request.cookies = {"token": invalid_token}
 
-@pytest.mark.asyncio
-async def test_login_required_no_token(setup_app):
-    request = Mock(spec=Request)
-    request.cookies = {}
-
-    response = await protected_route(request=request)
-
-    assert isinstance(response, RedirectResponse)
-    assert response.status_code == 302
-
-@pytest.mark.asyncio
-async def test_login_required_invalid_token(setup_app, invalid_token):
-    request = Mock(spec=Request)
-    request.cookies = {"token": invalid_token}
-
-    response = await protected_route(request=request)
-
-    assert isinstance(response, RedirectResponse)
-    assert response.status_code == 302
+        response = await setup_bot_view.show_list_chatbots(request=request)
+        assert isinstance(response, RedirectResponse)
+        assert response.status_code == 302
