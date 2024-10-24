@@ -632,18 +632,20 @@ class TestSlackAdapter:
         )
     @pytest.mark.asyncio
     async def test_process_chatbot_request_with_history(self, mock_slack_adapter):
-        mock_app, _, _, slack_adapter = mock_slack_adapter
+        mock_app, mock_chatbot, _, slack_adapter = mock_slack_adapter
 
         channel_id = "C12345678"
         thread_ts = "1234567890.123456"
         history = [
             {"role": "user", "content": "What is the weather today?"},
             {"role": "assistant", "content": "It's sunny!"},
+            {"role": "user", "content": "1 + 1 ?"},
+            {"role": "assistant", "content": "1 + 1 = 2"},
         ]
         
-        slack_adapter.engine_selector.select_engine.return_value = ChatOpenAI()
-
         mock_app.client.chat_postMessage = MagicMock(return_value={"ts": "1234567890.654321"})
+        
+        mock_chatbot.add_chat_history = MagicMock()
         
         bot = BotModel()
         bot.model = ChatOpenAI()
@@ -662,8 +664,20 @@ class TestSlackAdapter:
                 text=":hourglass_flowing_sand: Processing your request, please wait...",
                 thread_ts=thread_ts,
             )
+            
+            expected_calls = [call(event["role"], event["content"]) for event in history]
+            mock_chatbot.add_chat_history.assert_has_calls(expected_calls, any_order=False)
 
             mock_thread.assert_called_once()
             assert response.status_code == 200
+    
+    def test_fail_extract_question(self, mock_slack_adapter):
+        _, _, _, slack_adapter = mock_slack_adapter
+        result = slack_adapter.extract_question(        
+            message = {"text": "<@U07MKR1082Y> \n\n\"What is the weather today?\""},
+            key_word = "asked:"
+        )
+        assert result == None
+        
 
 
