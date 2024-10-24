@@ -147,7 +147,7 @@ class TestBotViews:
         token = jwt.encode({
             "sub": "test_sub",
             "email": "test@broom.id",
-            "exp": datetime.utcnow() + timedelta(hours=3)
+            "exp": datetime.now() + timedelta(hours=3)
         }, setup_jwt_secret)  # Use the fixture's JWT secret
 
         # Set the cookies on the request mock
