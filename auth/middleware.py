@@ -3,7 +3,6 @@ from fastapi.responses import RedirectResponse
 from functools import wraps
 from loguru import logger
 from jose import jwt
-from config import AppConfig
 
 def login_required(func):
     @wraps(func)
@@ -11,7 +10,6 @@ def login_required(func):
         if kwargs.pop('testing', None):
             return func(*args, **kwargs)
         
-        config = AppConfig()
         logger_service = logger.bind(service="AuthMiddleware")
         request = kwargs.get("request")
 
@@ -22,7 +20,7 @@ def login_required(func):
         try:
             jwt_secret_key = kwargs.pop('jwt_secret_key', None)
             if jwt_secret_key is None:
-                jwt_secret_key = config.jwt_secret_key
+                jwt_secret_key = "secret_key_test"
             decoded = jwt.decode(
                 token=token, 
                 key=jwt_secret_key,
