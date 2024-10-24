@@ -80,9 +80,9 @@ class SlackAdapter:
                 channel=channel_id,
                 text=question,
                 metadata={
-                    "event_type": "bot-slug",
+                    "event_type": "chat-data",
                     "event_payload": {
-                        "bot_slug": bot_slug
+                        "bot_slug": bot_slug,
                     }
                 },
             )
@@ -91,7 +91,7 @@ class SlackAdapter:
         except SlackApiError as e:
             raise HTTPException(status_code=400, detail=f"Slack API Error: {e}")
 
-    async def process_chatbot_request(self, chatbot, question, channel_id, thread_ts):
+    async def process_chatbot_request(self, chatbot, question, channel_id, thread_ts, history=None):
         try:
             loading_message = self.app.client.chat_postMessage(
                 channel=channel_id,
@@ -101,6 +101,12 @@ class SlackAdapter:
 
             bot_engine = self.engine_selector.select_engine(engine_type=chatbot.model)
 
+            if history:
+                for event in history:
+                    role = event.get("role")
+                    content = event.get("content")
+                    bot_engine.add_chat_history(role, content)
+            
             send_response_thread = threading.Thread(
                 target=self.send_generated_response,
                 kwargs={
@@ -177,5 +183,36 @@ class SlackAdapter:
         
         if chatbot is None:
             return {"text": self.MISSING_CHATBOT_ERROR}
+        
+        history = self.get_chat_history(event)
+        return asyncio.run(self.process_chatbot_request(chatbot, question, channel_id, thread_ts, history))
+    
+    def get_chat_history(self, event):
+        all_messages = self.app.client.conversations_replies(
+            channel=event['channel'],
+            inclusive=True,
+            ts=event['thread_ts'],
+            include_all_metadata=True
+        )["messages"]
+        
+        result = []
+        for i in range(len(all_messages)):
+            message = all_messages[i]
+            if i == 0:
+                if 'text' in message and "asked:" in message['text']:
+                    question_start = message['text'].find("asked:") + len("asked:") + 1  
+                    question = message['text'][question_start:].strip().strip('"')
+                    result.append({"role" : "user", "content" : question})
+            else:
+                if 'text' in message:
+                    if 'bot_id' in message:
+                        result.append({"role" : "assistant", "content" : message['text']})
+                    else:
+                        result.append({"role" : "user", "content" : message['text']})
                 
-        return asyncio.run(self.process_chatbot_request(chatbot, question, channel_id, thread_ts))
+        return result
+
+
+
+            
+
