@@ -196,23 +196,25 @@ class SlackAdapter:
         )["messages"]
         
         result = []
-        for i in range(len(all_messages)):
-            message = all_messages[i]
+        INTRODUCTION_KEY_WORD = "asked:"
+
+        for i, message in enumerate(all_messages):
             if i == 0:
-                if 'text' in message and "asked:" in message['text']:
-                    question_start = message['text'].find("asked:") + len("asked:") + 1  
-                    question = message['text'][question_start:].strip().strip('"')
-                    result.append({"role" : "user", "content" : question})
+                question = self.extract_question(message, INTRODUCTION_KEY_WORD)
+                if question:
+                    result.append({"role": "user", "content": question})
             else:
-                if 'text' in message:
-                    if 'bot_id' in message:
-                        result.append({"role" : "assistant", "content" : message['text']})
-                    else:
-                        result.append({"role" : "user", "content" : message['text']})
-                
+                self.add_message_to_result(message, result)
+        
         return result
 
+    def extract_question(self, message, key_word):
+        if 'text' in message and key_word in message['text']:
+            question_start = message['text'].find(key_word) + len(key_word) + 1
+            return message['text'][question_start:].strip().strip('"')
+        return None
 
-
-            
-
+    def add_message_to_result(self, message, result):
+        if 'text' in message:
+            role = "assistant" if 'bot_id' in message else "user"
+            result.append({"role": role, "content": message['text']})
