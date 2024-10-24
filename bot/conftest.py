@@ -1,11 +1,15 @@
 # Configurations for all tests in bot module
 
 from datetime import datetime
+from unittest.mock import Mock
 from uuid import uuid4
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import pytest
 
+import auth.conftest
+from auth.controller import AuthControllerV1
+from auth.dto import ProfileResponse
 from bot.bot import BotResponse, MessageAdapter, ModelEngine
 from bot.helper import relative_time
 from bot.view import BotViewV1
@@ -53,11 +57,6 @@ def setup_database():
     yield engine
     BotModel.metadata.drop_all(engine)
 
-@pytest.fixture()
-def setup_view(setup_controller, setup_service):
-    view = BotViewV1(setup_controller, setup_service)
-    return view
-    
 @pytest.fixture
 def setup_bots():
   '''Setup BotResponse list for template context'''
@@ -66,6 +65,7 @@ def setup_bots():
         id = uuid4(),
         name = "Bot A",
         system_prompt = "prompt A here",
+        slug = "bot-a",
         model = ModelEngine.OPENAI,
         adapter = MessageAdapter.SLACK,
         created_at = datetime.fromisocalendar(2024, 1, 1),
@@ -75,6 +75,7 @@ def setup_bots():
     BotResponse(
         id = uuid4(),
         name = "Bot B",
+        slug="bot-b",
         system_prompt = "a much longer prompt B here",
         model = ModelEngine.OPENAI,
         adapter = MessageAdapter.SLACK,
@@ -83,3 +84,26 @@ def setup_bots():
         updated_at_relative = relative_time(datetime.now()),
     )
   ]
+
+@pytest.fixture()
+def setup_jwt_secret():
+    """Set up a mock JWT secret."""
+    return "some_arbitrary_string_here"
+
+@pytest.fixture()
+def dummy_user_profile():
+    """Return a mock user profile."""
+    return ProfileResponse(data={
+        "id": str(uuid4()),  # Replace with actual fields expected by User
+        "email": "test@broom.id",
+        "created_at": "2024-10-24T00:00:00Z",
+        # Include other necessary fields...
+    })
+
+@pytest.fixture()
+def setup_view(setup_controller, setup_service):
+    """Setup the BotViewV1 with mocked controller and service."""
+    mock_controller = Mock(spec=AuthControllerV1)
+    view = BotViewV1(mock_controller, setup_service, setup_controller)
+    view.auth_controller = mock_controller
+    return view
