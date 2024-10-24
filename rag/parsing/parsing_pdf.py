@@ -1,4 +1,4 @@
-from processor import FileProcessor
+from rag.parsing.processor import FileProcessor
 from llama_index.readers.file.docs.base import PDFReader
 from pathlib import Path
 from llama_index.core.node_parser import SentenceSplitter
