@@ -36,7 +36,7 @@ class AuthControllerV1(AuthController):
     self.service = service
     self.logger = logger.bind(service="AuthController")
     
-  def logout(self):
+  def logout(self) -> Response:
     response = RedirectResponse("/")
     try:
       response.delete_cookie("token")
@@ -44,19 +44,22 @@ class AuthControllerV1(AuthController):
       pass
     return response
     
-  def login_redirect_google(self):
+  def login_redirect_google(self) -> Response:
     response = self.service.login_redirect_google()
     return response
     
-  def authorize_google(self, request: Request, code: str):
+  def authorize_google(self, request: Request, code: str) -> Response :
     response = self.service.authorize_google(request, code)
 
     return response
 
-  def user_profile_google(self, request: Request):
+  def user_profile_google(self, request: Request) -> ProfileResponse:
     token = request.cookies.get("token")
     try:
-      response = self.service.get_user_profile(token)
+      user = self.service.get_user_profile(token)
+      return ProfileResponse(
+        data=user,
+      )
     except NoTokenSupplied:
       raise HTTPException(status_code=401, detail="You are not authenticated")
     except ExpiredSignatureError:
@@ -65,4 +68,3 @@ class AuthControllerV1(AuthController):
       raise HTTPException(status_code=400, detail="Invalid token signature")
     except UserNotFound:
       raise HTTPException(status_code=404, detail="User not found")
-    return response
