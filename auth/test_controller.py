@@ -1,3 +1,4 @@
+from uuid import uuid4
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi import HTTPException, Request, Response
 from fastapi.testclient import TestClient
@@ -7,6 +8,7 @@ from unittest.mock import Mock
 
 from jose import ExpiredSignatureError, JWTError
 from auth.exceptions import NoTokenSupplied, UserNotFound
+from auth.repository import UserModel
 from auth.service import AuthServiceV1
 
 class TestAuthController:
@@ -34,10 +36,10 @@ class TestAuthController:
     def test_user_profile_google_success(self, setup_controller, setup_service):
         request = Mock()
         request.cookies.get.return_value = "valid_token"
-        setup_service.get_user_profile.return_value = {"data": "user_profile"}
+        setup_service.get_user_profile.return_value = UserModel()
 
         response = setup_controller.user_profile_google(request)
-        assert response == {"data": "user_profile"}
+        assert isinstance(response["data"], UserModel)
         setup_service.get_user_profile.assert_called_once_with("valid_token")
 
     def test_user_profile_google_no_token(self, setup_controller, setup_service):
