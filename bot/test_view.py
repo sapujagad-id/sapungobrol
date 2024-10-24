@@ -184,7 +184,7 @@ class TestBotViews:
         assert "bots" in response.context
         assert len(response.context["bots"]) == 2
         assert "user_profile" in response.context
-        assert response.context["user_profile"].get("data").get('email') == dummy_user_profile.get("data")["email"]
+        assert response.context["user_profile"].get('email') == dummy_user_profile.get("data")["email"]
 
         # Validate if bot names are present in the rendered template
         rendered = response.body.decode()  # Decode response body for assertion
@@ -208,7 +208,7 @@ class TestBotViews:
 
         # Assertions
         assert response.template.name == "create-chatbot.html"
-        assert response.context["user_profile"].get("data").get('email') == dummy_user_profile.get("data")["email"]
+        assert response.context["user_profile"].get('email') == dummy_user_profile.get("data")["email"]
 
     @pytest.mark.asyncio
     async def test_show_edit_chatbot(self, setup_view, setup_service, dummy_user_profile):
@@ -238,7 +238,7 @@ class TestBotViews:
         assert response.template.name == "edit-chatbot.html"
         assert "bot" in response.context
         assert response.context["bot"]["name"] == 'Test Bot'
-        assert response.context["user_profile"].get("data").get('email') == dummy_user_profile.get("data")["email"]
+        assert response.context["user_profile"].get('email') == dummy_user_profile.get("data")["email"]
         assert 'value="Test Bot"' in response.body.decode() 
 
     def test_show_login(self, setup_view):
