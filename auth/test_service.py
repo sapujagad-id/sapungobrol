@@ -109,7 +109,7 @@ class TestAuthService:
         setup_real_service.repository.add_google_user(user_info)
         profile = setup_real_service.get_user_profile(token)
         assert profile is not None
-        assert profile["data"].email == "test@broom.id"
+        assert profile.email == "test@broom.id"
 
     def test_get_user_profile_no_token_supplied(self, setup_real_service: AuthServiceV1):
         with pytest.raises(NoTokenSupplied):
