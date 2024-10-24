@@ -1,6 +1,6 @@
 import pytest
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch, call
 from fastapi import Request, HTTPException, Response
 from .slack import SlackAdapter
 from slack_sdk.errors import SlackApiError
@@ -11,6 +11,8 @@ from bot.service import BotService
 from bot.helper import relative_time
 from chat import ChatEngineSelector, ChatOpenAI
 from chat.exceptions import ChatResponseGenerationError
+from bot.repository import BotModel
+
 
 
 class TestSlackAdapter:
@@ -74,7 +76,7 @@ class TestSlackAdapter:
                 "user_id": "U12345678",
                 "text": text,
                 "metadata" : {
-                    "event_type": "bot-slug",
+                    "event_type": "chat-data",
                     "event_payload": {
                         "bot_slug": "12"
                     }
@@ -82,6 +84,28 @@ class TestSlackAdapter:
             }
         )
         return mock_request
+    
+    def common_message_history(self):
+        return {
+            "messages": [
+                {
+                    "text": "<@U07MKR1082Y> asked: \n\n\"What is the weather today?\"",
+                    "user": "U07QCQ3LXDW",
+                    "ts": "1234567890.123456"
+                },
+                {
+                    "text": "It's sunny!",
+                    "user": "U07QCQ3LXDW",
+                    "bot_id": "B07PM4SPSPP",
+                    "ts": "1234567890.123457"
+                },
+                {
+                    "text": "Thanks!",
+                    "user": "U07QCQ3LXDW",
+                    "ts": "1234567890.123458"
+                }
+            ]
+        }
 
     @pytest.mark.asyncio
     async def test_send_generated_response(self, mock_slack_adapter):
@@ -149,7 +173,7 @@ class TestSlackAdapter:
             channel="C12345678",
             text='<@U12345678> asked: \n\n"How are you?" ',
             metadata={
-                "event_type": "bot-slug",
+                "event_type": "chat-data",
                 "event_payload": {
                     "bot_slug": "12"
                 }
@@ -185,7 +209,7 @@ class TestSlackAdapter:
             channel="C12345678",
             text='<@U12345678> asked: \n\n"How are you?" ',
             metadata={
-                "event_type": "bot-slug",
+                "event_type": "chat-data",
                 "event_payload": {
                     "bot_slug": "12"
                 }
@@ -284,7 +308,7 @@ class TestSlackAdapter:
             channel="C12345678", 
             text='<@U12345678> asked: \n\n"How is the weather?" ',
             metadata={
-                "event_type": "bot-slug",
+                "event_type": "chat-data",
                 "event_payload": {
                     "bot_slug": "12"
                 }
@@ -340,7 +364,7 @@ class TestSlackAdapter:
             channel="C12345678",
             text='<@U12345678> asked: \n\n"Explain quantum computing" ',
             metadata={
-                "event_type": "bot-slug",
+                "event_type": "chat-data",
                 "event_payload": {
                     "bot_slug": "12"
                 }
@@ -535,13 +559,23 @@ class TestSlackAdapter:
 
         slack_adapter.process_chatbot_request = AsyncMock(return_value={"status_code": 200})
 
+        slack_adapter.get_chat_history = MagicMock(return_value=[
+            {"role" : "user", "content" : "How are you ?"},
+            {"role" : "assistant", "content" : "Fine"}
+        ])
+
         response = slack_adapter.bot_replied(event, parent_messages)
 
         slack_adapter.bot_service.get_chatbot_by_slug.assert_called_once_with(slug="test-bot")
         slack_adapter.process_chatbot_request.assert_called_once_with(
-            mock_chatbot, "How are you?", "C123ABC456", "1355517523.000005"
+            mock_chatbot, "How are you?", "C123ABC456", "1355517523.000005", 
+            [
+                {"role" : "user", "content" : "How are you ?"},
+                {"role" : "assistant", "content" : "Fine"}
+            ],
         )
         assert response == {"status_code": 200}
+        
         
     def test_bot_replied_chatbot_not_found(self, mock_slack_adapter):
         _, _, _, slack_adapter = mock_slack_adapter
@@ -568,4 +602,68 @@ class TestSlackAdapter:
 
         slack_adapter.bot_service.get_chatbot_by_slug.assert_called_once_with(slug="non-existent-bot")
         assert response == {"text": "Whoops. Can't find the chatbot you're looking for."}
+        
+    def test_get_chat_history(self, mock_slack_adapter):
+        mock_app, _, _, slack_adapter = mock_slack_adapter
+
+        event = {
+            "channel": "C12345678",
+            "thread_ts": "1234567890.123456"
+        }
+
+        mock_conversation_replies = self.common_message_history()
+        
+        mock_app.client.conversations_replies.return_value = mock_conversation_replies
+
+        result = slack_adapter.get_chat_history(event)
+
+        expected_result = [
+            {"role": "user", "content": "What is the weather today?"},
+            {"role": "assistant", "content": "It's sunny!"},
+            {"role": "user", "content": "Thanks!"}
+        ]
+
+        assert result == expected_result
+        mock_app.client.conversations_replies.assert_called_once_with(
+            channel="C12345678",
+            inclusive=True,
+            ts="1234567890.123456",
+            include_all_metadata=True
+        )
+    @pytest.mark.asyncio
+    async def test_process_chatbot_request_with_history(self, mock_slack_adapter):
+        mock_app, _, _, slack_adapter = mock_slack_adapter
+
+        channel_id = "C12345678"
+        thread_ts = "1234567890.123456"
+        history = [
+            {"role": "user", "content": "What is the weather today?"},
+            {"role": "assistant", "content": "It's sunny!"},
+        ]
+        
+        slack_adapter.engine_selector.select_engine.return_value = ChatOpenAI()
+
+        mock_app.client.chat_postMessage = MagicMock(return_value={"ts": "1234567890.654321"})
+        
+        bot = BotModel()
+        bot.model = ChatOpenAI()
+        
+        with patch("threading.Thread") as mock_thread:
+            response = await slack_adapter.process_chatbot_request(
+                chatbot=bot,
+                question="Is it sunny outside?",
+                channel_id=channel_id,
+                thread_ts=thread_ts,
+                history=history,
+            )
+
+            mock_app.client.chat_postMessage.assert_called_once_with(
+                channel=channel_id,
+                text=":hourglass_flowing_sand: Processing your request, please wait...",
+                thread_ts=thread_ts,
+            )
+
+            mock_thread.assert_called_once()
+            assert response.status_code == 200
+
 
