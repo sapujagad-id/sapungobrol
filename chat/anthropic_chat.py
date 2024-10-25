@@ -20,6 +20,7 @@ class ChatAnthropic(ChatEngine):
         response = self.client.messages.create(
             model="claude-3-haiku-20240307",
             max_tokens=1024,
-            messages=self.history,
+            system=self._get_generate_system()["content"],
+            messages=self.history[1:],
         )
         return response.content[0].text
