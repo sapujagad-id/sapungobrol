@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import patch
 from .openai_chat import ChatOpenAI
 from chat.exceptions import ChatResponseGenerationError
+from chat import ChatEngineSelector
+from bot import ModelEngine
 
 
 @pytest.fixture
@@ -43,7 +45,8 @@ def sample_insufficient_context_query():
 
 @pytest.fixture
 def chat():
-    return ChatOpenAI()
+    selector = ChatEngineSelector(openai_api_key="testkey", anthropic_api_key="testkey")
+    return selector.select_engine(ModelEngine.OPENAI)
 
 
 @pytest.fixture
