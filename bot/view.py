@@ -44,7 +44,7 @@ class BotViewV1(BotView):
         self.service = service
         self.auth_controller = auth_controller
     
-    @login_required
+    @login_required()
     def show_list_chatbots(self, request: Request):
         bots = self.controller.fetch_chatbots()
         user_profile = self.auth_controller.user_profile_google(request)
@@ -56,7 +56,7 @@ class BotViewV1(BotView):
                      },
         )
         
-    @login_required
+    @login_required()
     def show_edit_chatbot(self, id: str, request:Request):
         user_profile = self.auth_controller.user_profile_google(request)
         bot = self.service.get_chatbot_by_id(id)
@@ -71,7 +71,7 @@ class BotViewV1(BotView):
                         }
         )
 
-    @login_required
+    @login_required()
     def show_create_chatbots(self, request: Request):
         user_profile = self.auth_controller.user_profile_google(request)  # Make sure to await if this is a coroutine
         return self.templates.TemplateResponse(

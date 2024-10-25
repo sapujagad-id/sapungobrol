@@ -37,6 +37,7 @@ if __name__ == "__main__":
         token=config.slack_bot_token, signing_secret=config.slack_signing_secret
     )
 
+
     auth_repository = PostgresAuthRepository(sessionmaker)
     
     auth_service = AuthServiceV1(auth_repository, google_credentials, config.base_url, config.jwt_secret_key)

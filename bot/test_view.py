@@ -193,7 +193,7 @@ class TestBotViews:
         assert 'Bot B' in rendered
 
     @pytest.mark.asyncio
-    async def test_show_create_chatbot(self, setup_view, setup_service, dummy_user_profile):
+    async def test_show_create_chatbot(self, setup_view, setup_service, dummy_user_profile, setup_jwt_secret):
         view = setup_view
 
         # Mock the user_profile_google method
@@ -201,7 +201,12 @@ class TestBotViews:
 
         # Create a mock request
         request = Mock(spec=Request)
-        request.cookies = {'token': 'some_valid_token'}
+        token = jwt.encode({
+            "sub": "test_sub",
+            "email": "test@broom.id",
+            "exp": datetime.now() + timedelta(hours=3)
+        }, setup_jwt_secret)  # Use the fixture's JWT secret
+        request.cookies = {'token': token}
 
         # Call the show_edit_chatbot method
         response = await view.show_create_chatbots(request=request, testing=True)
@@ -211,7 +216,7 @@ class TestBotViews:
         assert response.context["user_profile"].get('email') == dummy_user_profile.get("data")["email"]
 
     @pytest.mark.asyncio
-    async def test_show_edit_chatbot(self, setup_view, setup_service, dummy_user_profile):
+    async def test_show_edit_chatbot(self, setup_view, setup_service, dummy_user_profile, setup_jwt_secret):
         view = setup_view
         bot_id = str(uuid4())
 
@@ -229,7 +234,12 @@ class TestBotViews:
 
         # Create a mock request
         request = Mock(spec=Request)
-        request.cookies = {'token': 'some_valid_token'}
+        token = jwt.encode({
+            "sub": "test_sub",
+            "email": "test@broom.id",
+            "exp": datetime.now() + timedelta(hours=3)
+        }, setup_jwt_secret)  # Use the fixture's JWT secret
+        request.cookies = {'token': token}
 
         # Call the show_edit_chatbot method
         response = await view.show_edit_chatbot(bot_id, request=request, testing=True)
