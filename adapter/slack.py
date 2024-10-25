@@ -80,9 +80,9 @@ class SlackAdapter:
                 channel=channel_id,
                 text=question,
                 metadata={
-                    "event_type": "bot-slug",
+                    "event_type": "chat-data",
                     "event_payload": {
-                        "bot_slug": bot_slug
+                        "bot_slug": bot_slug,
                     }
                 },
             )
@@ -91,7 +91,7 @@ class SlackAdapter:
         except SlackApiError as e:
             raise HTTPException(status_code=400, detail=f"Slack API Error: {e}")
 
-    async def process_chatbot_request(self, chatbot, question, channel_id, thread_ts):
+    async def process_chatbot_request(self, chatbot, question, channel_id, thread_ts, history=None):
         try:
             loading_message = self.app.client.chat_postMessage(
                 channel=channel_id,
@@ -101,6 +101,12 @@ class SlackAdapter:
 
             bot_engine = self.engine_selector.select_engine(engine_type=chatbot.model)
 
+            if history:
+                for event in history:
+                    role = event.get("role")
+                    content = event.get("content")
+                    bot_engine.add_chat_history(role, content)
+            
             send_response_thread = threading.Thread(
                 target=self.send_generated_response,
                 kwargs={
@@ -177,5 +183,40 @@ class SlackAdapter:
         
         if chatbot is None:
             return {"text": self.MISSING_CHATBOT_ERROR}
-                
-        return asyncio.run(self.process_chatbot_request(chatbot, question, channel_id, thread_ts))
+        
+        history = self.get_chat_history(event)
+        return asyncio.run(self.process_chatbot_request(chatbot, question, channel_id, thread_ts, history))
+    
+    def get_chat_history(self, event):
+        all_messages = self.app.client.conversations_replies(
+            channel=event['channel'],
+            inclusive=True,
+            ts=event['thread_ts'],
+            include_all_metadata=True
+        )["messages"]
+        
+        result = []
+        INTRODUCTION_KEY_WORD = "asked:"
+
+        for i, message in enumerate(all_messages):
+            if i == 0:
+                question = self.extract_question(message, INTRODUCTION_KEY_WORD)
+                if(question == None):
+                    continue
+                if question:
+                    result.append({"role": "user", "content": question})
+            else:
+                self.add_message_to_result(message, result)
+        
+        return result
+
+    def extract_question(self, message, key_word):
+        if 'text' in message and key_word in message['text']:
+            question_start = message['text'].find(key_word) + len(key_word) + 1
+            return message['text'][question_start:].strip().strip('"')
+        return None
+
+    def add_message_to_result(self, message, result):
+        if 'text' in message:
+            role = "assistant" if 'bot_id' in message else "user"
+            result.append({"role": role, "content": message['text']})
