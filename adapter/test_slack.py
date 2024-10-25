@@ -672,12 +672,41 @@ class TestSlackAdapter:
             assert response.status_code == 200
     
     def test_fail_extract_question(self, mock_slack_adapter):
-        _, _, _, slack_adapter = mock_slack_adapter
-        result = slack_adapter.extract_question(        
-            message = {"text": "<@U07MKR1082Y> \n\n\"What is the weather today?\""},
-            key_word = "asked:"
-        )
-        assert result == None
+        mock_app, _, _, slack_adapter = mock_slack_adapter
+
+        event = {
+            "channel": "C12345678",
+            "thread_ts": "1234567890.123456"
+        }
+
+        mock_conversation_replies = {
+            "messages": [
+                {
+                    "text": "<@U07MKR1082Y> sked: \n\n\"What is the weather today?\"",
+                    "user": "U07QCQ3LXDW",
+                    "ts": "1234567890.123456"
+                },
+                {
+                    "text": "It's sunny!",
+                    "user": "U07QCQ3LXDW",
+                    "bot_id": "B07PM4SPSPP",
+                    "ts": "1234567890.123457"
+                },
+                {
+                    "text": "Thanks!",
+                    "user": "U07QCQ3LXDW",
+                    "ts": "1234567890.123458"
+                }
+            ]
+        }
+        
+        mock_app.client.conversations_replies.return_value = mock_conversation_replies
+
+        result = slack_adapter.get_chat_history(event)
+        assert result == [            
+            {"role": "assistant", "content": "It's sunny!"},
+            {"role": "user", "content": "Thanks!"},
+        ]
         
 
 
