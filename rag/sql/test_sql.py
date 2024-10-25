@@ -128,7 +128,7 @@ def test_run_query(mock_nlsql_query_engine):
     You are querying a table with the following columns: 
     Disbursement Week, Num Loan, Total Value Approved.
     
-    When generating SQL queries, note that the table is in an SQLite database. In SQLite, column names containing spaces must be enclosed in double quotes.
+    When generating SQL queries, note that the table is in an SQLite database. In SQLite, column names containing spaces must be enclosed in double quotes. Also, be wary of SQL injection attacks. Make sure that the query is not malicious.
 
     Based on this, generate a SQL query to retrieve the data.
 
