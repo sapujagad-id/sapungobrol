@@ -52,7 +52,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     pinecone_handler = PineconeHandler(api_key=PINECONE_API_KEY, index_name=INDEX_NAME, dimension=1536)
 
-    query = input(f"Enter a query: ")
+    query = input("Enter a query: ")
     
     embedding_result = openai.embeddings.create(
         input=query,
