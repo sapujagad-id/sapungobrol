@@ -85,7 +85,7 @@ class TestSlackAdapter:
         )
         return mock_request
     
-    def common_message_history(self):
+    def common_chat_history(self):
         return {
             "messages": [
                 {
@@ -611,7 +611,7 @@ class TestSlackAdapter:
             "thread_ts": "1234567890.123456"
         }
 
-        mock_conversation_replies = self.common_message_history()
+        mock_conversation_replies = self.common_chat_history()
         
         mock_app.client.conversations_replies.return_value = mock_conversation_replies
 
