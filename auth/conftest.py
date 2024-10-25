@@ -2,6 +2,7 @@ from unittest.mock import Mock
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from jose import jwt
 
 from auth.controller import AuthControllerV1
 from auth.dto import GoogleCredentials
@@ -72,3 +73,13 @@ def setup_database():
     UserModel.metadata.create_all(engine)
     yield engine
     UserModel.metadata.drop_all(engine)
+
+@pytest.fixture
+def valid_token(setup_jwt_secret):
+    # Generate a valid JWT token for testing
+    return jwt.encode({"sub": "user_id"}, key=setup_jwt_secret, algorithm="HS256")
+
+@pytest.fixture
+def invalid_token(setup_jwt_secret):
+    # Generate an invalid JWT token (e.g., altered or expired)
+    return "invalid.token.string"
