@@ -1,5 +1,7 @@
 from pinecone import Pinecone
 from pinecone import ServerlessSpec
+import os
+import openai
 
 class PineconeHandler:
     """Handles all interactions with Pinecone, including indexing and querying."""
@@ -42,3 +44,21 @@ class PineconeHandler:
     def query(self, vector, top_k: int = 10):
         """Queries the Pinecone index and returns the top_k results."""
         return self.index.query(vector=vector, top_k=top_k)
+
+if __name__ == "__main__":  # pragma: no cover
+    PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+    DOCUMENT_PATH = "data/ppl_testing_pdf.pdf"
+    INDEX_NAME = "broom"
+
+    pinecone_handler = PineconeHandler(api_key=PINECONE_API_KEY, index_name=INDEX_NAME, dimension=1536)
+
+    query = input("Enter a query: ")
+    
+    embedding_result = openai.embeddings.create(
+        input=query,
+        model="text-embedding-3-small"
+    )
+    
+    query_results = pinecone_handler.query(embedding_result.data[0].embedding, top_k=5)
+
+    print(f"Top 5 most relevant results: {query_results}")
