@@ -51,12 +51,36 @@ def chat():
 
 @pytest.fixture
 def mock_openai_response():
-    return {"choices": [{"message": {"content": "Mocked response content"}}]}
+    class MockMessage:
+        def __init__(self, content):
+            self.content = content
+
+    class MockChoice:
+        def __init__(self, message):
+            self.message = message
+
+    class MockResponse:
+        def __init__(self):
+            self.choices = [MockChoice(MockMessage("Mocked response content"))]
+
+    return MockResponse()
 
 
 @pytest.fixture
 def mock_openai_response_insufficient():
-    return {"choices": [{"message": {"content": "I don't know"}}]}
+    class MockMessage:
+        def __init__(self, content):
+            self.content = content
+
+    class MockChoice:
+        def __init__(self, message):
+            self.message = message
+
+    class MockResponse:
+        def __init__(self):
+            self.choices = [MockChoice(MockMessage("I don't know"))]
+
+    return MockResponse()
 
 
 class TestChat:
