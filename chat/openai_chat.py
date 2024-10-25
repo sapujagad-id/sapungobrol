@@ -13,7 +13,7 @@ class ChatOpenAI(ChatEngine):
         }
 
     def _api_call(self, full_input: str):
-        response = openai.ChatCompletion.create(
+        response = openai.chat.completions.create(
             model="gpt-4o-mini",
             messages=self.history,
         )
