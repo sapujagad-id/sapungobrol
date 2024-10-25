@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from fastapi import FastAPI, status
+from fastapi import Depends, FastAPI, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slack_bolt import App
@@ -37,27 +37,26 @@ if __name__ == "__main__":
         token=config.slack_bot_token, signing_secret=config.slack_signing_secret
     )
 
-    bot_repository = PostgresBotRepository(sessionmaker)
 
-    bot_service = BotServiceV1(bot_repository)
-
-    bot_controller = BotControllerV1(bot_service)
-
-    bot_view = BotViewV1(bot_controller, bot_service)
-    
     auth_repository = PostgresAuthRepository(sessionmaker)
     
     auth_service = AuthServiceV1(auth_repository, google_credentials, config.base_url, config.jwt_secret_key)
     
     auth_controller = AuthControllerV1(auth_service)
 
+    bot_repository = PostgresBotRepository(sessionmaker)
+
+    bot_service = BotServiceV1(bot_repository)
+
+    bot_controller = BotControllerV1(bot_service)
+
+    bot_view = BotViewV1(bot_controller, bot_service, auth_controller)
+    
+
     engine_selector = ChatEngineSelector(openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key)
 
     slack_adapter = SlackAdapter(slack_app, engine_selector, bot_service)
     
-    async def handle_event_message(event):
-        await slack_adapter.event_message(event)
-
     slack_app.event("message")(slack_adapter.event_message)
 
     app = FastAPI()
@@ -70,6 +69,13 @@ if __name__ == "__main__":
         endpoint=bot_view.show_list_chatbots,
         response_class=HTMLResponse,
         description="Page that displays existing chatbots",
+    )
+
+    app.add_api_route(
+        "/login",
+        endpoint=bot_view.show_login,
+        response_class=HTMLResponse,
+        description="Page that displays login page",
     )
 
     app.add_api_route(
