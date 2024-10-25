@@ -201,6 +201,8 @@ class SlackAdapter:
         for i, message in enumerate(all_messages):
             if i == 0:
                 question = self.extract_question(message, INTRODUCTION_KEY_WORD)
+                if(question == None):
+                    continue
                 if question:
                     result.append({"role": "user", "content": question})
             else:
