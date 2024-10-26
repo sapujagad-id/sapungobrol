@@ -3,15 +3,21 @@ import hashlib
 import os
 
 SENSITIVE_KEYWORDS = {"DELETE", "DROP", "UPDATE"}
-VALID_SIGNATURE = os.getenv("VALID_SIGNATURE")
-SECRET_SALT = os.getenv("SECRET_SALT")
+
+def get_valid_signature():
+    return os.getenv("VALID_SIGNATURE")
+
+def get_secret_salt():
+    return os.getenv("SECRET_SALT")
 
 def get_hash(text: str) -> str:
-    return hashlib.sha256(f"{text}{SECRET_SALT}".encode()).hexdigest()
+    return hashlib.sha256(f"{text}{get_secret_salt()}".encode()).hexdigest()
 
 def check_sql_security(sql: str, signature: str = None) -> Tuple[bool, str]:
     sql_upper = sql.upper()
     requires_signature = any(keyword in sql_upper for keyword in SENSITIVE_KEYWORDS)
+    
+    VALID_SIGNATURE = get_valid_signature()
     
     print("signature", signature)
     print("valid_signature", VALID_SIGNATURE)
