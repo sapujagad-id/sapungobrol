@@ -14,6 +14,7 @@ def check_sql_security(sql: str, signature: str = None) -> Tuple[bool, str]:
     requires_signature = any(keyword in sql_upper for keyword in SENSITIVE_KEYWORDS)
     
     print("signature", signature)
+    print("valid_signature", VALID_SIGNATURE)
     
     if not requires_signature:
         return True, "Valid non-modifying query"
