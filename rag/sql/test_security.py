@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from rag.sql.query_engine import extract_signature
+from rag.sql.query_engine import extract_signature, run_query
 from rag.sql.security import check_sql_security
 
 
@@ -61,3 +61,11 @@ def test_check_sql_security_non_modifying_query():
     is_valid, message = check_sql_security(non_modifying_sql)
     assert is_valid
     assert message == "Valid non-modifying query"
+
+def test_run_query_security_check_fails():
+    """Test run_query raises ValueError when security check fails."""
+    # Provide a modifying query without a valid signature to trigger the security check failure
+    modifying_query = "UPDATE ppl_data SET Num_Loan = 58 WHERE Date = '2024-10-07'"
+    
+    with pytest.raises(ValueError, match="Security check failed: Modifying query requires signature"):
+        run_query(modifying_query)
