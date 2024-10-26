@@ -13,6 +13,8 @@ def check_sql_security(sql: str, signature: str = None) -> Tuple[bool, str]:
     sql_upper = sql.upper()
     requires_signature = any(keyword in sql_upper for keyword in SENSITIVE_KEYWORDS)
     
+    print("signature", signature)
+    
     if not requires_signature:
         return True, "Valid non-modifying query"
         
@@ -24,6 +26,11 @@ def check_sql_security(sql: str, signature: str = None) -> Tuple[bool, str]:
         
     sql_hash = get_hash(sql)
     stored_hash = get_hash(VALID_SIGNATURE)
+    
+    print("sql_hash", sql_hash)
+    print("stored_hash", stored_hash)
+    print("signature", signature)
+    print("VALID_SIGNATURE", VALID_SIGNATURE)
     
     is_valid = sql_hash == stored_hash or signature == VALID_SIGNATURE
     return is_valid, "Signature validated" if is_valid else "Invalid signature"
