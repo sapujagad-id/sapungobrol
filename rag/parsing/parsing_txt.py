@@ -26,7 +26,3 @@ class TXTProcessor(FileProcessor):
     def process(self):
         documents = self._load_document()
         return self.get_nodes(documents)
-
-if __name__=="__main__":
-    processor_txt = TXTProcessor(document_path='/Users/nyoosteven/Kuliah/PPL/sapungobrol/data/ppl_faq (1).txt')
-    nodes = processor_txt.process()
