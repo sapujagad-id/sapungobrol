@@ -8,10 +8,10 @@ from fastapi.responses import RedirectResponse
 from loguru import logger
 import requests
 
-from auth.repository import AuthRepository, UserModel
+from auth.repository import AuthRepository
 from auth.dto import GoogleCredentials, LoginResponse, ProfileResponse
 from .exceptions import NoTokenSupplied, UserNotFound
-from auth.user import GoogleUserInfo
+from auth.user import GoogleUserInfo, User
 from jose import jwt
 
 
@@ -25,7 +25,7 @@ class AuthService(ABC):
       pass
     
     @abstractmethod
-    def get_user_profile(self, token: str) -> UserModel:
+    def get_user_profile(self, token: str) -> User:
       pass
   
 class AuthServiceV1(AuthService):
@@ -119,7 +119,7 @@ class AuthServiceV1(AuthService):
       
       return response
     
-    def get_user_profile(self, token: str) -> UserModel:
+    def get_user_profile(self, token: str) -> User:
       self.logger.debug("jwt token", token)
       if token == "" or token == None:
         raise NoTokenSupplied
