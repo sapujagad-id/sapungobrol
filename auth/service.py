@@ -11,7 +11,7 @@ import requests
 from auth.repository import AuthRepository
 from auth.dto import GoogleCredentials, LoginResponse, ProfileResponse
 from .exceptions import NoTokenSupplied, UserNotFound
-from auth.user import GoogleUserInfo
+from auth.user import GoogleUserInfo, User
 from jose import jwt
 
 
@@ -25,7 +25,7 @@ class AuthService(ABC):
       pass
     
     @abstractmethod
-    def get_user_profile(self, token: str) -> ProfileResponse:
+    def get_user_profile(self, token: str) -> User:
       pass
   
 class AuthServiceV1(AuthService):
@@ -51,6 +51,8 @@ class AuthServiceV1(AuthService):
       )
         
     def authorize_google(self, request: Request, code: str) -> Response:
+      JWT_EXPIRY_IN_HOURS = 24
+      
       data = {
         "code": code,
         "client_id": self.google_credentials.client_id,
@@ -84,14 +86,14 @@ class AuthServiceV1(AuthService):
       
       # check if the email is a valid broom email
       if not user_info_json["email"].endswith("@broom.id"):
-          raise HTTPException(status_code=401, detail="Invalid email, must be a Broom.id email")
+        raise HTTPException(status_code=401, detail="Invalid email, must be a Broom.id email")
 
       # generate our own access token
       jwt_token = jwt.encode(
         {
           "sub": user_info_json["sub"],
           "email": user_info_json["email"],
-          "exp": datetime.now(UTC) + timedelta(hours=3),
+          "exp": datetime.now(UTC) + timedelta(hours=JWT_EXPIRY_IN_HOURS),
         },
         self.jwt_secret,
       )
@@ -101,17 +103,23 @@ class AuthServiceV1(AuthService):
 
       state = request.cookies.get("oauth_state")
       if state is not None:
-          target_path = base64.urlsafe_b64decode(
-              state.removeprefix("b'").removesuffix("'")
-          ).decode("utf-8")
+        cleaned_state = state.removeprefix("b'").removesuffix("'")
+        target_path = base64.urlsafe_b64decode(
+          cleaned_state
+        ).decode("utf-8")
 
       target_url = self.base_url + target_path
       response = RedirectResponse(url=target_url)
-      response.set_cookie(key="token", value=jwt_token, httponly=True, secure=True)
+      response.set_cookie(
+        key="token", 
+        value=jwt_token, 
+        httponly=True, 
+        secure=True,
+      )
       
       return response
     
-    def get_user_profile(self, token: str) -> ProfileResponse:
+    def get_user_profile(self, token: str) -> User:
       self.logger.debug("jwt token", token)
       if token == "" or token == None:
         raise NoTokenSupplied
@@ -121,11 +129,9 @@ class AuthServiceV1(AuthService):
         key=self.jwt_secret,
         algorithms=["HS256"],
       )
-        
       self.logger.debug("decoded jwt", decoded.items())
+      
       user = self.repository.find_user_by_email(decoded['email'])
       if not user:
         raise UserNotFound
-      return ProfileResponse(
-        data=user,
-      )
+      return user

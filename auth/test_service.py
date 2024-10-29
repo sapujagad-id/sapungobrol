@@ -50,6 +50,26 @@ class TestAuthService:
         decoded = jwt.decode(token, setup_real_service.jwt_secret, algorithms=["HS256"])
         assert decoded['sub'] == "12345"
         assert decoded['email'] == "test@broom.id"
+        
+    @patch('requests.post')
+    @patch('requests.get')
+    def test_authorize_google_not_broom(self, mock_get, mock_post, setup_real_service: AuthServiceV1):
+        mock_post.return_value.json.return_value = {"access_token": "fake_access_token"}
+        mock_post.return_value.raise_for_status.return_value = None
+
+        mock_get.return_value.json.return_value = {
+            "sub": "12345",
+            "email": "notbroom@gmail.com",
+            "email_verified": True,
+            "name": "Test User",
+            "given_name": "Test User",
+            "picture": "https://newuser.com/icon.png",
+        }
+        mock_get.return_value.raise_for_status.return_value = None
+        mock_request = MockRequest(cookies={})
+        
+        with pytest.raises(HTTPException):
+            setup_real_service.authorize_google(mock_request, "fake_code")
 
     @patch('requests.post')
     def test_authorize_google_invalid_token(self, mock_post, setup_real_service):
@@ -109,7 +129,7 @@ class TestAuthService:
         setup_real_service.repository.add_google_user(user_info)
         profile = setup_real_service.get_user_profile(token)
         assert profile is not None
-        assert profile["data"].email == "test@broom.id"
+        assert profile.email == "test@broom.id"
 
     def test_get_user_profile_no_token_supplied(self, setup_real_service: AuthServiceV1):
         with pytest.raises(NoTokenSupplied):
