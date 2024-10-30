@@ -4,6 +4,8 @@ CREATE TYPE message_adapters AS ENUM('SLACK');
 
 CREATE TYPE login_methods AS ENUM('GOOGLE');
 
+CREATE TYPE data_source_type AS ENUM ('csv', 'pdf', 'txt', 'sql');
+
 CREATE TABLE users (
     id UUID PRIMARY KEY,
     sub VARCHAR(127) NOT NULL,
@@ -26,4 +28,15 @@ CREATE TABLE bots (
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     slug VARCHAR(255),
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE data_sources (
+    id UUID PRIMARY KEY,
+    type data_source_type NOT NULL,
+    object_url VARCHAR(2048),
+    db_conn_url VARCHAR(2048),
+    table_names TEXT,
+    created_by UUID NOT NULL REFERENCES users(id),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
