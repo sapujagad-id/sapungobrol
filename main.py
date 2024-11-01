@@ -16,8 +16,20 @@ from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
 
 import uvicorn
+import sentry_sdk
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+import os
 
 load_dotenv(override=True)
+
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN"),
+    traces_sample_rate=1.0,
+    environment=os.getenv("ENVIRONMENT", "production"),
+    _experiments={
+        "continuous_profiling_auto_start": True,
+    },
+)
 
 
 if __name__ == "__main__":
@@ -60,6 +72,7 @@ if __name__ == "__main__":
     slack_app.event("message")(slack_adapter.event_message)
 
     app = FastAPI()
+    app.add_middleware(SentryAsgiMiddleware)
 
     app.mount("/assets", StaticFiles(directory="public"), name="assets")
     app.mount("/static", StaticFiles(directory="public"), name="static")
@@ -160,5 +173,9 @@ if __name__ == "__main__":
         response_class=RedirectResponse,
         methods=["GET"],
     )
+    
+    @app.get("/sentry-debug")
+    async def trigger_error():
+        division_by_zero = 1 / 0
 
     uvicorn.run(app, host="0.0.0.0", port=config.port)
