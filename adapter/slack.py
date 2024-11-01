@@ -41,18 +41,17 @@ class SlackAdapter:
         payload = json.loads(payload_str)
 
         actions = payload["actions"]
-        if len(actions) == 1:
-            if actions[0]["action_id"] == "ask_question":
-                channel_id = payload["channel"]["id"]
-                user_id = payload["user"]["id"]
-                slug = payload["state"]["values"]["bots"]["select_chatbot"][
-                    "selected_option"
-                ]["value"]
-                question = payload["state"]["values"]["question"]["question"]["value"]
+        if len(actions) == 1 and actions[0]["action_id"] == "ask_question":
+            channel_id = payload["channel"]["id"]
+            user_id = payload["user"]["id"]
+            slug = payload["state"]["values"]["bots"]["select_chatbot"][
+                "selected_option"
+            ]["value"]
+            question = payload["state"]["values"]["question"]["question"]["value"]
 
-                await self.ask_v2(
-                    channel_id=channel_id, user_id=user_id, slug=slug, question=question
-                )
+            await self.ask_v2(
+                channel_id=channel_id, user_id=user_id, slug=slug, question=question
+            )
 
         return Response(status_code=200)
 
@@ -103,7 +102,7 @@ class SlackAdapter:
                 text="Something went wrong when trying to generate your response.",
             )
 
-    async def ask_form(self, request: Request):
+    async def ask_form(self, _: Request):
         return {
             "blocks": [
                 {

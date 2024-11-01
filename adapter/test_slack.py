@@ -200,7 +200,7 @@ class TestSlackAdapter:
         mock_slack_adapter,
         mock_request,
     ):
-        _, _, mock_bot_service, slack_adapter = mock_slack_adapter
+        _, _, _, slack_adapter = mock_slack_adapter
 
         mock_request = await self.mock_load_options_request(
             mock_request, action_id="unknown"
