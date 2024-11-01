@@ -82,7 +82,11 @@ class AuthServiceV1(AuthService):
       self.logger.debug("user_info_json with user data", user_info_json)
       user = self.repository.find_user_by_sub(user_info_json["sub"])
       if not user:
-        self.repository.add_google_user(user_info_json)
+        user_with_email = self.repository.find_user_by_email(user_info_json["email"])
+        if(user_with_email):
+          self.repository.update_google_user(user=user_with_email, user_info_json=user_info_json)
+        else:
+          self.repository.add_google_user(user_info_json)
       
       # check if the email is a valid broom email
       if not user_info_json["email"].endswith("@broom.id"):
