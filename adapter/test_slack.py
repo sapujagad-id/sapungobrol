@@ -328,7 +328,7 @@ class TestSlackAdapter:
         )
 
     @pytest.mark.asyncio
-    async def test_as_v2_no_bots(self, mock_slack_adapter):
+    async def test_ask_v2_no_bots(self, mock_slack_adapter):
         mock_app, _, mock_bot_service, slack_adapter = mock_slack_adapter
 
         mock_app.client.chat_postMessage = MagicMock(
