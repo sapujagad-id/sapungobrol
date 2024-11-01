@@ -81,6 +81,56 @@ class SlackAdapter:
                 text="Something went wrong when trying to generate your response.",
             )
 
+    async def ask_form(self, request: Request):
+        return {
+            "blocks": [
+                {
+                    "type": "section",
+                    "block_id": "bots",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "*Select the chatbot you want to ask*",
+                    },
+                    "accessory": {
+                        "action_id": "select_chatbot",
+                        "type": "external_select",
+                        "placeholder": {
+                            "type": "plain_text",
+                            "text": "Select a chatbot",
+                        },
+                        "min_query_length": 0,
+                    },
+                },
+                {
+                    "type": "input",
+                    "block_id": "question",
+                    "element": {
+                        "action_id": "question",
+                        "type": "plain_text_input",
+                        "multiline": True,
+                        "min_length": 1,
+                    },
+                    "label": {"type": "plain_text", "text": "What is your question?"},
+                    "hint": {
+                        "type": "plain_text",
+                        "text": "e.g. Who's the CEO of our company?",
+                    },
+                },
+                {
+                    "type": "actions",
+                    "elements": [
+                        {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "Ask question"},
+                            "style": "primary",
+                            "value": "ask_question",
+                            "action_id": "ask_question",
+                        },
+                    ],
+                },
+            ]
+        }
+
     async def ask(self, request: Request):
         data = await request.form()
 
