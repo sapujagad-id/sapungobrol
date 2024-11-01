@@ -12,6 +12,7 @@ from auth.dto import GoogleCredentials, ProfileResponse
 from bot.view import BotViewV1
 from config import AppConfig, configure_logger
 from chat import ChatEngineSelector
+from data_source.view import DataSourceViewV1
 from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
 
@@ -52,6 +53,7 @@ if __name__ == "__main__":
 
     bot_view = BotViewV1(bot_controller, bot_service, auth_controller)
     
+    data_source_view = DataSourceViewV1(auth_controller)
 
     engine_selector = ChatEngineSelector(openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key)
 
@@ -91,6 +93,13 @@ if __name__ == "__main__":
         endpoint=bot_view.show_edit_chatbot,
         response_class=HTMLResponse,
         description="Page that displays chatbot in detail",
+    )
+    
+    app.add_api_route(
+        "/data-source",
+        endpoint=data_source_view.show_list_data_sources,
+        response_class=HTMLResponse,
+        description="Page that displays list of data source",
     )
 
     app.add_api_route(
