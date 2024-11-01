@@ -101,7 +101,7 @@ class TestSlackAdapter:
             ]
         }
 
-    async def mock_select_chatbot_options_request(self, mock_request):
+    async def mock_load_options_request(self, mock_request, action_id: str):
         mock_request.form = AsyncMock(
             return_value={
                 "channel_id": "C12345678",
@@ -109,7 +109,7 @@ class TestSlackAdapter:
                 "payload": json.dumps(
                     {
                         "type": "block_suggestion",
-                        "action_id": "select_chatbot",
+                        "action_id": action_id,
                         "block_id": "bots",
                         "value": "",
                     }
@@ -117,6 +117,57 @@ class TestSlackAdapter:
             }
         )
         return mock_request
+
+    @pytest.mark.asyncio
+    async def test_handle_interactions_ask_question(
+        self, mock_slack_adapter, mock_request
+    ):
+        _, _, _, slack_adapter = mock_slack_adapter
+
+        mock_request.form = AsyncMock(
+            return_value={
+                "payload": json.dumps(
+                    {
+                        "channel": {
+                            "id": "C12345678",
+                        },
+                        "user": {
+                            "id": "U12345678",
+                        },
+                        "state": {
+                            "values": {
+                                "bots": {
+                                    "select_chatbot": {
+                                        "selected_option": {"value": "12"}
+                                    }
+                                },
+                                "question": {
+                                    "question": {"value": "What is the weather today?"}
+                                },
+                            },
+                        },
+                        "actions": [
+                            {
+                                "action_id": "ask_question",
+                            }
+                        ],
+                    }
+                )
+            }
+        )
+
+        slack_adapter.ask_v2 = AsyncMock()
+
+        res = await slack_adapter.handle_interactions(mock_request)
+
+        assert res.status_code == 200
+
+        slack_adapter.ask_v2.assert_called_once_with(
+            channel_id="C12345678",
+            user_id="U12345678",
+            slug="12",
+            question="What is the weather today?",
+        )
 
     @pytest.mark.asyncio
     async def test_load_options_select_chatbot(
@@ -130,7 +181,9 @@ class TestSlackAdapter:
 
         bots = mock_bot_list.return_value
 
-        mock_request = await self.mock_select_chatbot_options_request(mock_request)
+        mock_request = await self.mock_load_options_request(
+            mock_request, action_id="select_chatbot"
+        )
         mock_bot_service.get_chatbots = mock_bot_list
 
         res = await slack_adapter.load_options(mock_request)
@@ -140,6 +193,22 @@ class TestSlackAdapter:
 
         for i in range(len(options)):
             assert options[i]["value"] == bots[i].slug
+
+    @pytest.mark.asyncio
+    async def test_load_options_unknown_action(
+        self,
+        mock_slack_adapter,
+        mock_request,
+    ):
+        _, _, mock_bot_service, slack_adapter = mock_slack_adapter
+
+        mock_request = await self.mock_load_options_request(
+            mock_request, action_id="unknown"
+        )
+
+        res = await slack_adapter.load_options(mock_request)
+
+        assert res.status_code == 200
 
     @pytest.mark.asyncio
     async def test_ask_form(
@@ -194,6 +263,90 @@ class TestSlackAdapter:
             ts="1234567890.654321",
             text="Something went wrong when trying to generate your response.",
         )
+
+    @pytest.mark.asyncio
+    async def test_ask_v2(self, mock_slack_adapter):
+        mock_app, mock_chatbot, _, slack_adapter = mock_slack_adapter
+
+        mock_app.client.chat_postMessage = MagicMock(
+            return_value={"ts": "1234567890.123456"}
+        )
+
+        mock_chatbot.generate_response = MagicMock(
+            return_value="Chatbot Reply: I'm fine, thank you!"
+        )
+
+        slack_adapter.process_chatbot_request = AsyncMock(
+            return_value=Response(status_code=200)
+        )
+
+        response = await slack_adapter.ask_v2(
+            channel_id="C12345678",
+            user_id="U12345678",
+            slug="12",
+            question="How are you?",
+        )
+
+        mock_app.client.chat_postMessage.assert_called_once_with(
+            channel="C12345678",
+            text='<@U12345678> asked: \n\n"How are you?" ',
+            metadata={"event_type": "chat-data", "event_payload": {"bot_slug": "12"}},
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_ask_v2_slack_api_error(self, mock_slack_adapter):
+        mock_app, mock_chatbot, _, slack_adapter = mock_slack_adapter
+
+        mock_app.client.chat_postMessage = MagicMock(
+            side_effect=SlackApiError("Error posting message", response={}),
+        )
+
+        mock_chatbot.generate_response = MagicMock(
+            return_value="Chatbot Reply: I'm fine, thank you!"
+        )
+
+        slack_adapter.process_chatbot_request = AsyncMock(
+            return_value=Response(status_code=200)
+        )
+
+        with pytest.raises(HTTPException) as exc_info:
+            await slack_adapter.ask_v2(
+                channel_id="C12345678",
+                user_id="U12345678",
+                slug="12",
+                question="How are you?",
+            )
+
+        assert exc_info.value.status_code == 400
+        assert "Slack API Error" in str(exc_info.value.detail)
+
+        mock_app.client.chat_postMessage.assert_called_once_with(
+            channel="C12345678",
+            text='<@U12345678> asked: \n\n"How are you?" ',
+            metadata={"event_type": "chat-data", "event_payload": {"bot_slug": "12"}},
+        )
+
+    @pytest.mark.asyncio
+    async def test_as_v2_no_bots(self, mock_slack_adapter):
+        mock_app, _, mock_bot_service, slack_adapter = mock_slack_adapter
+
+        mock_app.client.chat_postMessage = MagicMock(
+            side_effect=[
+                {"ts": "1234567890.123456"},
+            ]
+        )
+
+        mock_bot_service.get_chatbot_by_slug = MagicMock(return_value=None)
+
+        res = await slack_adapter.ask_v2(
+            channel_id="C12345678",
+            user_id="U12345678",
+            slug="12",
+            question="How are you?",
+        )
+
+        assert res["text"] == "Whoops. Can't find the chatbot you're looking for."
 
     @pytest.mark.asyncio
     async def test_ask_method(self, mock_slack_adapter, mock_request):
