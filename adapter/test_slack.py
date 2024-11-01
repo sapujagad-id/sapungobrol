@@ -1,9 +1,14 @@
 import json
 import pytest
 import time
+import requests
 from unittest.mock import AsyncMock, MagicMock, patch, call
 from fastapi import Request, HTTPException, Response
-from .slack import SlackAdapter
+from .slack import (
+    SlackAdapter,
+    EmptyQuestion,
+    MissingChatbot,
+)
 from slack_sdk.errors import SlackApiError
 from datetime import datetime
 from uuid import uuid4
@@ -69,6 +74,14 @@ class TestSlackAdapter:
 
         return first_bot_slug, second_bot_slug, mock_bot_response_list
 
+    @pytest.fixture
+    def mock_requests(self):
+        return MagicMock(spec=requests)
+
+    @pytest.fixture
+    def mock_response(self):
+        return MagicMock(spec=requests.Response)
+
     async def common_mock_request(self, mock_request, text):
         mock_request.form = AsyncMock(
             return_value={
@@ -120,7 +133,11 @@ class TestSlackAdapter:
 
     @pytest.mark.asyncio
     async def test_handle_interactions_ask_question(
-        self, mock_slack_adapter, mock_request
+        self,
+        mock_slack_adapter,
+        mock_request,
+        mock_requests,
+        mock_response,
     ):
         _, _, _, slack_adapter = mock_slack_adapter
 
@@ -151,12 +168,16 @@ class TestSlackAdapter:
                                 "action_id": "ask_question",
                             }
                         ],
+                        "response_url": "https://hooks.slack.com/XXXXXXX",
                     }
                 )
             }
         )
 
         slack_adapter.ask_v2 = AsyncMock()
+
+        mock_response.status_code = 200
+        mock_requests.post = MagicMock(return_value=mock_response)
 
         res = await slack_adapter.handle_interactions(mock_request)
 
@@ -168,6 +189,110 @@ class TestSlackAdapter:
             slug="12",
             question="What is the weather today?",
         )
+
+    @pytest.mark.asyncio
+    async def test_handle_interactions_ask_question_error(
+        self,
+        mock_slack_adapter,
+        mock_request,
+    ):
+        _, _, _, slack_adapter = mock_slack_adapter
+
+        mock_request.form = AsyncMock(
+            return_value={
+                "payload": json.dumps(
+                    {
+                        "channel": {
+                            "id": "C12345678",
+                        },
+                        "user": {
+                            "id": "U12345678",
+                        },
+                        "state": {
+                            "values": {
+                                "bots": {
+                                    "select_chatbot": {
+                                        "selected_option": {"value": "12"}
+                                    }
+                                },
+                                "question": {
+                                    "question": {"value": "What is the weather today?"}
+                                },
+                            },
+                        },
+                        "actions": [
+                            {
+                                "action_id": "ask_question",
+                            }
+                        ],
+                        "response_url": "https://hooks.slack.com/XXXXXXX",
+                    }
+                )
+            }
+        )
+
+        slack_adapter.ask_v2 = AsyncMock(side_effect=EmptyQuestion)
+        with pytest.raises(HTTPException) as e:
+            await slack_adapter.handle_interactions(mock_request)
+
+        assert e.value.status_code == 400
+        assert e.value.detail == EmptyQuestion.message
+
+        slack_adapter.ask_v2 = AsyncMock(side_effect=MissingChatbot)
+        with pytest.raises(HTTPException) as e:
+            await slack_adapter.handle_interactions(mock_request)
+
+        assert e.value.status_code == 400
+        assert e.value.detail == MissingChatbot.message
+
+    @pytest.mark.asyncio
+    async def test_handle_interactions_ask_question_slack_api_error(
+        self, mock_slack_adapter, mock_request, mock_response
+    ):
+        _, _, _, slack_adapter = mock_slack_adapter
+
+        mock_request.form = AsyncMock(
+            return_value={
+                "payload": json.dumps(
+                    {
+                        "channel": {
+                            "id": "C12345678",
+                        },
+                        "user": {
+                            "id": "U12345678",
+                        },
+                        "state": {
+                            "values": {
+                                "bots": {
+                                    "select_chatbot": {
+                                        "selected_option": {"value": "12"}
+                                    }
+                                },
+                                "question": {
+                                    "question": {"value": "What is the weather today?"}
+                                },
+                            },
+                        },
+                        "actions": [
+                            {
+                                "action_id": "ask_question",
+                            }
+                        ],
+                        "response_url": "https://hooks.slack.com/XXXXXXX",
+                    }
+                )
+            }
+        )
+
+        slack_adapter.ask_v2 = AsyncMock()
+
+        with patch("requests.post") as mock_post:
+            mock_response.status_code = 400
+            mock_post.return_value = mock_response
+            await slack_adapter.handle_interactions(mock_request)
+
+            mock_post.side_effect = requests.RequestException
+            await slack_adapter.handle_interactions(mock_request)
 
     @pytest.mark.asyncio
     async def test_load_options_select_chatbot(
@@ -339,14 +464,37 @@ class TestSlackAdapter:
 
         mock_bot_service.get_chatbot_by_slug = MagicMock(return_value=None)
 
-        res = await slack_adapter.ask_v2(
-            channel_id="C12345678",
-            user_id="U12345678",
-            slug="12",
-            question="How are you?",
+        with pytest.raises(MissingChatbot):
+            await slack_adapter.ask_v2(
+                channel_id="C12345678",
+                user_id="U12345678",
+                slug="12",
+                question="How are you?",
+            )
+
+    @pytest.mark.asyncio
+    async def test_ask_v2_empty_question(self, mock_slack_adapter):
+        mock_app, _, _, slack_adapter = mock_slack_adapter
+
+        mock_app.client.chat_postMessage = MagicMock(
+            return_value={"ts": "1234567890.123456"}
         )
 
-        assert res["text"] == "Whoops. Can't find the chatbot you're looking for."
+        with pytest.raises(EmptyQuestion):
+            await slack_adapter.ask_v2(
+                channel_id="C12345678",
+                user_id="U12345678",
+                slug="12",
+                question=None,
+            )
+
+        with pytest.raises(EmptyQuestion):
+            await slack_adapter.ask_v2(
+                channel_id="C12345678",
+                user_id="U12345678",
+                slug="12",
+                question="",
+            )
 
     @pytest.mark.asyncio
     async def test_ask_method(self, mock_slack_adapter, mock_request):
