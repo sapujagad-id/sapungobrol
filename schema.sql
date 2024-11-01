@@ -36,7 +36,6 @@ CREATE TABLE data_sources (
     object_url VARCHAR(2048),
     db_conn_url VARCHAR(2048),
     table_names TEXT,
-    created_by UUID NOT NULL REFERENCES users(id),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
