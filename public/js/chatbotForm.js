@@ -1,3 +1,11 @@
+document.addEventListener("DOMContentLoaded", function() {
+    new TomSelect("#data_source", {
+        plugins: ['remove_button'],
+        create: false,  // Disallow creating new items
+        placeholder: "Select data sources...",
+    });
+});
+
 function validateForm() {
     const name = document.getElementById('name').value;
     const systemPrompt = document.getElementById('system_prompt').value;
