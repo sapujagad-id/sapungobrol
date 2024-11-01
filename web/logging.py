@@ -14,22 +14,23 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         self,
         app: FastAPI,
     ) -> None:
-        self.logger = logger
         super().__init__(app)
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
 
         request_id: str = str(uuid4())
-        logging_dict = {"trace_id": request_id}
 
-        response, response_dict = await self._log_response(
-            call_next, request, request_id
-        )
-        request_dict = await self._log_request(request)
-        logging_dict["request"] = request_dict
-        logging_dict["response"] = response_dict
+        with logger.contextualize(trace_id=request_id):
+            logging_dict = {"trace_id": request_id}
 
-        self.logger.bind(**logging_dict).info("Incoming request")
+            response, response_dict = await self._log_response(
+                call_next, request, request_id
+            )
+            request_dict = await self._log_request(request)
+            logging_dict["request"] = request_dict
+            logging_dict["response"] = response_dict
+
+            logger.bind(**logging_dict).info("Incoming request")
 
         return response
 
@@ -102,9 +103,9 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             return response
 
         except Exception as e:
-            self.logger.bind(trace_id=request_id).bind(
-                stacktrace=traceback.format_exception(e)
-            ).error("Unhandled error")
+            logger.bind(stacktrace=traceback.format_exception(e)).error(
+                "Unhandled error"
+            )
 
             response = Response(status_code=500, content="Something went wrong")
             response.headers["X-TRACE-ID"] = request_id
