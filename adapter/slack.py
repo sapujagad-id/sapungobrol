@@ -34,6 +34,28 @@ class SlackAdapter:
     async def handle_events(self, req: Request):  # pragma: no cover
         return await self.handler.handle(req)
 
+    async def handle_interactions(self, req: Request):
+        data = await req.form()
+
+        payload_str = data.get("payload")
+        payload = json.loads(payload_str)
+
+        actions = payload["actions"]
+        if len(actions) == 1:
+            if actions[0]["action_id"] == "ask_question":
+                channel_id = payload["channel"]["id"]
+                user_id = payload["user"]["id"]
+                slug = payload["state"]["values"]["bots"]["select_chatbot"][
+                    "selected_option"
+                ]["value"]
+                question = payload["state"]["values"]["question"]["question"]["value"]
+
+                await self.ask_v2(
+                    channel_id=channel_id, user_id=user_id, slug=slug, question=question
+                )
+
+        return Response(status_code=200)
+
     async def load_options(self, req: Request):
         data = await req.form()
 
@@ -130,6 +152,32 @@ class SlackAdapter:
                 },
             ]
         }
+
+    async def ask_v2(self, channel_id: str, user_id: str, slug: str, question: str):
+        question = f'<@{user_id}> asked: \n\n"{question}" '
+
+        try:
+            chatbot = self.bot_service.get_chatbot_by_slug(slug=slug)
+
+            if chatbot is None:
+                return {"text": self.MISSING_CHATBOT_ERROR}
+
+            response = self.app.client.chat_postMessage(
+                channel=channel_id,
+                text=question,
+                metadata={
+                    "event_type": "chat-data",
+                    "event_payload": {
+                        "bot_slug": slug,
+                    },
+                },
+            )
+            return await self.process_chatbot_request(
+                chatbot, question, channel_id, response["ts"]
+            )
+
+        except SlackApiError as e:
+            raise HTTPException(status_code=400, detail=f"Slack API Error: {e}")
 
     async def ask(self, request: Request):
         data = await request.form()
