@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from rag.sql.db_loader import load_csv_to_db
+from rag.sql.db_loader import load_csv_to_db, load_xlsx_to_db
 from rag.sql.query_engine import (check_db_data, get_table_schema,
                                   setup_query_engine, run_query)
 
@@ -14,7 +14,15 @@ def mock_csv_processor(mocker):
     instance = mock_processor.return_value
     instance._load_document.return_value = MagicMock()
     return instance
-  
+
+@pytest.fixture
+def mock_xlsx_processor(mocker):
+    """Mock XLSXProcessor for testing."""
+    mock_processor = mocker.patch('rag.sql.db_loader.XLSXProcessor')
+    instance = mock_processor.return_value
+    instance._load_document.return_value = MagicMock()
+    return instance
+
 @pytest.fixture
 def mock_inspect(mocker):
     """Mock SQLAlchemy's inspect function."""
@@ -70,6 +78,18 @@ def test_load_csv_to_db(mock_csv_processor, mock_engine):
     mock_csv_processor._load_document.assert_called_once()
 
     mock_csv_processor._load_document().to_sql.assert_called_once_with(
+        'ppl_data', con=mock_engine, if_exists='replace', index=False
+    )
+    
+    assert engine == mock_engine
+
+def test_load_xlsx_to_db(mock_xlsx_processor, mock_engine):
+    """Test loading a single CSV into the database."""
+    engine = load_xlsx_to_db("dummy_path.xlsx", "Sheet1")
+
+    mock_xlsx_processor._load_document.assert_called_once()
+
+    mock_xlsx_processor._load_document().to_sql.assert_called_once_with(
         'ppl_data', con=mock_engine, if_exists='replace', index=False
     )
     

@@ -1,4 +1,5 @@
 from rag.parsing.parsing_csv import CSVProcessor
+from rag.parsing.parsing_xlsx import XLSXProcessor
 
 from sqlalchemy import create_engine
 
@@ -12,3 +13,6 @@ def load_csv_to_db(file_path: str, db_path: str = "sqlite:///ppl_data.db"):
     df.to_sql('ppl_data', con=engine, if_exists='replace', index=False)
     
     return engine
+
+def load_xlsx_to_db(file_path: str, sheet_name: str, db_path: str = "sqlite:///ppl_data.db"):
+    pass
