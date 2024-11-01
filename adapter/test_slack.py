@@ -345,7 +345,7 @@ class TestSlackAdapter:
 
         mock_request = await self.common_mock_request(mock_request, "12 What")
 
-        res = await slack_adapter.ask_form(mock_request)
+        res = slack_adapter.ask_form(mock_request)
 
         assert res["blocks"] is not None
 

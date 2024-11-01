@@ -139,7 +139,7 @@ class SlackAdapter:
                 text="Something went wrong when trying to generate your response.",
             )
 
-    async def ask_form(self, _: Request):
+    def ask_form(self, _: Request):
         return {
             "blocks": [
                 {
