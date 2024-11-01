@@ -22,11 +22,11 @@ load_dotenv(override=True)
 
 if __name__ == "__main__":
     config = AppConfig()
-    
+
     google_credentials = GoogleCredentials(
-        client_id     = config.google_client_id,
-        client_secret = config.google_client_secret,
-        redirect_uri  = config.google_redirect_uri,
+        client_id=config.google_client_id,
+        client_secret=config.google_client_secret,
+        redirect_uri=config.google_redirect_uri,
     )
 
     configure_logger(config.log_level)
@@ -37,11 +37,12 @@ if __name__ == "__main__":
         token=config.slack_bot_token, signing_secret=config.slack_signing_secret
     )
 
-
     auth_repository = PostgresAuthRepository(sessionmaker)
-    
-    auth_service = AuthServiceV1(auth_repository, google_credentials, config.base_url, config.jwt_secret_key)
-    
+
+    auth_service = AuthServiceV1(
+        auth_repository, google_credentials, config.base_url, config.jwt_secret_key
+    )
+
     auth_controller = AuthControllerV1(auth_service)
 
     bot_repository = PostgresBotRepository(sessionmaker)
@@ -51,12 +52,13 @@ if __name__ == "__main__":
     bot_controller = BotControllerV1(bot_service)
 
     bot_view = BotViewV1(bot_controller, bot_service, auth_controller)
-    
 
-    engine_selector = ChatEngineSelector(openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key)
+    engine_selector = ChatEngineSelector(
+        openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key
+    )
 
     slack_adapter = SlackAdapter(slack_app, engine_selector, bot_service)
-    
+
     slack_app.event("message")(slack_adapter.event_message)
 
     app = FastAPI()
@@ -116,7 +118,7 @@ if __name__ == "__main__":
         lambda q: bot_controller.check_slug_exist(q),
         methods=["GET"],
         status_code=status.HTTP_200_OK,
-        name="Check Is Slug Exist"
+        name="Check Is Slug Exist",
     )
     app.add_api_route(
         "/api/bots/{bot_id}",
@@ -127,33 +129,46 @@ if __name__ == "__main__":
     app.add_api_route(
         "/api/slack/events", endpoint=slack_adapter.handle_events, methods=["POST"]
     )
+    app.add_api_route(
+        "/api/slack/interactivity",
+        endpoint=slack_adapter.handle_interactions,
+        methods=["POST"],
+    )
+    app.add_api_route(
+        "/api/slack/options",
+        endpoint=slack_adapter.load_options,
+        methods=["POST"],
+    )
     app.add_api_route("/api/slack/ask", endpoint=slack_adapter.ask, methods=["POST"])
+    app.add_api_route(
+        "/api/slack/askbot", endpoint=slack_adapter.ask_form, methods=["POST"]
+    )
     app.add_api_route(
         "/api/slack/list-bots", endpoint=slack_adapter.list_bots, methods=["POST"]
     )
-    
+
     app.add_api_route(
         "/login/google",
-        endpoint=auth_controller.login_redirect_google, 
+        endpoint=auth_controller.login_redirect_google,
         response_class=RedirectResponse,
         methods=["GET"],
-        description="Page to redirect user to when using google sign-in"
+        description="Page to redirect user to when using google sign-in",
     )
-    
+
     app.add_api_route(
         "/api/auth/callback/google",
         endpoint=auth_controller.authorize_google,
         response_class=RedirectResponse,
         methods=["GET"],
     )
-    
+
     app.add_api_route(
         "/api/auth/profile",
         endpoint=auth_controller.user_profile_google,
         response_model=ProfileResponse,
         methods=["GET"],
     )
-    
+
     app.add_api_route(
         "/logout",
         endpoint=auth_controller.logout,
