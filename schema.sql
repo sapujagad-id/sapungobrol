@@ -12,7 +12,8 @@ CREATE TABLE users (
     email VARCHAR(127) NOT NULL,
     email_verified BOOLEAN NOT NULL,
     login_method login_methods NOT NULL DEFAULT 'GOOGLE',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    access_level INTEGER DEFAULT 0 NOT NULL
 );
 
 CREATE TABLE bots (
