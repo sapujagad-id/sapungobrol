@@ -1,7 +1,7 @@
 import time
 import traceback
 
-from typing import Callable
+from typing import Callable, Any
 
 from fastapi import FastAPI, Request, Response
 from loguru import logger
@@ -34,7 +34,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
         return response
 
-    async def _log_request(self, request: Request) -> str:
+    async def _log_request(self, request: Request) -> dict[str, Any]:
         """Logs request part
          Arguments:
         - request: Request
@@ -56,7 +56,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
     async def _log_response(
         self, call_next: Callable, request: Request, request_id: str
-    ) -> Response:
+    ) -> tuple[Response, dict[str, Any]]:
         """Logs response part
 
         Arguments:
