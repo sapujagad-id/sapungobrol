@@ -28,9 +28,9 @@ def mock_inspect(mocker):
     """Mock SQLAlchemy's inspect function."""
     mock_inspector = mocker.patch('rag.sql.query_engine.inspect')
     mock_inspector.return_value.get_columns.return_value = [
-        {'name': 'Disbursement Week'}, 
-        {'name': 'Num Loan'}, 
-        {'name': 'Total Value Approved'}
+        {'name': 'Disbursement Week', 'type': 'DATETIME'}, 
+        {'name': 'Num Loan', 'type': 'BIGINT'}, 
+        {'name': 'Total Value Approved', 'type': 'TEXT'}
     ]
     return mock_inspector
 
@@ -106,7 +106,7 @@ def test_get_table_schema(mock_inspect):
 
     mock_inspect.return_value.get_columns.assert_called_once_with(table_name)
 
-    assert schema == ['Disbursement Week', 'Num Loan', 'Total Value Approved']
+    assert schema == ['Disbursement Week (DATETIME)', 'Num Loan (BIGINT)', 'Total Value Approved (TEXT)']
     
 def test_setup_query_engine(mock_nlsql_query_engine):
     """Test the setup_query_engine function."""
@@ -115,9 +115,9 @@ def test_setup_query_engine(mock_nlsql_query_engine):
 
     assert query_engine == mock_nlsql_query_engine
     assert table_schema == [
-      'Disbursement Week', 'Num Loan', 'Total Value Approved', 
-      'Total Admin Fee Nett' ,'Total Management Fee Nett', 'Total Gmv',
-      'Total Gp'
+      'Disbursement Week (TEXT)', 'Num Loan (BIGINT)', 'Total Value Approved (TEXT)', 
+      'Total Admin Fee Nett (TEXT)' ,'Total Management Fee Nett (TEXT)', 'Total Gmv (TEXT)',
+      'Total Gp (TEXT)'
       ]
     
 def test_check_db_data(mock_create_engine, mock_connection):
@@ -134,7 +134,7 @@ def test_run_query(mock_nlsql_query_engine):
     with patch('rag.sql.query_engine.setup_query_engine') as mock_setup_query_engine:
         mock_setup_query_engine.return_value = (
             mock_nlsql_query_engine,
-            ['Disbursement Week', 'Num Loan', 'Total Value Approved']
+            ['Disbursement Week (DATETIME)', 'Num Loan (BIGINT)', 'Total Value Approved (TEXT)']
         )
 
         query_str = "What is the total value approved for the week of September 23, 2024?"
@@ -146,9 +146,10 @@ def test_run_query(mock_nlsql_query_engine):
 
         expected_prompt = """
     You are querying a table with the following columns: 
-    Disbursement Week, Num Loan, Total Value Approved.
+    Disbursement Week (DATETIME), Num Loan (BIGINT), Total Value Approved (TEXT).
     
     When generating SQL queries, note that the table is in an SQLite database. In SQLite, column names containing spaces must be enclosed in double quotes. Also, be wary of SQL injection attacks. Make sure that the query is not malicious.
+    If a date is specified and the column type is DATETIME, use the DATE function just in case the DATETIME entry also contains microseconds. Otherwise, if the column type is TEXT, just use the human format of the date.
 
     Based on this, generate a SQL query to retrieve the data.
 
