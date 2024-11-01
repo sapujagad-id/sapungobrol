@@ -82,6 +82,36 @@ class TestSlackAdapter:
     def mock_response(self):
         return MagicMock(spec=requests.Response)
 
+    def mock_interaction_form(self):
+        return {
+            "payload": json.dumps(
+                {
+                    "channel": {
+                        "id": "C12345678",
+                    },
+                    "user": {
+                        "id": "U12345678",
+                    },
+                    "state": {
+                        "values": {
+                            "bots": {
+                                "select_chatbot": {"selected_option": {"value": "12"}}
+                            },
+                            "question": {
+                                "question": {"value": "What is the weather today?"}
+                            },
+                        },
+                    },
+                    "actions": [
+                        {
+                            "action_id": "ask_question",
+                        }
+                    ],
+                    "response_url": "https://hooks.slack.com/XXXXXXX",
+                }
+            )
+        }
+
     async def common_mock_request(self, mock_request, text):
         mock_request.form = AsyncMock(
             return_value={
@@ -141,38 +171,7 @@ class TestSlackAdapter:
     ):
         _, _, _, slack_adapter = mock_slack_adapter
 
-        mock_request.form = AsyncMock(
-            return_value={
-                "payload": json.dumps(
-                    {
-                        "channel": {
-                            "id": "C12345678",
-                        },
-                        "user": {
-                            "id": "U12345678",
-                        },
-                        "state": {
-                            "values": {
-                                "bots": {
-                                    "select_chatbot": {
-                                        "selected_option": {"value": "12"}
-                                    }
-                                },
-                                "question": {
-                                    "question": {"value": "What is the weather today?"}
-                                },
-                            },
-                        },
-                        "actions": [
-                            {
-                                "action_id": "ask_question",
-                            }
-                        ],
-                        "response_url": "https://hooks.slack.com/XXXXXXX",
-                    }
-                )
-            }
-        )
+        mock_request.form = AsyncMock(return_value=self.mock_interaction_form())
 
         slack_adapter.ask_v2 = AsyncMock()
 
@@ -198,38 +197,7 @@ class TestSlackAdapter:
     ):
         _, _, _, slack_adapter = mock_slack_adapter
 
-        mock_request.form = AsyncMock(
-            return_value={
-                "payload": json.dumps(
-                    {
-                        "channel": {
-                            "id": "C12345678",
-                        },
-                        "user": {
-                            "id": "U12345678",
-                        },
-                        "state": {
-                            "values": {
-                                "bots": {
-                                    "select_chatbot": {
-                                        "selected_option": {"value": "12"}
-                                    }
-                                },
-                                "question": {
-                                    "question": {"value": "What is the weather today?"}
-                                },
-                            },
-                        },
-                        "actions": [
-                            {
-                                "action_id": "ask_question",
-                            }
-                        ],
-                        "response_url": "https://hooks.slack.com/XXXXXXX",
-                    }
-                )
-            }
-        )
+        mock_request.form = AsyncMock(return_value=self.mock_interaction_form())
 
         slack_adapter.ask_v2 = AsyncMock(side_effect=EmptyQuestion)
         with pytest.raises(HTTPException) as e:
@@ -251,38 +219,7 @@ class TestSlackAdapter:
     ):
         _, _, _, slack_adapter = mock_slack_adapter
 
-        mock_request.form = AsyncMock(
-            return_value={
-                "payload": json.dumps(
-                    {
-                        "channel": {
-                            "id": "C12345678",
-                        },
-                        "user": {
-                            "id": "U12345678",
-                        },
-                        "state": {
-                            "values": {
-                                "bots": {
-                                    "select_chatbot": {
-                                        "selected_option": {"value": "12"}
-                                    }
-                                },
-                                "question": {
-                                    "question": {"value": "What is the weather today?"}
-                                },
-                            },
-                        },
-                        "actions": [
-                            {
-                                "action_id": "ask_question",
-                            }
-                        ],
-                        "response_url": "https://hooks.slack.com/XXXXXXX",
-                    }
-                )
-            }
-        )
+        mock_request.form = AsyncMock(return_value=self.mock_interaction_form())
 
         slack_adapter.ask_v2 = AsyncMock()
 
