@@ -26,3 +26,9 @@ class TXTProcessor(FileProcessor):
     def process(self):
         documents = self._load_document()
         return self.get_nodes(documents)
+    
+if __name__=="__main__": # pragma: no cover
+    processor_txt = TXTProcessor(document_path='C:/Users/arkan/Downloads/University/ppl/sapungobrol/data/ppl_faq (1).txt')
+    nodes = processor_txt.process()
+    
+    print("nodes", nodes)
