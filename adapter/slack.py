@@ -14,7 +14,7 @@ from chat import ChatEngineSelector, ChatEngine
 from chat.exceptions import ChatResponseGenerationError
 
 
-class UnableToRespondToInteraction(BaseException):
+class UnableToRespondToInteraction(Exception):
     pass
 
 
