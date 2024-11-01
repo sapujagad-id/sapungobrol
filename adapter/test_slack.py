@@ -142,6 +142,20 @@ class TestSlackAdapter:
             assert options[i]["value"] == bots[i].slug
 
     @pytest.mark.asyncio
+    async def test_ask_form(
+        self,
+        mock_slack_adapter,
+        mock_request,
+    ):
+        _, _, _, slack_adapter = mock_slack_adapter
+
+        mock_request = await self.common_mock_request(mock_request, "12 What")
+
+        res = await slack_adapter.ask_form(mock_request)
+
+        assert res["blocks"] is not None
+
+    @pytest.mark.asyncio
     async def test_send_generated_response(self, mock_slack_adapter):
         mock_app, mock_chatbot, _, slack_adapter = mock_slack_adapter
 
