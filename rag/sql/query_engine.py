@@ -1,7 +1,7 @@
 # python -m rag.sql.query_engine
 
 from typing import Tuple
-from rag.sql.db_loader import load_csv_to_db
+from rag.sql.db_loader import load_csv_to_db, load_xlsx_to_db
 from rag.sql.security import check_sql_security
 from llama_index.core.query_engine import NLSQLTableQueryEngine
 from llama_index.core import SQLDatabase
@@ -14,8 +14,8 @@ def get_table_schema(engine, table_name):
     """Fetches and returns the table schema (column names) from the database."""
     inspector = inspect(engine)
     columns = inspector.get_columns(table_name)
-    column_names = [column['name'] for column in columns]
-    return column_names
+    column_names_types = [f"{column['name']} ({column['type']})" for column in columns]
+    return column_names_types
 
 def setup_query_engine(db_path: str = "sqlite:///ppl_data.db"):
     llm = OpenAI(model="gpt-4o-mini")
@@ -56,6 +56,7 @@ def run_query(query_str: str):
     {', '.join(table_schema)}.
     
     When generating SQL queries, note that the table is in an SQLite database. In SQLite, column names containing spaces must be enclosed in double quotes. Also, be wary of SQL injection attacks. Make sure that the query is not malicious.
+    If a date is specified and the column type is DATETIME, use the DATE function just in case the DATETIME entry also contains microseconds. Otherwise, if the column type is TEXT, just use the human format of the date.
 
     Based on this, generate a SQL query to retrieve the data.
 
@@ -73,13 +74,13 @@ def run_query(query_str: str):
   
 
 if __name__ == "__main__":  # pragma: no cover
-  engine = load_csv_to_db('data/ppl_data_testing - Sheet1.csv')
+    engine = load_xlsx_to_db('data/ppl_data_testing.xlsx', "Sheet1")
   
-  check_db_data()
+    check_db_data()
   
-  query = "What is the total value approved for the week of September 23, 2024?"
+    query = "What is the total value approved for the week of September 23, 2024?"
 #   query = "Change the num loan of October 7 to 58"
 #   query = "Change the num loan of October 7 to 58 -- SIGNATURE:SAYNOTOSWIPER"
 
-  response = run_query(query)
-  print(response)
+    response = run_query(query)
+    print(response)
