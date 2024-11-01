@@ -173,9 +173,5 @@ if __name__ == "__main__":
         response_class=RedirectResponse,
         methods=["GET"],
     )
-    
-    @app.get("/sentry-debug")
-    async def trigger_error():
-        division_by_zero = 1 / 0
 
     uvicorn.run(app, host="0.0.0.0", port=config.port)
