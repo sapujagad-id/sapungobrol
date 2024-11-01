@@ -1,6 +1,6 @@
 # python -m rag.sql.query_engine
 
-from rag.sql.db_loader import load_csv_to_db
+from rag.sql.db_loader import load_csv_to_db, load_xlsx_to_db
 from llama_index.core.query_engine import NLSQLTableQueryEngine
 from llama_index.core import SQLDatabase
 from llama_index.llms.openai import OpenAI
@@ -56,11 +56,12 @@ def run_query(query_str: str):
   
 
 if __name__ == "__main__":  # pragma: no cover
-  engine = load_csv_to_db('data/ppl_data_testing - Sheet1.csv')
-  
-  check_db_data()
-  
-  query = "What is the total value approved for the week of September 23, 2024?"
-  
-  response = run_query(query)
-  print(response)
+    engine = load_xlsx_to_db('data/ppl_data_testing.xlsx', "Sheet1")
+    # engine = load_csv_to_db('data/ppl_data_testing - Sheet1.csv')
+    
+    check_db_data()
+    
+    query = "What is the total value approved for the week of September 23, 2024?"
+    
+    response = run_query(query)
+    print(response)
