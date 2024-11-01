@@ -57,8 +57,7 @@ def run_query(query_str: str):
   
 
 if __name__ == "__main__":  # pragma: no cover
-    # engine = load_xlsx_to_db('data/ppl_data_testing.xlsx', "Sheet1")
-    engine = load_csv_to_db('data/ppl_data_testing - Sheet1.csv')
+    engine = load_xlsx_to_db('data/ppl_data_testing.xlsx', "Sheet1")
     
     check_db_data()
     
