@@ -32,6 +32,7 @@ CREATE TABLE bots (
 
 CREATE TABLE data_sources (
     id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
     type data_source_type NOT NULL,
     object_url VARCHAR(2048),
     db_conn_url VARCHAR(2048),
