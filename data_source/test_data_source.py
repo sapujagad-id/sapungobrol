@@ -11,7 +11,6 @@ class TestDataSource:
             object_url=None,
             db_conn_url="postgresql://user:password@localhost/dbname",
             table_names=["users", "orders"],
-            created_by=uuid4(),
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -24,7 +23,6 @@ class TestDataSource:
             object_url=None,
             db_conn_url="mysql://user:password@localhost:3210/dbname",
             table_names=["users"],
-            created_by=uuid4(),
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -37,7 +35,6 @@ class TestDataSource:
             object_url="https://example.com/report.pdf",
             db_conn_url=None,
             table_names=None,
-            created_by=uuid4(),
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -50,7 +47,6 @@ class TestDataSource:
             object_url=None,
             db_conn_url="postgresql://user:password@localhost/dbname",
             table_names=None,
-            created_by=uuid4(),
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -64,7 +60,6 @@ class TestDataSource:
             object_url=None,
             db_conn_url="sqlite:///example.db",
             table_names=None,
-            created_by=uuid4(),
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -78,7 +73,6 @@ class TestDataSource:
             object_url="asd",
             db_conn_url=None,
             table_names=None,
-            created_by=uuid4(),
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -93,7 +87,6 @@ class TestDataSource:
             object_url=None,
             db_conn_url=None,
             table_names=None,
-            created_by=uuid4(),
             created_at=datetime.now(),
             updated_at=datetime.now()
         )

@@ -35,7 +35,6 @@ class DataSource(BaseModel):
     db_conn_url: Optional[str]
     table_names: Optional[list[str]]
     
-    created_by: UUID4
     created_at: datetime
     updated_at: datetime
     
