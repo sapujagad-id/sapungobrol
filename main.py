@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, status
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi import FastAPI, status
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slack_bolt import App
 
@@ -14,6 +14,8 @@ from config import AppConfig, configure_logger
 from chat import ChatEngineSelector
 from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
+
+from web.logging import RequestLoggingMiddleware
 
 import uvicorn
 import sentry_sdk
@@ -74,6 +76,7 @@ if __name__ == "__main__":
     slack_app.event("message")(slack_adapter.event_message)
 
     app = FastAPI()
+    app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(SentryAsgiMiddleware)
 
     app.mount("/assets", StaticFiles(directory="public"), name="assets")
@@ -189,4 +192,4 @@ if __name__ == "__main__":
         methods=["GET"],
     )
 
-    uvicorn.run(app, host="0.0.0.0", port=config.port)
+    uvicorn.run(app, host="0.0.0.0", port=config.port, access_log=False)
