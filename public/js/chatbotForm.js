@@ -1,3 +1,16 @@
+document.addEventListener("DOMContentLoaded", function() {
+    const dataSourceSelect = new TomSelect("#data_source", {
+        plugins: ['remove_button'],
+        create: false, 
+        placeholder: "Select data sources...",
+    });
+
+    dataSourceSelect.on('change', function(values) {
+        document.getElementById("data_source").value = values
+        console.log('Selected values:', values);
+    });
+});
+
 function validateForm() {
     const name = document.getElementById('name').value;
     const systemPrompt = document.getElementById('system_prompt').value;
@@ -26,13 +39,14 @@ async function submitForm(event, bot_id = null) {
         alert('Error: Please check your input!');
         return;
     }
-
+    console.log(document.getElementById('data_source').value)
     const formData = {
         name: document.getElementById('name').value,
         system_prompt: document.getElementById('system_prompt').value,
         model: document.getElementById('model').value,
         adapter: document.getElementById('adapter').value,
-        slug: document.getElementById('slug').value
+        slug: document.getElementById('slug').value,
+        data_source: document.getElementById('data_source').value
     };
 
     let method = bot_id ? 'PATCH' : 'POST';  // PATCH if bot_id exists, POST otherwise
