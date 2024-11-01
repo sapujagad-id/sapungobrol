@@ -2,6 +2,7 @@ import sqlalchemy
 import threading
 import asyncio
 import json
+import requests
 
 from fastapi import Request, Response, HTTPException
 from loguru import logger
@@ -11,6 +12,18 @@ from slack_sdk.errors import SlackApiError
 from bot.service import BotService
 from chat import ChatEngineSelector, ChatEngine
 from chat.exceptions import ChatResponseGenerationError
+
+
+class UnableToRespondToInteraction(BaseException):
+    pass
+
+
+class EmptyQuestion(Exception):
+    message = "Your question can't be empty"
+
+
+class MissingChatbot(Exception):
+    message = "Whoops. Can't find the chatbot you're looking for."
 
 
 class SlackAdapter:
@@ -49,9 +62,33 @@ class SlackAdapter:
             ]["value"]
             question = payload["state"]["values"]["question"]["question"]["value"]
 
-            await self.ask_v2(
-                channel_id=channel_id, user_id=user_id, slug=slug, question=question
-            )
+            try:
+                await self.ask_v2(
+                    channel_id=channel_id, user_id=user_id, slug=slug, question=question
+                )
+            except (EmptyQuestion, MissingChatbot) as e:
+                raise HTTPException(status_code=400, detail=e.message)
+
+            response_url = payload["response_url"]
+
+            ack_payload = {
+                "response_type": "ephemeral",
+                "text": "",
+                "replace_original": True,
+                "delete_original": True,
+            }
+
+            try:
+                res = requests.post(response_url, json=ack_payload)
+                if res.status_code != 200:
+                    raise UnableToRespondToInteraction
+
+            except UnableToRespondToInteraction:
+                self.logger.bind(res=res.json()).error(
+                    "unable to respond to interaction"
+                )
+            except requests.RequestException as e:
+                self.logger.bind(err=e).error("unable to respond to interaction")
 
         return Response(status_code=200)
 
@@ -153,13 +190,16 @@ class SlackAdapter:
         }
 
     async def ask_v2(self, channel_id: str, user_id: str, slug: str, question: str):
+        if question is None or len(question.strip()) < 1:
+            raise EmptyQuestion
+
         question = f'<@{user_id}> asked: \n\n"{question}" '
 
         try:
             chatbot = self.bot_service.get_chatbot_by_slug(slug=slug)
 
             if chatbot is None:
-                return {"text": self.MISSING_CHATBOT_ERROR}
+                raise MissingChatbot
 
             response = self.app.client.chat_postMessage(
                 channel=channel_id,
