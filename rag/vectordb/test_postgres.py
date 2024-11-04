@@ -87,7 +87,7 @@ def test_postgres_node_storage_openai_failure(mock_postgres_handler, mocker):
 def test_postgres_handler_query(mock_psycopg2_connect):
     """Test querying vectors from Postgres."""
     mock_conn, mock_cursor = mock_psycopg2_connect
-    handler = PostgresHandler(db_name="test_db", user="user", password="pass", host="localhost", port=5432, dimension=1536)
+    handler = PostgresHandler(db_name="test_db", user="user", password="random123", host="localhost", port=5432, dimension=1536)
     
     query_vector = [0.1, 0.2, 0.3]
     top_k = 5
@@ -115,4 +115,4 @@ def test_postgres_handler_initialization_error(mocker):
     mocker.patch("psycopg2.connect", side_effect=Exception("Database connection error"))
 
     with pytest.raises(Exception, match="Database connection error"):
-        PostgresHandler(db_name="test_db", user="user", password="pass", host="localhost", port=5432, dimension=1536)
+        PostgresHandler(db_name="test_db", user="user", password="random123", host="localhost", port=5432, dimension=1536)
