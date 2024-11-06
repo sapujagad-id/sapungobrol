@@ -1,9 +1,11 @@
-import pytest
-from unittest.mock import MagicMock, patch, create_autospec
-from sqlalchemy import text, Engine, Connection
-from llama_index.core.llms import ChatMessage
+from unittest.mock import MagicMock, create_autospec, patch
 
-# Patching SQLAlchemy's database engine, inspector, and connection for isolated testing
+import pytest
+from sqlalchemy import Connection, Engine
+
+from rag.sql.postgres_db_loader import (get_postgres_engine, load_csv_to_db,
+                                        load_xlsx_to_db)
+
 
 @pytest.fixture
 def mock_engine():
@@ -94,12 +96,10 @@ def test_run_query(mock_connection, mock_sql_database, mock_openai, mock_nl_sql_
     """Test running a query with mock data returned."""
     from rag.sql.postgres_query_engine import run_query
     
-    # Mock the fetchall response
     mock_result = MagicMock()
     mock_result.fetchall.return_value = [('result1',), ('result2',)]
     mock_connection.execute.return_value = mock_result
     
-    # Execute run_query and assert
     result = run_query("test query", user_access_level=3, table_name="test_table")
     
     assert result == "Mocked response"
@@ -112,12 +112,10 @@ def test_run_query_no_results(mock_connection, mock_sql_database, mock_openai,
     """Test running a query with no results."""
     from rag.sql.postgres_query_engine import run_query
     
-    # Mock the fetchall response to return no results
     mock_result = MagicMock()
     mock_result.fetchall.return_value = []
     mock_connection.execute.return_value = mock_result
     
-    # Execute run_query and assert
     result = run_query("test query", user_access_level=3, table_name="test_table")
     
     assert result == "I'm sorry, but there is no data available for your access level or the specified query."
@@ -126,8 +124,7 @@ def test_run_query_security_check_fails(mock_engine, mock_sql_database, mock_nl_
                                       mock_get_table_schema, mock_extract_signature):
     """Test running a query that fails the security check."""
     from rag.sql.postgres_query_engine import run_query
-    
-    # Mock security check to fail
+
     with patch('rag.sql.postgres_query_engine.check_sql_security',
               return_value=(False, "Security violation")):
         
@@ -137,3 +134,51 @@ def test_run_query_security_check_fails(mock_engine, mock_sql_database, mock_nl_
                 user_access_level=3,
                 table_name="test_table"
             )
+
+@patch("rag.sql.postgres_db_loader.create_engine")
+def test_get_postgres_engine(mock_create_engine):
+    """Test the creation of a PostgreSQL engine."""
+    # Mock environment variables for database configuration
+    with patch.dict("os.environ", {
+        "POSTGRES_DB": "test_db",
+        "POSTGRES_USER": "test_user",
+        "POSTGRES_PASSWORD": "test_password",
+        "POSTGRES_HOST": "test_host",
+        "POSTGRES_PORT": "5432"
+    }):
+        engine = get_postgres_engine()
+        
+        mock_create_engine.assert_called_once_with(
+            "postgresql://test_user:test_password@test_host:5432/test_db"
+        )
+        assert engine == mock_create_engine.return_value
+
+@patch("rag.sql.postgres_db_loader.get_postgres_engine")
+@patch("rag.sql.postgres_db_loader.CSVProcessor")
+def test_load_csv_to_db(mock_csv_processor, mock_get_engine):
+    """Test loading CSV data into PostgreSQL."""
+    mock_engine = mock_get_engine.return_value
+    mock_df = MagicMock()
+    mock_csv_processor.return_value._load_document.return_value = mock_df
+
+    engine = load_csv_to_db("dummy_path.csv", access_level=3, table_name="test_table")
+
+    mock_csv_processor.return_value._load_document.assert_called_once()
+    mock_df.__setitem__.assert_called_once_with("access_level", 3)  # Ensure "access_level" is set
+    mock_df.to_sql.assert_called_once_with("test_table", con=mock_engine, if_exists="replace", index=False)
+    assert engine == mock_engine
+
+@patch("rag.sql.postgres_db_loader.get_postgres_engine")
+@patch("rag.sql.postgres_db_loader.XLSXProcessor")
+def test_load_xlsx_to_db(mock_xlsx_processor, mock_get_engine):
+    """Test loading XLSX data into PostgreSQL."""
+    mock_engine = mock_get_engine.return_value
+    mock_df = MagicMock()
+    mock_xlsx_processor.return_value._load_document.return_value = mock_df
+
+    engine = load_xlsx_to_db("dummy_path.xlsx", "Sheet1", access_level=3, table_name="test_table")
+
+    mock_xlsx_processor.return_value._load_document.assert_called_once()
+    mock_df.__setitem__.assert_called_once_with("access_level", 3)  # Ensure "access_level" is set
+    mock_df.to_sql.assert_called_once_with("test_table", con=mock_engine, if_exists="replace", index=False)
+    assert engine == mock_engine
