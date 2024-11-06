@@ -2,15 +2,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from rag.sql.db_loader import load_csv_to_db, load_xlsx_to_db
-from rag.sql.query_engine import (check_db_data, get_table_schema,
-                                  setup_query_engine, run_query)
+from rag.sql.local.local_db_loader import load_csv_to_db, load_xlsx_to_db
+from rag.sql.local.local_query_engine import (check_db_data, get_table_schema,
+                                              run_query, setup_query_engine)
 
 
 @pytest.fixture
 def mock_csv_processor(mocker):
     """Mock CSVProcessor for testing."""
-    mock_processor = mocker.patch('rag.sql.db_loader.CSVProcessor')
+    mock_processor = mocker.patch('rag.sql.local.local_db_loader.CSVProcessor')
     instance = mock_processor.return_value
     instance._load_document.return_value = MagicMock()
     return instance
@@ -18,7 +18,7 @@ def mock_csv_processor(mocker):
 @pytest.fixture
 def mock_xlsx_processor(mocker):
     """Mock XLSXProcessor for testing."""
-    mock_processor = mocker.patch('rag.sql.db_loader.XLSXProcessor')
+    mock_processor = mocker.patch('rag.sql.local.local_db_loader.XLSXProcessor')
     instance = mock_processor.return_value
     instance._load_document.return_value = MagicMock()
     return instance
@@ -26,7 +26,7 @@ def mock_xlsx_processor(mocker):
 @pytest.fixture
 def mock_inspect(mocker):
     """Mock SQLAlchemy's inspect function."""
-    mock_inspector = mocker.patch('rag.sql.query_engine.inspect')
+    mock_inspector = mocker.patch('rag.sql.local.local_query_engine.inspect')
     mock_inspector.return_value.get_columns.return_value = [
         {'name': 'Disbursement Week', 'type': 'DATETIME'}, 
         {'name': 'Num Loan', 'type': 'BIGINT'}, 
@@ -38,20 +38,20 @@ def mock_inspect(mocker):
 @pytest.fixture
 def mock_nlsql_query_engine(mocker):
     """Mock the NLSQLTableQueryEngine."""
-    mock_query_engine = mocker.patch('rag.sql.query_engine.NLSQLTableQueryEngine')
+    mock_query_engine = mocker.patch('rag.sql.local.local_query_engine.NLSQLTableQueryEngine')
     return mock_query_engine.return_value
 
 
 @pytest.fixture
 def mock_engine(mocker):
     """Mock SQLAlchemy create_engine."""
-    mock_engine = mocker.patch('rag.sql.db_loader.create_engine')
+    mock_engine = mocker.patch('rag.sql.local.local_db_loader.create_engine')
     return mock_engine.return_value
 
 @pytest.fixture
 def mock_create_engine(mocker):
     """Mock SQLAlchemy create_engine."""
-    mock_engine = mocker.patch('rag.sql.query_engine.create_engine')
+    mock_engine = mocker.patch('rag.sql.local.local_query_engine.create_engine')
     return mock_engine.return_value
 
 
@@ -131,7 +131,7 @@ def test_run_query(mock_nlsql_query_engine):
     
     mock_nlsql_query_engine.query.return_value = MagicMock(response="Mocked response")
     
-    with patch('rag.sql.query_engine.setup_query_engine') as mock_setup_query_engine:
+    with patch('rag.sql.local.local_query_engine.setup_query_engine') as mock_setup_query_engine:
         mock_setup_query_engine.return_value = (
             mock_nlsql_query_engine,
             ['Disbursement Week (DATETIME)', 'Num Loan (BIGINT)', 'Total Value Approved (TEXT)']
