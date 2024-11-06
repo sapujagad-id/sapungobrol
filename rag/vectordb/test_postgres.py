@@ -1,8 +1,6 @@
 import os
-from unittest.mock import MagicMock, create_autospec, patch
+from unittest.mock import MagicMock, call, create_autospec, patch
 
-import openai
-import psycopg2
 import pytest
 
 from rag.vectordb.postgres_handler import PostgresHandler
@@ -91,7 +89,7 @@ def test_postgres_node_storage_openai_failure(mock_postgres_handler, mocker):
 
 def test_postgres_handler_query(mock_psycopg2_connect):
     """Test querying vectors from Postgres."""
-    mock_conn, mock_cursor = mock_psycopg2_connect
+    _, mock_cursor = mock_psycopg2_connect
     mock_password = os.getenv("POSTGRES_TEST_PASSWORD")
     handler = PostgresHandler(db_name="test_db", user="user", password=mock_password, host="localhost", port=5432, dimension=1536)
     
@@ -123,3 +121,39 @@ def test_postgres_handler_initialization_error(mocker):
 
     with pytest.raises(Exception, match="Database connection error"):
         PostgresHandler(db_name="test_db", user="user", password=mock_password, host="localhost", port=5432, dimension=1536)
+        
+def test_upsert_vectors(mock_psycopg2_connect):
+    """Test the upsert_vectors method to ensure correct insertion of vectors."""
+    _, mock_cursor = mock_psycopg2_connect
+
+    with patch.dict(os.environ, {"TOTAL_ACCESS_LEVELS": "5"}):
+        handler = PostgresHandler(
+            db_name="test_db",
+            user="user",
+            password="password",
+            host="localhost",
+            port=5432,
+            dimension=1536
+        )
+
+    vectors = [
+        {"id": "item1", "values": [0.1, 0.2, 0.3]},
+        {"id": "item2", "values": [0.4, 0.5, 0.6]}
+    ]
+    level = 2
+
+    handler.upsert_vectors(vectors, level=level)
+
+    insert_calls = [
+        call(
+            f"INSERT INTO index_L{lvl} (item_id, embedding) VALUES (%s, %s) "
+            f"ON CONFLICT (item_id) DO UPDATE SET embedding = EXCLUDED.embedding;",
+            (vector["id"], vector["values"])
+        )
+        for lvl in range(level, handler.total_access_levels + 1)
+        for vector in vectors
+    ]
+
+    mock_cursor.execute.assert_has_calls(insert_calls, any_order=False)
+
+    handler.close()
