@@ -5,8 +5,7 @@ from llama_index.core.node_parser import SentenceSplitter
 
 class PDFProcessor(FileProcessor):
     
-    def __init__(self, document_path: str, chunk_size: int = 200, chunk_overlap: int = 0):
-        self.document_path = Path(document_path)
+    def __init__(self, chunk_size: int = 200, chunk_overlap: int = 0):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.pdf_reader = PDFReader(return_full_document=True)
@@ -24,6 +23,7 @@ class PDFProcessor(FileProcessor):
         except Exception as e:
             raise RuntimeError(f"Failed to get nodes from documents: {str(e)}")
 
-    def process(self):
+    def process(self, document_path: str):
+        self.document_path = document_path
         documents = self._load_document()
         return self.get_nodes(documents)
