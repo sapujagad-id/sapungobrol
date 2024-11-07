@@ -1,31 +1,42 @@
 from rag.parsing.parsing_csv import CSVProcessor
 from rag.parsing.parsing_txt import TXTProcessor
 from rag.parsing.parsing_pdf import PDFProcessor
-#from document.service import DocumentService
+#from document.service import DocumentServiceV1, Document
+from datetime import datetime
 import pandas as pd
 
 # WILL DELETE LATER
 class Document:
-    def __init__(self, id, name, type, object_url, created_at, updated_at):
+    def __init__(self, id, title, type, object_name, created_at, updated_at):
         self.id = id
-        self.name = name
+        self.title = title
         self.type = type
-        self.object_url = object_url
+        self.object_name = object_name
         self.created_at = created_at
         self.updated_at = updated_at
 
     def generate_presigned_url(self) -> str:
         # Placeholder method to generate a presigned URL
-        return self.object_url  # Example implementation
+        return '' # Example implementation
 
+# WILL DELETE LATER
+class DocumentServiceV1:
+
+    def get_documents(self, filter) -> list:
+
+        return []
+    
 class DocumentIndexing:
     def __init__(self):
-        # self.service = DocumentService()
+        self.service = DocumentServiceV1()
         pass
 
-    def fetch_documents(self) -> list[Document]:
-        # Example: return self.service.get_documents(filter={})  # Implement actual fetch logic
-        return []
+    def fetch_documents(self, start_date: datetime):
+        filter = {
+            "created_after": start_date.isoformat(),
+            "created_before": datetime.now().isoformat()
+        }
+        return self.service.get_documents(filter=filter)
 
     def _get_processor(self, document_type: str, document_url: str):
         """Returns the appropriate processor based on document type."""
@@ -43,9 +54,9 @@ class DocumentIndexing:
         """Updates metadata of a node based on document properties."""
         node.metadata.update({
             'id': document.id,
-            'name': document.name,
+            'title': document.title,
             'type': document.type,
-            'object_url': document.object_url,
+            'object_name': document.object_name,
             'created_at': document.created_at,
             'updated_at': document.updated_at
         })
