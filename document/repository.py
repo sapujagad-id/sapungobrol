@@ -96,6 +96,7 @@ class PostgresDocumentRepository(DocumentRepository):
                     **doc_create.model_dump(), 
                     id=doc_id, 
                 )
+                self.logger.debug(f"saving document entry: {new_doc}")
                 session.add(new_doc)
                 session.commit()
         
