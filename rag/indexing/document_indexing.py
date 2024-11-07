@@ -29,9 +29,8 @@ class DocumentServiceV1:
 class DocumentIndexing:
     def __init__(self):
         self.service = DocumentServiceV1()
-        pass
 
-    def fetch_documents(self, start_date: datetime):
+    def fetch_documents(self, start_date: datetime = None):
         filter = {
             "created_after": start_date.isoformat(),
             "created_before": datetime.now().isoformat()
