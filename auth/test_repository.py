@@ -76,11 +76,3 @@ class TestAuthRepository:
         assert added_user is not None
         assert added_user.sub == "new-sub"
         assert added_user.email == "newuser@broom.id"
-
-    def test_add_user_with_access_level(self, setup_repository, session):
-        setup_repository.add_user_with_access_level("example@broom.id", 1)
-        added_user = session.query(UserModel).filter(UserModel.email == "example@broom.id").first()
-
-        assert added_user is not None
-        assert added_user.email == "example@broom.id"
-        assert added_user.access_level == 1

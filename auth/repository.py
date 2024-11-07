@@ -41,16 +41,6 @@ class AuthRepository(ABC):
     @abstractmethod
     def add_google_user(self, user_info_json: GoogleUserInfo) -> None:
         pass
-    
-    @abstractmethod
-    def add_user_with_access_level(self, email: str, acces_level: int) -> None:
-        pass
-    
-    @abstractmethod
-    def update_google_user(self, user : UserModel, user_info_json: GoogleUserInfo) -> None:
-        pass
-
-
 
 class PostgresAuthRepository(AuthRepository):
     def __init__(self, session: sessionmaker) -> None:
@@ -90,35 +80,3 @@ class PostgresAuthRepository(AuthRepository):
                 session.add(user)
                 session.commit()
                 
-    def update_google_user(self, user : UserModel, user_info_json: GoogleUserInfo) -> None:
-        with self.create_session() as session:
-            with self.logger.catch(message="create or update user error", reraise=True):
-                assert isinstance(session, Session)
-                                
-                user.sub = user_info_json['sub']
-                user.name = user_info_json['name']
-                user.picture = user_info_json['picture']
-                user.email_verified = user_info_json['email_verified']
-                user.login_method = LoginMethod.GOOGLE
-                self.logger.info(f"Updated existing user with sub: {user.sub}")
-                session.commit()
-
-    
-    def add_user_with_access_level(self, email: str, access_level: int = 0) -> None:
-        with self.create_session() as session:
-            with self.logger.catch(message="create user with acces level error", reraise=True):
-                assert isinstance(session, Session)
-                user = UserModel(
-                    id = uuid4(),
-                    sub = "",
-                    name = "",
-                    picture = "",
-                    email = email,
-                    email_verified = False,
-                    access_level = access_level,
-                    login_method = LoginMethod.GOOGLE,
-                )
-                session.add(user)
-                session.commit()
-
-

@@ -110,30 +110,6 @@ class TestAuthService:
         assert response.status_code == 302 or 307
         assert "token" in response.headers['set-cookie']
         
-    @patch('requests.post')
-    @patch('requests.get')
-    def test_authorize_google_existing_user_by_email(self, mock_get, mock_post, setup_real_service):
-        mock_post.return_value.json.return_value = {"access_token": "fake_access_token"}
-        mock_post.return_value.raise_for_status.return_value = None
-        mock_get.return_value.json.return_value = {
-            "sub": "12345",
-            "email": "existing@broom.id",
-            "name": "Updated User",
-            "picture": "https://example.com/updated_image.png",
-            "email_verified" : True
-        }
-        mock_get.return_value.raise_for_status.return_value = None
-
-        setup_real_service.repository.add_user_with_access_level(email="existing@broom.id")
-
-        mock_request = MockRequest(cookies={})
-
-        response = setup_real_service.authorize_google(mock_request, "fake_code")
-
-        assert isinstance(response, RedirectResponse), "Response is not a RedirectResponse"
-        assert response.status_code in (302, 307), f"Expected redirect status code, got {response.status_code}"
-        assert "token" in response.headers.get('set-cookie', ''), "Token not set in cookies"
-
     def test_get_user_profile_success(self, setup_real_service: AuthServiceV1, setup_jwt_secret: str):
         token = jwt.encode({
             "sub": "test_sub", 
