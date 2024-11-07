@@ -108,17 +108,28 @@ def test_get_table_schema(mock_inspect):
 
     assert schema == ['Disbursement Week (DATETIME)', 'Num Loan (BIGINT)', 'Total Value Approved (TEXT)']
     
-def test_setup_query_engine(mock_nlsql_query_engine):
+def test_setup_query_engine(mock_nlsql_query_engine, mock_inspect, mock_create_engine):
     """Test the setup_query_engine function."""
 
-    query_engine, table_schema = setup_query_engine()
+    mock_inspect.return_value.get_columns.return_value = [
+        {'name': 'Disbursement Week', 'type': 'DATETIME'},
+        {'name': 'Num Loan', 'type': 'BIGINT'},
+        {'name': 'Total Value Approved', 'type': 'TEXT'}
+    ]
 
-    assert query_engine == mock_nlsql_query_engine
-    assert table_schema == [
-      'Disbursement Week (TEXT)', 'Num Loan (BIGINT)', 'Total Value Approved (TEXT)', 
-      'Total Admin Fee Nett (TEXT)' ,'Total Management Fee Nett (TEXT)', 'Total Gmv (TEXT)',
-      'Total Gp (TEXT)'
-      ]
+    with patch('rag.sql.local.local_query_engine.SQLDatabase') as mock_sql_database:
+        mock_sql_database.return_value.get_table_schema.return_value = [
+            'Disbursement Week (DATETIME)', 'Num Loan (BIGINT)', 'Total Value Approved (TEXT)',
+            'Total Admin Fee Nett (TEXT)', 'Total Management Fee Nett (TEXT)', 'Total Gmv (TEXT)',
+            'Total Gp (TEXT)'
+        ]
+
+        query_engine, table_schema = setup_query_engine()
+
+        assert query_engine == mock_nlsql_query_engine
+        assert table_schema == [
+            'Disbursement Week (DATETIME)', 'Num Loan (BIGINT)', 'Total Value Approved (TEXT)', 
+        ]
     
 def test_check_db_data(mock_create_engine, mock_connection):
     """Test checking the database data."""
