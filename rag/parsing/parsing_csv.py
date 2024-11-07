@@ -7,8 +7,7 @@ import pandas as pd
 
 class CSVProcessor(FileProcessor):
     
-    def __init__(self, document_path):
-        self.document_path = Path(document_path)
+    def __init__(self):
         self.llm = OpenAI(model="gpt-4o-mini")
         self.df = None  # Initialize dataframe attribute
 
@@ -51,13 +50,14 @@ class CSVProcessor(FileProcessor):
         
         return table_info
 
-    def process(self):
+    def process(self, document_path):
+        self.document_path = document_path
         """Main processing method: loads the document and generates table info."""
         self.df = self._load_document()
         table_info = self._get_table_info()
-        return table_info
+        return self.df, table_info
     
 if __name__=="__main__":  # pragma: no cover
-    csv_processor = CSVProcessor('data/ppl_data_testing - Sheet1.csv')
+    csv_processor = CSVProcessor()
     file = csv_processor._load_document()
     print(file)
