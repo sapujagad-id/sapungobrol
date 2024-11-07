@@ -7,30 +7,6 @@ from document.dto import DocumentCreate, DocumentFilter
 from document.repository import DocumentModel, PostgresDocumentRepository
 from document.service import DocumentServiceV1
 
-@pytest.fixture
-def setup_documents(setup_repository):
-    # Add some documents to the test database
-    documents = [
-        DocumentCreate(
-            title="Document 1",
-            type=DocumentType.CSV,
-            object_name="doc1.csv",
-            created_at=datetime.now(),
-            updated_at=datetime.now()
-        ),
-        DocumentCreate(
-            title="Document 2",
-            type=DocumentType.PDF,
-            object_name="doc2.pdf",
-            created_at=datetime.now(),
-            updated_at=datetime.now()
-        ),
-    ]
-    for doc in documents:
-      setup_repository.create_document(doc_create=doc)
-    return documents
-
-# Test cases for DocumentServiceV1 methods
 def test_get_documents(setup_service, setup_documents):
     filter_data = DocumentFilter(created_after="2000-01-01")
     documents = setup_service.get_documents(filter_data)

@@ -5,6 +5,21 @@ from document.dto import DocumentCreate, DocumentFilter
 from document.repository import DocumentModel, PostgresDocumentRepository, DocumentRepository
 from loguru import logger
 
+def get_sample_document_models():
+    return [
+        DocumentModel(
+            id=uuid4(),
+            type=DocumentType.CSV.value,
+            title="CSV Document",
+            object_name="csv_object"
+        ),
+        DocumentModel(
+            id=uuid4(),
+            type=DocumentType.PDF.value,
+            title="PDF Document",
+            object_name="pdf_object"
+        )
+    ]
 
 def test_create_document(setup_repository, setup_session):
     doc_create = DocumentCreate(
@@ -65,29 +80,12 @@ def test_get_document_by_name(setup_repository, setup_session):
 
 
 def test_get_documents_with_filters(setup_repository, setup_session):
-    documents = [
-        DocumentModel(
-            id=uuid4(),
-            type=DocumentType.CSV.value,
-            title="CSV Document",
-            object_name="csv_object",
-            created_at=datetime.now(),
-            updated_at=datetime.now()
-        ),
-        DocumentModel(
-            id=uuid4(),
-            type=DocumentType.PDF.value,
-            title="PDF Document",
-            object_name="pdf_object",
-            created_at=datetime.now(),
-            updated_at=datetime.now()
-        )
-    ]
+    documents = get_sample_document_models()
     with setup_session() as session:
         session.bulk_save_objects(documents)
         session.commit()
 
-    # Filter to fetch only the PDF document
+    # filter to fetch only the PDF document
     filter = DocumentFilter(object_name="pdf_object", title="PDF Document", created_before=datetime.now())
     result = setup_repository.get_documents(filter)
     assert len(result) == 1
@@ -95,25 +93,7 @@ def test_get_documents_with_filters(setup_repository, setup_session):
     assert result[0].object_name == "pdf_object"
     
 def test_get_documents_without_filters(setup_repository, setup_session):
-    # Insert multiple documents
-    documents = [
-        DocumentModel(
-            id=uuid4(),
-            type=DocumentType.CSV.value,
-            title="CSV Document",
-            object_name="csv_object",
-            created_at=datetime.now(),
-            updated_at=datetime.now()
-        ),
-        DocumentModel(
-            id=uuid4(),
-            type=DocumentType.PDF.value,
-            title="PDF Document",
-            object_name="pdf_object",
-            created_at=datetime.now(),
-            updated_at=datetime.now()
-        )
-    ]
+    documents = get_sample_document_models()
     with setup_session() as session:
         session.bulk_save_objects(documents)
         session.commit()
@@ -123,25 +103,12 @@ def test_get_documents_without_filters(setup_repository, setup_session):
 
 
 def test_get_documents_without_filters(setup_repository, setup_session):
-    documents = [
-        DocumentModel(
-            id=uuid4(),
-            type=DocumentType.CSV.value,
-            title="CSV Document",
-            object_name="csv_object"
-        ),
-        DocumentModel(
-            id=uuid4(),
-            type=DocumentType.PDF.value,
-            title="PDF Document",
-            object_name="pdf_object"
-        )
-    ]
+    documents = get_sample_document_models()
     with setup_session() as session:
         session.bulk_save_objects(documents)
         session.commit()
 
-    # Retrieve all documents without filters
+    # retrieve all documents without filters
     filter = DocumentFilter()
     result = setup_repository.get_documents(filter)
     assert len(result) == 2

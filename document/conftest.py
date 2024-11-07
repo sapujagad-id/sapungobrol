@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import uuid4
 import pytest
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
@@ -31,7 +32,7 @@ def setup_controller(setup_service):
 
 @pytest.fixture
 def setup_documents(setup_repository):
-    # Add some documents to the test database
+    # Add some documents to the test database (side-effect)
     documents = [
         DocumentCreate(
             title="Document 1",
