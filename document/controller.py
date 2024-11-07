@@ -48,7 +48,7 @@ class DocumentControllerV1(ABC):
       updated_after: str | None = None,
       updated_before: str | None = None,
     ):
-        filter = DocumentFilter(
+        doc_filter = DocumentFilter(
           id = id,
           object_name = object_name,
           created_after = created_after,
@@ -57,7 +57,7 @@ class DocumentControllerV1(ABC):
           updated_before = updated_before,
         )
         try:
-            docs = self.service.get_documents(filter=filter)
+            docs = self.service.get_documents(filter=doc_filter)
             if docs is None:
                 return HTTPException(status_code=404)
             return docs

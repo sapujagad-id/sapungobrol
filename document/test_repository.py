@@ -86,8 +86,8 @@ def test_get_documents_with_filters(setup_repository, setup_session):
         session.commit()
 
     # filter to fetch only the PDF document
-    filter = DocumentFilter(object_name="pdf_object", title="PDF Document", created_before=datetime.now())
-    result = setup_repository.get_documents(filter)
+    doc_filter = DocumentFilter(object_name="pdf_object", title="PDF Document", created_before=datetime.now())
+    result = setup_repository.get_documents(doc_filter)
     assert len(result) == 1
     assert result[0].title == "PDF Document"
     assert result[0].object_name == "pdf_object"
@@ -109,6 +109,6 @@ def test_get_documents_without_filters(setup_repository, setup_session):
         session.commit()
 
     # retrieve all documents without filters
-    filter = DocumentFilter()
-    result = setup_repository.get_documents(filter)
+    doc_filter = DocumentFilter()
+    result = setup_repository.get_documents(doc_filter)
     assert len(result) == 2
