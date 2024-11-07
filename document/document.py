@@ -39,11 +39,23 @@ class Document(BaseModel):
       if not self.object_name:
         raise ObjectNameError
         
-    def generate_presigned_url(self) -> str:
+    def generate_presigned_url(self, object_name: str, expiration: int = 28800) -> str:
       '''
-      Generates and returns a new presigned URL for S3
-      with parameters:
-      ...
+      Generates and returns a new presigned S3 URL.
+      
+      Parameters
+      -----
+      object_name (str): the object name, key identifier for the file. this is stored in the DB
+      
+      expiration (int): time until presigned URL expires, in seconds. default is 28800s (8 hours)
+      
+      Returns
+      -----
+      A presigned URL string for an S3 object, that does not require additional auth or API keys to access.
+      
+      Notes
+      -----
+      This method is not implemented yet.
       
       '''
       raise NotImplementedError
