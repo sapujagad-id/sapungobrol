@@ -12,6 +12,8 @@ from auth.dto import GoogleCredentials, ProfileResponse
 from bot.view import BotViewV1
 from config import AppConfig, configure_logger
 from chat import ChatEngineSelector
+from data_source.controller import DataSourceControllerV1
+from data_source.service import DataSourceServiceV1
 from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
 
@@ -64,6 +66,9 @@ if __name__ == "__main__":
     bot_controller = BotControllerV1(bot_service)
 
     bot_view = BotViewV1(bot_controller, bot_service, auth_controller)
+    data_source_service = DataSourceServiceV1(config.aws_access_key_id, config.aws_secret_access_key, config.aws_public_bucket_name, config.aws_region)
+
+    data_source_controller = DataSourceControllerV1(data_source_service)
 
     engine_selector = ChatEngineSelector(
         openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key
@@ -187,6 +192,11 @@ if __name__ == "__main__":
         endpoint=auth_controller.logout,
         response_class=RedirectResponse,
         methods=["GET"],
+    )
+    app.add_api_route(
+        "/upload",
+        endpoint=data_source_controller.upload_file,
+        methods=["POST"],
     )
 
     uvicorn.run(app, host="0.0.0.0", port=config.port)
