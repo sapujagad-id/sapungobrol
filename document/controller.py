@@ -77,7 +77,7 @@ class DocumentControllerV1(ABC):
       
     def fetch_document_by_id(self, doc_id: str):
         try:
-            doc = self.service.get_document_by_name(doc_id,doc_id)
+            doc = self.service.get_document_by_id(doc_id=doc_id)
             if doc is None:
                 return HTTPException(status_code=404)
             return doc

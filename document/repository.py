@@ -3,7 +3,8 @@ from datetime import datetime
 from uuid import uuid4
 from loguru import logger
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
-from sqlalchemy import UUID, Column, Enum, Uuid, String, Text, DateTime
+from sqlalchemy import Column, Enum, Uuid, String, Text, DateTime
+from uuid import UUID as pythonUUID
 
 from document.document import DocumentType
 from document.dto import DocumentCreate, DocumentFilter, DocumentUpdate
@@ -13,7 +14,7 @@ Base = declarative_base()
 class DocumentModel(Base):
     __tablename__ = "documents"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id = Column(Uuid, primary_key=True, default=uuid4)
     type = Column(String, nullable=False) # Enum(DocumentType)
     title = Column(String, nullable=False)
     object_name = Column(String, nullable=False)
@@ -95,7 +96,6 @@ class PostgresDocumentRepository(DocumentRepository):
                     **doc_create.model_dump(), 
                     id=doc_id, 
                 )
-                self.logger.info("awooga")
                 session.add(new_doc)
                 session.commit()
         
