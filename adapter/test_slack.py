@@ -165,7 +165,7 @@ class TestSlackAdapter:
         event = {
             "type": "reaction_added",
             "user": "U1234567890",
-            "reaction": "-1",
+            "reaction": reaction,
             "item": {
                 "type": "message",
                 "channel": "C1234567890",
