@@ -46,7 +46,7 @@ class AuthRepository(ABC):
     @abstractmethod
     def get_all_users_basic_info(self) -> list[dict]:
         pass
-
+      
 class PostgresAuthRepository(AuthRepository):
     def __init__(self, session: sessionmaker) -> None:
         self.create_session = session
