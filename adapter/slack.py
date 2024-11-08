@@ -4,6 +4,7 @@ import asyncio
 import json
 import requests
 
+from typing import Any, Dict
 from fastapi import Request, Response, HTTPException
 from loguru import logger
 from slack_bolt import App
@@ -128,6 +129,19 @@ class SlackAdapter:
             return {"options": options}
 
         return Response(status_code=200)
+
+    def reaction_added(self, event: Dict[str, any]):
+        reaction = event["reaction"]
+
+        # Handle negative reactions
+        if reaction == "-1":
+            self.negative_reaction(event=event)
+
+        return Response(status_code=200)
+
+    def negative_reaction(self, event: Dict[str, any]):
+        self.logger().info("handle negative reaction")
+        pass
 
     def send_generated_response(
         self, channel: str, ts: str, engine: ChatEngine, question: str
