@@ -84,7 +84,30 @@ class DocumentIndexing:
                 self._store_vector(nodes)
 
     def _store_tabular(self, table_name: str, data: pd.DataFrame, summary: str):
-        pass
+        engine = get_postgres_engine()
+
+        data["access_level"] = 5 # TODO: Change to proper access level
+
+        data.to_sql(table_name, con=engine, if_exists="replace", index=False)
 
     def _store_vector(self, nodes):
-        pass
+        POSTGRES_DB = os.getenv("POSTGRES_DB")
+        POSTGRES_USER = os.getenv("POSTGRES_USER")
+        POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+        POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+        POSTGRES_PORT = int(os.getenv("POSTGRES_PORT", 5432))
+        ACCESS_LEVEL = 5 # TODO: Change to proper access level
+        
+        postgres_handler = PostgresHandler(
+            db_name=POSTGRES_DB,
+            user=POSTGRES_USER,
+            password=POSTGRES_PASSWORD,
+            host=POSTGRES_HOST,
+            port=POSTGRES_PORT,
+            dimension=1536
+        )
+
+        postgres_storage = PostgresNodeStorage(postgres_handler)
+        postgres_storage.store_nodes([node.text for node in nodes], ACCESS_LEVEL)
+
+        postgres_handler.close()
