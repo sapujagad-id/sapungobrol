@@ -141,7 +141,6 @@ class SlackAdapter:
 
     def negative_reaction(self, event: Dict[str, any]):
         self.logger().info("handle negative reaction")
-        pass
 
     def send_generated_response(
         self, channel: str, ts: str, engine: ChatEngine, question: str
