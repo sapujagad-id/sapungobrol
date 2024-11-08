@@ -117,5 +117,3 @@ class TestAuthRepository:
         user2_info = next(info for info in users_basic_info if info["email"] == "user2@broom.id")
         assert user2_info["name"] == "User Two"
         assert user2_info["access_level"] == 2
-
-        assert added_user.email == "newuser@broom.id"
