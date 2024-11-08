@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock
 from fastapi import Request
 from jose import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from auth.view import UserViewV1
 
@@ -16,7 +16,7 @@ class TestUserView:
 
         token = jwt.encode({
             "email": "admin@broom.id",
-            "exp": datetime() + timedelta(hours=1)
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1)
         }, setup_jwt_secret, algorithm="HS256")
 
         request.cookies = {'token': token}
