@@ -1,5 +1,5 @@
 from typing import List
-from rag.vectordb.pinecone_handler import PineconeHandler
+from rag.vectordb.pinecone.pinecone_handler import PineconeHandler
 from rag.parsing.parsing_pdf import PDFProcessor
 from rag.parsing.parsing_txt import TXTProcessor
 import openai
