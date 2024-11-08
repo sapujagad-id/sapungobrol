@@ -16,7 +16,7 @@ class TestUserView:
 
         token = jwt.encode({
             "email": "admin@broom.id",
-            "exp": datetime.utcnow() + timedelta(hours=1)
+            "exp": datetime() + timedelta(hours=1)
         }, setup_jwt_secret, algorithm="HS256")
 
         request.cookies = {'token': token}
