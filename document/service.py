@@ -1,5 +1,9 @@
 from abc import ABC, abstractmethod
+import io
+
+from loguru import logger
 import boto3
+from botocore.exceptions import BotoCoreError, NoCredentialsError, PartialCredentialsError
 
 from document.document import ObjectNameError
 from document.dto import DocumentCreate, DocumentFilter, DocumentResponse, DocumentUpdate
@@ -7,6 +11,10 @@ from document.repository import DocumentRepository
 
 
 class DocumentService(ABC):
+    @abstractmethod
+    def upload_document(self, file, object_name):
+        pass
+
     @abstractmethod
     def get_documents(self, filter: DocumentFilter) -> list[DocumentResponse]:
         pass
@@ -44,6 +52,23 @@ class DocumentServiceV1(DocumentService):
             endpoint_url="https://broom-magang.s3.ap-southeast-3.amazonaws.com"
         )
         self.bucket_name = bucket_name
+        self.logger = logger.bind(service="DocumentService")
+
+    def upload_document(self, file_content, object_name):
+        try:
+            file_content_bytes = file_content.file.read()
+            file_object = io.BytesIO(file_content_bytes)
+
+            self.s3_client.upload_fileobj(file_object, self.bucket_name, object_name)
+        except NoCredentialsError:
+            self.logger.error("AWS credentials not found.")
+            raise
+        except PartialCredentialsError:
+            self.logger.error("Incomplete AWS credentials.")
+            raise
+        except BotoCoreError as e:
+            self.logger.error(f"Error uploading file to S3: {e}")
+            raise
         
     def get_documents(self, filter: DocumentFilter) -> list[DocumentResponse] | None:
         docs = self.repository.get_documents(filter=filter)
