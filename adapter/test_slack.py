@@ -161,6 +161,25 @@ class TestSlackAdapter:
         )
         return mock_request
 
+    def mock_reaction_added_event(self, reaction: str):
+        event = {
+            "type": "reaction_added",
+            "user": "U1234567890",
+            "reaction": "-1",
+            "item": {
+                "type": "message",
+                "channel": "C1234567890",
+                "ts": "1731075911.249209",
+            },
+            "item_user": "U9876543210",
+            "event_ts": "1731076540.000900",
+        }
+        return event
+
+    @pytest.fixture
+    def mock_negative_reaction_event(self):
+        return self.mock_reaction_added_event("-1")
+
     @pytest.mark.asyncio
     async def test_handle_interactions_ask_question(
         self,
@@ -271,6 +290,31 @@ class TestSlackAdapter:
         res = await slack_adapter.load_options(mock_request)
 
         assert res.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_reaction_added(
+        self, mock_negative_reaction_event, mock_slack_adapter
+    ):
+        negative_reaction = mock_negative_reaction_event
+        _, _, _, slack_adapter = mock_slack_adapter
+
+        # Test for negative reaction handling
+        slack_adapter.negative_reaction = MagicMock()
+        res = slack_adapter.reaction_added(negative_reaction)
+
+        assert res.status_code == 200
+
+        slack_adapter.negative_reaction.assert_called_once_with(event=negative_reaction)
+
+    @pytest.mark.asyncio
+    async def test_negative_reaction(
+        self, mock_negative_reaction_event, mock_slack_adapter
+    ):
+        negative_reaction = mock_negative_reaction_event
+        _, _, _, slack_adapter = mock_slack_adapter
+
+        # will add logic in next PR
+        slack_adapter.negative_reaction(event=negative_reaction)
 
     @pytest.mark.asyncio
     async def test_ask_form(
