@@ -52,27 +52,27 @@ class AppConfig:
         self.openai_api_key, found = self.validate_env_var("OPENAI_API_KEY")
         if not found:
             invalid = True
-            
+
         self.google_client_id, found = self.validate_env_var("GOOGLE_CLIENT_ID")
         if not found:
             invalid = True
-        
+
         self.google_client_secret, found = self.validate_env_var("GOOGLE_CLIENT_SECRET")
         if not found:
             invalid = True
-        
+
         self.google_redirect_uri, found = self.validate_env_var("GOOGLE_REDIRECT_URI")
         if not found:
             invalid = True
-            
+
         self.base_url, found = self.validate_env_var("BASE_URL")
         if not found:
             invalid = True
-        
+
         self.anthropic_api_key, found = self.validate_env_var("ANTHROPIC_API_KEY")
         if not found:
             invalid = True
-            
+
         self.jwt_secret_key, found = self.validate_env_var("JWT_SECRET_KEY")
         if not found:
             invalid = True
@@ -134,9 +134,13 @@ def configure_logger(log_level: str):
     level = parse_log_level(log_level)
     logger.remove(0)
     logger.add(
-        sink,
+        sink=sink,
         level=level,
-        format="{time} | {level} | {message}",
+        format="{time} | {level} | {message} {extra}",
         backtrace=True,
         serialize=True,
     )
+
+    for name in ["uvicorn.access", "uvicorn.error", "fastapi"]:
+        uvicorn_logger = logging.getLogger(name)
+        uvicorn_logger.handlers = []

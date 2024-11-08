@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, status
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi import FastAPI, status
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slack_bolt import App
 
@@ -12,10 +12,11 @@ from auth.dto import GoogleCredentials, ProfileResponse
 from bot.view import BotViewV1
 from config import AppConfig, configure_logger
 from chat import ChatEngineSelector
-from data_source.controller import DataSourceControllerV1
-from data_source.service import DataSourceServiceV1
+from data_source.view import DataSourceViewV1
 from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
+
+from web.logging import RequestLoggingMiddleware
 
 import uvicorn
 import sentry_sdk
@@ -74,6 +75,7 @@ if __name__ == "__main__":
 
     data_source_controller = DataSourceControllerV1(data_source_service)
 
+    data_source_view = DataSourceViewV1(auth_controller)
     engine_selector = ChatEngineSelector(
         openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key
     )
@@ -89,6 +91,7 @@ if __name__ == "__main__":
     slack_app.event("message")(slack_adapter.event_message)
 
     app = FastAPI()
+    app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(SentryAsgiMiddleware)
 
     app.mount("/assets", StaticFiles(directory="public"), name="assets")
@@ -121,6 +124,13 @@ if __name__ == "__main__":
         endpoint=bot_view.show_edit_chatbot,
         response_class=HTMLResponse,
         description="Page that displays chatbot in detail",
+    )
+    
+    app.add_api_route(
+        "/data-source",
+        endpoint=data_source_view.show_list_data_sources,
+        response_class=HTMLResponse,
+        description="Page that displays list of data source",
     )
 
     app.add_api_route(
@@ -231,10 +241,5 @@ if __name__ == "__main__":
         response_class=RedirectResponse,
         methods=["GET"],
     )
-    app.add_api_route(
-        "/upload",
-        endpoint=data_source_controller.upload_file,
-        methods=["POST"],
-    )
-
-    uvicorn.run(app, host="0.0.0.0", port=config.port)
+    
+    uvicorn.run(app, host="0.0.0.0", port=config.port, access_log=False)

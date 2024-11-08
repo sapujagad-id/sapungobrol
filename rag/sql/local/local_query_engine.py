@@ -1,13 +1,15 @@
-# python -m rag.sql.query_engine
+# python -m rag.sql.local.local_query_engine
 
-from typing import Tuple
-from rag.sql.db_loader import load_csv_to_db, load_xlsx_to_db
-from rag.sql.security import check_sql_security
-from llama_index.core.query_engine import NLSQLTableQueryEngine
-from llama_index.core import SQLDatabase
-from llama_index.llms.openai import OpenAI
-from sqlalchemy import create_engine, text, inspect
 import re
+from typing import Tuple
+
+from llama_index.core import SQLDatabase
+from llama_index.core.query_engine import NLSQLTableQueryEngine
+from llama_index.llms.openai import OpenAI
+from sqlalchemy import create_engine, inspect, text
+
+from rag.sql.local.local_db_loader import load_csv_to_db, load_xlsx_to_db
+from rag.sql.security import check_sql_security
 
 
 def get_table_schema(engine, table_name):

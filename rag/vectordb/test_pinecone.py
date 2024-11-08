@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from rag.vectordb.node_storage import PineconeNodeStorage
-from rag.vectordb.pinecone_handler import PineconeHandler
+from rag.vectordb.pinecone.pinecone_node_storage import PineconeNodeStorage
+from rag.vectordb.pinecone.pinecone_handler import PineconeHandler
 from pinecone.core.openapi.shared.exceptions import UnauthorizedException
 
 
@@ -74,7 +74,7 @@ def test_pinecone_node_storage_openai_failure(mock_pinecone_handler, mocker):
 @pytest.fixture
 def mock_pinecone(mocker):
     """Mock the Pinecone API."""
-    mock_pc = mocker.patch('rag.vectordb.pinecone_handler.Pinecone')
+    mock_pc = mocker.patch('rag.vectordb.pinecone.pinecone_handler.Pinecone')
     mock_pc_instance = mock_pc.return_value
     mock_pc_instance.list_indexes.return_value = [{'name': 'broom'}]
     return mock_pc_instance
