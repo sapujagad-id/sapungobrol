@@ -2,8 +2,12 @@ from rag.parsing.parsing_csv import CSVProcessor
 from rag.parsing.parsing_txt import TXTProcessor
 from rag.parsing.parsing_pdf import PDFProcessor
 #from document.service import DocumentServiceV1, Document
+from rag.sql.postgres_db_loader import get_postgres_engine
+from rag.vectordb.postgres_handler import PostgresHandler
+from rag.vectordb.postgres_node_storage import PostgresNodeStorage
 from datetime import datetime
 import pandas as pd
+import os
 
 # WILL DELETE LATER
 class Document:
@@ -72,17 +76,15 @@ class DocumentIndexing:
             if document.type == 'csv':
                 summary = processor.process()
                 data = processor.df
-                self._store_tabular(data, summary)
+                self._store_tabular(document.title, data, summary)
 
             else:
                 nodes = processor.process()
                 nodes = [self._update_metadata(node, document) for node in nodes]
                 self._store_vector(nodes)
 
-    def _store_tabular(self, data: pd.DataFrame, summary: str):
-        # Implement logic to store tabular data and summary
+    def _store_tabular(self, table_name: str, data: pd.DataFrame, summary: str):
         pass
 
     def _store_vector(self, nodes):
-        # Implement logic to store vector data
         pass

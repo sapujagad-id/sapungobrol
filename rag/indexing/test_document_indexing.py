@@ -44,14 +44,11 @@ def test_get_processor_invalid(document_indexing):
 
 # Test for the _update_metadata method
 def test_update_metadata(document_indexing, document):
-    # Mock node with empty metadata
     node = MagicMock()
     node.metadata = {}
     
-    # Update the metadata of the node using the _update_metadata method
     updated_node = document_indexing._update_metadata(node, document)
     
-    # Assertions to verify metadata updates
     assert updated_node.metadata["id"] == document.id
     assert updated_node.metadata["title"] == document.title
     assert updated_node.metadata["type"] == document.type
@@ -62,7 +59,6 @@ def test_update_metadata(document_indexing, document):
 # Test for the fetch_documents method
 @patch("rag.indexing.document_indexing.datetime")
 def test_fetch_documents_from_date(mock_datetime, document_indexing):
-    # Mock the current datetime to have a consistent result
     mock_datetime.now.return_value = datetime(2024, 11, 7, 12, 0, 0)
     start_date = datetime(2024, 1, 1)
     filter_criteria = {
@@ -75,15 +71,15 @@ def test_fetch_documents_from_date(mock_datetime, document_indexing):
     document_indexing.service.get_documents.assert_called_once_with(filter=filter_criteria)
     assert documents == ["Mocked Document"]
 
-# Test for the process_documents method flow
+# Test for the process_documents method flow with CSV format
 @patch("rag.indexing.document_indexing.CSVProcessor.process")
 @patch("rag.indexing.document_indexing.Document.generate_presigned_url")
 def test_process_documents_csv(mock_generate_presigned_url, mock_process, document_indexing, document):
     mock_generate_presigned_url.return_value = "dummy_url"
     mock_process.return_value = pd.DataFrame({"column": [1, 2, 3]})
 
-    document_indexing.fetch_documents = MagicMock(return_value=[document])  # Mock fetch_documents to return a sample document
-    document_indexing._store_tabular = MagicMock()  # Mock _store_tabular method
+    document_indexing.fetch_documents = MagicMock(return_value=[document])
+    document_indexing._store_tabular = MagicMock()
 
     document_indexing.process_documents()
 
@@ -91,3 +87,100 @@ def test_process_documents_csv(mock_generate_presigned_url, mock_process, docume
     document_indexing._store_tabular.assert_called_once()
     mock_process.assert_called_once()
 
+# Test for the process_documents method flow with PDF format
+@patch("rag.indexing.document_indexing.PDFProcessor.process")
+@patch("rag.indexing.document_indexing.Document.generate_presigned_url")
+def test_process_documents_pdf(mock_generate_presigned_url, mock_pdf_process, document_indexing, document):
+    mock_generate_presigned_url.return_value = "dummy_url"
+    mock_pdf_process.return_value = [
+        MagicMock(text="sample node text 1", metadata={}),
+        MagicMock(text="sample node text 2", metadata={})
+    ]
+
+    document.type = 'pdf'
+    document_indexing.fetch_documents = MagicMock(return_value=[document])
+    document_indexing._store_vector = MagicMock()
+
+    document_indexing.process_documents()
+
+    mock_generate_presigned_url.assert_called_once()
+    mock_pdf_process.assert_called_once()
+    document_indexing._store_vector.assert_called_once()
+
+# Test for the process_documents method flow with TXT format
+@patch("rag.indexing.document_indexing.TXTProcessor.process")
+@patch("rag.indexing.document_indexing.Document.generate_presigned_url")
+def test_process_documents_txt(mock_generate_presigned_url, mock_txt_process, document_indexing, document):
+    mock_generate_presigned_url.return_value = "dummy_url"
+    mock_txt_process.return_value = [
+        MagicMock(text="sample node text 1", metadata={}),
+        MagicMock(text="sample node text 2", metadata={})
+    ]
+
+    document.type = 'txt'
+    document_indexing.fetch_documents = MagicMock(return_value=[document])
+    document_indexing._store_vector = MagicMock()
+
+    document_indexing.process_documents()
+
+    mock_generate_presigned_url.assert_called_once()
+    mock_txt_process.assert_called_once()
+    document_indexing._store_vector.assert_called_once()
+
+@patch("rag.indexing.document_indexing.get_postgres_engine")
+@patch("pandas.DataFrame.to_sql")
+def test_store_tabular(mock_to_sql, mock_get_postgres_engine):
+    mock_engine = MagicMock()
+    mock_get_postgres_engine.return_value = mock_engine
+
+    data = pd.DataFrame({"column1": [1, 2, 3]})
+    table_name = "test_table"
+    summary = "This is a summary of the data."
+
+    document_indexing = DocumentIndexing()
+    document_indexing._store_tabular(table_name, data, summary)
+
+    assert "access_level" in data.columns
+    assert all(data["access_level"] == 5)
+
+    mock_get_postgres_engine.assert_called_once()
+
+    mock_to_sql.assert_called_once_with(
+        table_name, con=mock_engine, if_exists="replace", index=False
+    )
+
+@patch("os.getenv")
+@patch("rag.indexing.document_indexing.PostgresHandler")
+@patch("rag.indexing.document_indexing.PostgresNodeStorage")
+def test_store_vector(mock_postgres_storage, mock_postgres_handler, mock_getenv):
+    mock_getenv.side_effect = lambda key, default=None: {
+        "POSTGRES_DB": "test_db",
+        "POSTGRES_USER": "test_user",
+        "POSTGRES_PASSWORD": "test_password",
+        "POSTGRES_HOST": "localhost",
+        "POSTGRES_PORT": "5432"
+    }.get(key, default)
+
+    mock_nodes = [MagicMock(text="node text 1"), MagicMock(text="node text 2")]
+    
+    mock_handler_instance = mock_postgres_handler.return_value
+    mock_storage_instance = mock_postgres_storage.return_value
+
+    document_indexing = DocumentIndexing()
+    document_indexing._store_vector(mock_nodes)
+
+    mock_postgres_handler.assert_called_once_with(
+        db_name="test_db",
+        user="test_user",
+        password="test_password",
+        host="localhost",
+        port=5432,
+        dimension=1536
+    )
+    mock_postgres_storage.assert_called_once_with(mock_handler_instance)
+
+    mock_storage_instance.store_nodes.assert_called_once_with(
+        ["node text 1", "node text 2"], 5
+    )
+
+    mock_handler_instance.close.assert_called_once()
