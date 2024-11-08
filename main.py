@@ -86,6 +86,7 @@ if __name__ == "__main__":
     slack_adapter = SlackAdapter(slack_app, engine_selector, bot_service)
 
     slack_app.event("message")(slack_adapter.event_message)
+    slack_app.event("reaction_added")(slack_adapter.reaction_added)
 
     app = FastAPI()
     app.add_middleware(RequestLoggingMiddleware)
@@ -122,7 +123,7 @@ if __name__ == "__main__":
         response_class=HTMLResponse,
         description="Page that displays chatbot in detail",
     )
-    
+
     app.add_api_route(
         "/data-source",
         endpoint=data_source_view.show_list_data_sources,
