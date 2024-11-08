@@ -19,6 +19,13 @@ class AppConfig:
             logging.error(f"config error: missing '{var_name}'")
 
         return var, var != ""
+    
+    def parse_env_list(self, var_name: str) -> tuple[list[str], bool]:
+        var, found = self.validate_env_var(var_name)
+        if found:
+            return [email.strip() for email in var.split(",") if email.strip()], found
+        return [], found
+
 
     def __init__(self) -> None:
         invalid = False
@@ -74,6 +81,16 @@ class AppConfig:
             invalid = True
             
         self.jwt_secret_key, found = self.validate_env_var("JWT_SECRET_KEY")
+        if not found:
+            invalid = True
+
+        self.maximum_access_level, found = self.validate_env_var("MAXIMUM_ACCESS_LEVEL")
+        if not found:
+            invalid = True
+        else:
+            self.maximum_access_level = int(self.maximum_access_level)
+
+        self.admin_emails, found = self.parse_env_list("ADMIN_EMAILS")
         if not found:
             invalid = True
 

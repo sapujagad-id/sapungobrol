@@ -10,7 +10,7 @@ import requests
 
 from auth.repository import AuthRepository
 from auth.dto import GoogleCredentials, LoginResponse, ProfileResponse
-from .exceptions import NoTokenSupplied, UserNotFound
+from .exceptions import NoTokenSupplied, UserNotFound, UserUnauthorized
 from auth.user import GoogleUserInfo, User
 from jose import jwt
 
@@ -27,15 +27,21 @@ class AuthService(ABC):
     @abstractmethod
     def get_user_profile(self, token: str) -> User:
       pass
+
+    @abstractmethod
+    def get_all_users_basic_info(self, token: str) -> User:
+      pass
+
   
 class AuthServiceV1(AuthService):
-    def __init__(self, repository: AuthRepository, google_credentials: GoogleCredentials, base_url: str, jwt_secret: str) -> None:
+    def __init__(self, repository: AuthRepository, google_credentials: GoogleCredentials, base_url: str, jwt_secret: str, admin_emails: list[str]) -> None:
       super().__init__()
       self.repository = repository
       self.google_credentials = google_credentials
       self.base_url = base_url
       self.logger = logger.bind(service="AuthService")
       self.jwt_secret = jwt_secret
+      self.admin_emails = admin_emails
       
     def login_redirect_google(self) -> Response:
       query_params = urlencode({
@@ -97,7 +103,6 @@ class AuthServiceV1(AuthService):
         },
         self.jwt_secret,
       )
-      
       # redirect to page based on state
       target_path = "/"
 
@@ -135,3 +140,21 @@ class AuthServiceV1(AuthService):
       if not user:
         raise UserNotFound
       return user
+    
+    def get_all_users_basic_info(self, token: str) -> User:
+      self.logger.debug("jwt token", token)
+      if token == "" or token == None:
+        raise NoTokenSupplied
+      
+      decoded = jwt.decode(
+        token=token, 
+        key=self.jwt_secret,
+        algorithms=["HS256"],
+      )
+      self.logger.debug("decoded jwt", decoded.items())
+
+      if decoded['email'] not in self.admin_emails:
+        raise UserUnauthorized
+      
+      users = self.repository.get_all_users_basic_info()
+      return users

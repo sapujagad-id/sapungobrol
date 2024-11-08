@@ -3,6 +3,11 @@ class NoTokenSupplied(Exception):
         self.message = message
         super().__init__(self.message)
 
+class UserUnauthorized(Exception):
+    def __init__(self, message="Unauthorized"):
+        self.message = message
+        super().__init__(self.message)
+
 class UserNotFound(Exception):
     def __init__(self, message="This user does not exist"):
         self.message = message

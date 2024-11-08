@@ -9,6 +9,7 @@ from auth.controller import AuthControllerV1
 from auth.repository import PostgresAuthRepository
 from auth.service import AuthServiceV1
 from auth.dto import GoogleCredentials, ProfileResponse
+from auth.view import UserViewV1
 from bot.view import BotViewV1
 from config import AppConfig, configure_logger
 from chat import ChatEngineSelector
@@ -40,9 +41,11 @@ if __name__ == "__main__":
 
     auth_repository = PostgresAuthRepository(sessionmaker)
     
-    auth_service = AuthServiceV1(auth_repository, google_credentials, config.base_url, config.jwt_secret_key)
+    auth_service = AuthServiceV1(auth_repository, google_credentials, config.base_url, config.jwt_secret_key, config.admin_emails)
     
     auth_controller = AuthControllerV1(auth_service)
+ 
+    user_view = UserViewV1(auth_controller, auth_service, config.admin_emails)
 
     bot_repository = PostgresBotRepository(sessionmaker)
 
@@ -50,8 +53,7 @@ if __name__ == "__main__":
 
     bot_controller = BotControllerV1(bot_service)
 
-    bot_view = BotViewV1(bot_controller, bot_service, auth_controller)
-    
+    bot_view = BotViewV1(bot_controller, bot_service, auth_controller, config.admin_emails)
 
     engine_selector = ChatEngineSelector(openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key)
 
@@ -92,6 +94,14 @@ if __name__ == "__main__":
         response_class=HTMLResponse,
         description="Page that displays chatbot in detail",
     )
+
+    app.add_api_route(
+        "/users",
+        endpoint=user_view.view_users,
+        response_class=HTMLResponse,
+        description="Page that displays all users",
+    )
+
 
     app.add_api_route(
         "/api/bots",
@@ -139,6 +149,13 @@ if __name__ == "__main__":
         methods=["GET"],
         description="Page to redirect user to when using google sign-in"
     )
+
+    app.add_api_route(
+        "/api/user/get-all-user-basic-info",
+        endpoint=auth_controller.get_all_users_basic_info, 
+        methods=["GET"],
+    )
+
     
     app.add_api_route(
         "/api/auth/callback/google",
