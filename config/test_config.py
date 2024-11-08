@@ -28,6 +28,8 @@ class TestAppConfig:
         monkeypatch.setenv("PORT", "")
         monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")
+        monkeypatch.setenv("MAXIMUM_ACCESS_LEVEL", "5")
+        monkeypatch.setenv("ADMIN_EMAILS", "admin@broom.id,user@broom.id")
 
         config = AppConfig()
 
