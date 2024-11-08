@@ -48,6 +48,10 @@ class TestAppConfig:
     def test_config(self, monkeypatch):
         monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")
+        monkeypatch.setenv("AWS_PUBLIC_BUCKET_NAME", "test")
+        monkeypatch.setenv("AWS_REGION", "ap-test")
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test")
 
         config = AppConfig()
 
