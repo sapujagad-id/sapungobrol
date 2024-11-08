@@ -6,6 +6,10 @@ from document.document import DocumentType, ObjectNameError
 from document.dto import DocumentCreate, DocumentFilter
 from document.repository import DocumentModel, PostgresDocumentRepository
 from document.service import DocumentServiceV1
+import io
+from unittest.mock import ANY, MagicMock
+import pytest
+from botocore.exceptions import NoCredentialsError, PartialCredentialsError, BotoCoreError # type: ignore
 
 def test_get_documents(setup_service, setup_documents):
     filter_data = DocumentFilter(created_after="2000-01-01")
@@ -44,3 +48,49 @@ def test_create_document_existing_name_raises_error(setup_service):
     existing_document.title = "Duplicate Document"
     with pytest.raises(ObjectNameError):
         setup_service.create_document(existing_document)
+
+def test_upload_document_success(setup_service):
+    # Prepare a mock file content for upload
+    mock_file_content = MagicMock()
+    mock_file_content.file = io.BytesIO(b"test data")
+
+    # Call the upload_document method
+    setup_service.upload_document(mock_file_content, "test_object_name")
+
+    # Assert that the S3 upload_fileobj method was called once
+    setup_service.mock_s3_client.upload_fileobj.assert_called_once_with(
+        ANY, "test_bucket", "test_object_name"
+    )
+
+
+def test_upload_document_no_credentials_error(setup_service):
+    # Simulate NoCredentialsError
+    setup_service.mock_s3_client.upload_fileobj.side_effect = NoCredentialsError
+
+    mock_file_content = MagicMock()
+    mock_file_content.file.read.return_value = b"test data"
+
+    with pytest.raises(NoCredentialsError):
+        setup_service.upload_document(mock_file_content, "test_object_name")
+
+def test_upload_document_partial_credentials_error(setup_service):
+    # Simulate PartialCredentialsError
+    setup_service.mock_s3_client.upload_fileobj.side_effect = PartialCredentialsError(
+    provider='aws', cred_var='aws_secret_access_key'
+    )
+
+    mock_file_content = MagicMock()
+    mock_file_content.file = io.BytesIO(b"test data")
+
+    with pytest.raises(PartialCredentialsError):
+        setup_service.upload_document(mock_file_content, "test_object_name")
+
+def test_upload_document_botocore_error(setup_service):
+    # Simulate a generic BotoCoreError
+    setup_service.mock_s3_client.upload_fileobj.side_effect = BotoCoreError
+
+    mock_file_content = MagicMock()
+    mock_file_content.file.read.return_value = b"test data"
+
+    with pytest.raises(BotoCoreError):
+        setup_service.upload_document(mock_file_content, "test_object_name")
