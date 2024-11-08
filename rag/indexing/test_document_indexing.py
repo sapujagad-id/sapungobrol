@@ -70,7 +70,7 @@ def test_fetch_documents_from_date(mock_datetime, document_indexing):
     document_indexing.service.get_documents.return_value = ["Mocked Document"]
     
     documents = document_indexing.fetch_documents(start_date=start_date)
-    document_indexing.service.get_documents.assert_called_once_with(filter=filter_criteria)
+    document_indexing.service.get_documents.assert_called_once_with(doc_filter=filter_criteria)
     assert documents == ["Mocked Document"]
 
 # Test for the process_documents method flow with CSV format
