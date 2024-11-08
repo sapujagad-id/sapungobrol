@@ -5,6 +5,7 @@ from rag.parsing.parsing_csv import CSVProcessor
 from rag.parsing.parsing_pdf import PDFProcessor
 from rag.parsing.parsing_txt import TXTProcessor
 from rag.indexing.document_indexing import DocumentIndexing, Document
+from sqlalchemy import text
 import pandas as pd
 # Fixture for a sample Document instance
 @pytest.fixture
@@ -15,7 +16,8 @@ def document():
         type="csv",
         object_name="test.csv",
         created_at=datetime.now(),
-        updated_at=datetime.now()
+        updated_at=datetime.now(),
+        access_level=5
     )
 
 # Fixture for DocumentIndexing instance with a mock service
@@ -129,24 +131,63 @@ def test_process_documents_txt(mock_generate_presigned_url, mock_txt_process, do
 
 @patch("rag.indexing.document_indexing.get_postgres_engine")
 @patch("pandas.DataFrame.to_sql")
-def test_store_tabular(mock_to_sql, mock_get_postgres_engine):
+@patch("rag.indexing.document_indexing.text")
+def test_store_tabular(mock_text, mock_to_sql, mock_get_engine, document):
     mock_engine = MagicMock()
-    mock_get_postgres_engine.return_value = mock_engine
+    mock_get_engine.return_value = mock_engine
+    mock_connection = MagicMock()
+    mock_engine.connect.return_value.__enter__.return_value = mock_connection
+    mock_text.return_value = "MOCKED_QUERY"
 
+    summary = "This is a test summary."
     data = pd.DataFrame({"column1": [1, 2, 3]})
-    table_name = "test_table"
-    summary = "This is a summary of the data."
 
-    document_indexing = DocumentIndexing()
-    document_indexing._store_tabular(table_name, data, summary)
+    instance = DocumentIndexing()
+    instance._store_tabular("test_table", data, document, summary)
 
+    mock_to_sql.assert_called_once_with("test_table", con=mock_engine, if_exists="replace", index=False)
     assert "access_level" in data.columns
-    assert all(data["access_level"] == 5)
+    assert all(data["access_level"] == document.access_level)
+    
+    mock_text.assert_any_call(
+        "CREATE TABLE IF NOT EXISTS metadata_table (\n"
+        "    id SERIAL PRIMARY KEY,\n"
+        "    document_id VARCHAR NOT NULL,\n"
+        "    title VARCHAR,\n"
+        "    type VARCHAR,\n"
+        "    object_name VARCHAR,\n"
+        "    created_at TIMESTAMP,\n"
+        "    updated_at TIMESTAMP,\n"
+        "    access_level INTEGER,\n"
+        "    summary TEXT\n"
+        ");"
+    )
+    mock_connection.execute.assert_any_call("MOCKED_QUERY")
 
-    mock_get_postgres_engine.assert_called_once()
-
-    mock_to_sql.assert_called_once_with(
-        table_name, con=mock_engine, if_exists="replace", index=False
+    mock_text.assert_any_call(
+        "INSERT INTO metadata_table (document_id, title, type, object_name, created_at, updated_at, access_level, summary)\n"
+        "VALUES (:document_id, :title, :type, :object_name, :created_at, :updated_at, :access_level, :summary)\n"
+        "ON CONFLICT (document_id) DO UPDATE\n"
+        "SET title = EXCLUDED.title,\n"
+        "    type = EXCLUDED.type,\n"
+        "    object_name = EXCLUDED.object_name,\n"
+        "    created_at = EXCLUDED.created_at,\n"
+        "    updated_at = EXCLUDED.updated_at,\n"
+        "    access_level = EXCLUDED.access_level,\n"
+        "    summary = EXCLUDED.summary;"
+    )
+    mock_connection.execute.assert_any_call(
+        "MOCKED_QUERY",
+        {
+            "document_id": document.id,
+            "title": document.title,
+            "type": document.type,
+            "object_name": document.object_name,
+            "created_at": document.created_at,
+            "updated_at": document.updated_at,
+            "access_level": document.access_level,
+            "summary": summary
+        }
     )
 
 @patch("os.getenv")
@@ -167,7 +208,7 @@ def test_store_vector(mock_postgres_storage, mock_postgres_handler, mock_getenv)
     mock_storage_instance = mock_postgres_storage.return_value
 
     document_indexing = DocumentIndexing()
-    document_indexing._store_vector(mock_nodes)
+    document_indexing._store_vector(mock_nodes, 5)
 
     mock_postgres_handler.assert_called_once_with(
         db_name="test_db",
