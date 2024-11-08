@@ -25,7 +25,7 @@ class Document:
 
 class DocumentServiceV1:
 
-    def get_documents(self, filter) -> list:
+    def get_documents(self, doc_filter) -> list[Document]:
 
         return []
     
@@ -34,11 +34,11 @@ class DocumentIndexing:
         self.service = DocumentServiceV1()
 
     def fetch_documents(self, start_date: datetime = None):
-        filter = {
+        doc_filter = {
             "created_after": start_date.isoformat(),
             "created_before": datetime.now().isoformat()
         }
-        return self.service.get_documents(filter=filter)
+        return self.service.get_documents(doc_filter=doc_filter)
 
     def _get_processor(self, document_type: str, document_url: str):
         """Returns the appropriate processor based on document type."""
@@ -81,7 +81,7 @@ class DocumentIndexing:
             else:
                 nodes = processor.process()
                 nodes = [self._update_metadata(node, document) for node in nodes]
-                self._store_vector(nodes)
+                self._store_vector(nodes, document.access_level)
 
     def _store_tabular(self, table_name: str, data: pd.DataFrame, document: Document, summary: str):
         engine = get_postgres_engine()
