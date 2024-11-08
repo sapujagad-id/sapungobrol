@@ -16,6 +16,7 @@ from data_source.view import DataSourceViewV1
 from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
 
+from document.view import DocumentViewV1
 from web.logging import RequestLoggingMiddleware
 
 import uvicorn
@@ -71,9 +72,7 @@ if __name__ == "__main__":
     bot_controller = BotControllerV1(bot_service)
 
     bot_view = BotViewV1(bot_controller, bot_service, auth_controller)
-    data_source_service = DataSourceServiceV1(config.aws_access_key_id, config.aws_secret_access_key, config.aws_public_bucket_name, config.aws_region)
 
-    data_source_controller = DataSourceControllerV1(data_source_service)
 
     data_source_view = DataSourceViewV1(auth_controller)
     engine_selector = ChatEngineSelector(
@@ -82,9 +81,11 @@ if __name__ == "__main__":
     
     document_repository = PostgresDocumentRepository(sessionmaker)
 
-    document_service = DocumentServiceV1(document_repository)
+    document_service = DocumentServiceV1(config.aws_access_key_id, config.aws_secret_access_key, config.aws_public_bucket_name, config.aws_region, document_repository)
 
     document_controller = DocumentControllerV1(document_service)
+
+    document_view = DocumentViewV1(document_service, auth_controller)
 
     slack_adapter = SlackAdapter(slack_app, engine_selector, bot_service)
 
@@ -127,10 +128,10 @@ if __name__ == "__main__":
     )
     
     app.add_api_route(
-        "/data-source",
-        endpoint=data_source_view.show_list_data_sources,
+        "/document",
+        endpoint=document_view.show_list_documents,
         response_class=HTMLResponse,
-        description="Page that displays list of data source",
+        description="Page that displays list of documents",
     )
 
     app.add_api_route(
@@ -241,5 +242,5 @@ if __name__ == "__main__":
         response_class=RedirectResponse,
         methods=["GET"],
     )
-    
+
     uvicorn.run(app, host="0.0.0.0", port=config.port, access_log=False)
