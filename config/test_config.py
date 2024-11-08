@@ -45,6 +45,19 @@ class TestAppConfig:
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()
 
+    def test_config_empty_maximum_access_level(self, monkeypatch):
+        monkeypatch.setenv("MAXIMUM_ACCESS_LEVEL", "")
+
+        with pytest.raises(ValueError, match="invalid app config"):
+            AppConfig()
+
+    def test_config_empty_admin_email(self, monkeypatch):
+        monkeypatch.setenv("ADMIN_EMAILS", "")
+
+        with pytest.raises(ValueError, match="invalid app config"):
+            AppConfig()
+
+
     def test_config(self, monkeypatch):
         monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")

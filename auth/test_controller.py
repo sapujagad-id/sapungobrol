@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import Mock
 
 from jose import ExpiredSignatureError, JWTError
-from auth.exceptions import NoTokenSupplied, UserNotFound
+from auth.exceptions import NoTokenSupplied, UserNotFound, UserUnauthorized
 from auth.repository import UserModel
 from auth.service import AuthServiceV1
 
@@ -79,5 +79,70 @@ class TestAuthController:
 
         with pytest.raises(HTTPException) as excinfo:
             setup_controller.user_profile_google(request)
+        assert excinfo.value.status_code == 404
+        assert excinfo.value.detail == "User not found"
+
+    def test_get_all_users_basic_info_success(self, setup_controller, setup_service):
+        request = Mock()
+        request.cookies.get.return_value = "valid_token"
+        setup_service.get_all_users_basic_info.return_value = [{"name": "John Doe", "email": "johndoe@example.com"}]
+
+        response = setup_controller.get_all_users_basic_info(request)
+
+        assert response == [{"name": "John Doe", "email": "johndoe@example.com"}]
+        setup_service.get_all_users_basic_info.assert_called_once_with("valid_token")
+
+    def test_get_all_users_basic_info_no_token(self, setup_controller, setup_service):
+        request = Mock()
+        request.cookies.get.return_value = None
+        setup_service.get_all_users_basic_info.side_effect = NoTokenSupplied
+
+        with pytest.raises(HTTPException) as excinfo:
+            setup_controller.get_all_users_basic_info(request)
+
+        assert excinfo.value.status_code == 401
+        assert excinfo.value.detail == "You are not authenticated"
+
+    def test_get_all_users_basic_info_user_unauthorized(self, setup_controller, setup_service):
+        request = Mock()
+        request.cookies.get.return_value = "unauthorized_token"
+        setup_service.get_all_users_basic_info.side_effect = UserUnauthorized
+
+        with pytest.raises(HTTPException) as excinfo:
+            setup_controller.get_all_users_basic_info(request)
+
+        assert excinfo.value.status_code == 401
+        assert excinfo.value.detail == "You are not authenticated"
+
+    def test_get_all_users_basic_info_token_expired(self, setup_controller, setup_service):
+        request = Mock()
+        request.cookies.get.return_value = "expired_token"
+        setup_service.get_all_users_basic_info.side_effect = ExpiredSignatureError
+
+        with pytest.raises(HTTPException) as excinfo:
+            setup_controller.get_all_users_basic_info(request)
+
+        assert excinfo.value.status_code == 400
+        assert excinfo.value.detail == "Your token has expired, please login again"
+
+    def test_get_all_users_basic_info_invalid_token(self, setup_controller, setup_service):
+        request = Mock()
+        request.cookies.get.return_value = "invalid_token"
+        setup_service.get_all_users_basic_info.side_effect = JWTError
+
+        with pytest.raises(HTTPException) as excinfo:
+            setup_controller.get_all_users_basic_info(request)
+
+        assert excinfo.value.status_code == 400
+        assert excinfo.value.detail == "Invalid token signature"
+
+    def test_get_all_users_basic_info_user_not_found(self, setup_controller, setup_service):
+        request = Mock()
+        request.cookies.get.return_value = "valid_token"
+        setup_service.get_all_users_basic_info.side_effect = UserNotFound
+
+        with pytest.raises(HTTPException) as excinfo:
+            setup_controller.get_all_users_basic_info(request)
+
         assert excinfo.value.status_code == 404
         assert excinfo.value.detail == "User not found"
