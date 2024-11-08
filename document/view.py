@@ -28,4 +28,13 @@ class DocumentViewV1(DocumentView):
 
     @login_required()
     def show_list_documents(self, request: Request):
-        pass
+        documents = self.service.get_documents(DocumentFilter())
+        user_profile = self.auth_controller.user_profile_google(request)
+        return self.templates.TemplateResponse(
+            request=request, 
+            name="document-list.html", 
+            context={
+                "documents": documents,
+                "user_profile": user_profile.get("data")
+            }
+        )

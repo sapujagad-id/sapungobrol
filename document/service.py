@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import boto3
 
 from document.document import ObjectNameError
 from document.dto import DocumentCreate, DocumentFilter, DocumentResponse, DocumentUpdate
@@ -32,9 +33,17 @@ class DocumentService(ABC):
     #     pass
       
 class DocumentServiceV1(DocumentService):
-    def __init__(self, repository: DocumentRepository):
+    def __init__(self, aws_access_key_id, aws_secret_access_key, bucket_name, aws_region_name, repository: DocumentRepository):
         super().__init__()
         self.repository = repository
+        self.s3_client = boto3.client(
+            's3',
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            region_name=aws_region_name,
+            endpoint_url="https://broom-magang.s3.ap-southeast-3.amazonaws.com"
+        )
+        self.bucket_name = bucket_name
         
     def get_documents(self, filter: DocumentFilter) -> list[DocumentResponse] | None:
         docs = self.repository.get_documents(filter=filter)
