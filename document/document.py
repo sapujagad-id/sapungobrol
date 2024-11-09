@@ -9,7 +9,7 @@ class DocumentTitleError(Exception):
         super().__init__(self.message)
         
 class ObjectNameError(Exception):
-    def __init__(self, message="Object name is required to identify the file"):
+    def __init__(self, message="Object name is required"):
         self.message = message
         super().__init__(self.message)
         

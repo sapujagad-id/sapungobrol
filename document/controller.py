@@ -87,7 +87,6 @@ class DocumentControllerV1(ABC):
 
     def upload_document(self, 
       file: Annotated[UploadFile, File()], 
-      # request: Annotated[DocumentCreate, Form()]
       type: Annotated[str, Form()],
       object_name: Annotated[str, Form()],
       title: Annotated[str, Form()],
@@ -104,12 +103,12 @@ class DocumentControllerV1(ABC):
         try:
             self.service.create_document(request=doc_create)
             return {"detail": "Document created successfully!"}
-        except DocumentTypeError:
-            raise HTTPException(status_code=400, detail="Document Type is not valid")
-        except DocumentTitleError:
-            raise HTTPException(status_code=400, detail="Document title is required")
-        except ObjectNameError:
-            raise HTTPException(status_code=400, detail="Object name is required")
+        except DocumentTypeError as exc:
+            raise HTTPException(status_code=400, detail=exc.message)
+        except DocumentTitleError as exc:
+            raise HTTPException(status_code=400, detail=exc.message)
+        except ObjectNameError as exc:
+            raise HTTPException(status_code=400, detail=exc.message)
         except Exception as e:
             self.logger.error(e.args)
             raise HTTPException(status_code=500)

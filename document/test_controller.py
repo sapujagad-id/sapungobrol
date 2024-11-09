@@ -60,7 +60,7 @@ def test_upload_document_invalid_type(setup_controller):
     with pytest.raises(HTTPException) as exc:
         setup_controller.upload_document(**invalid_document)
     assert exc.value.status_code == 400
-    assert exc.value.detail == "Document Type is not valid"
+    assert exc.value.detail == "Data Source Type is not valid"
 
 def test_upload_document_missing_title(setup_controller):
     document_missing_title = {
