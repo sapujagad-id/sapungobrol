@@ -59,31 +59,31 @@ class DocumentControllerV1(ABC):
         try:
             docs = self.service.get_documents(filter=doc_filter)
             if docs is None:
-                return HTTPException(status_code=404)
+                raise HTTPException(status_code=404)
             return docs
         except Exception as e:
             self.logger.error(e.args)
-            return HTTPException(status_code=500)
+            raise HTTPException(status_code=500)
       
     def fetch_document_by_name(self, object_name: str):
         try:
             doc = self.service.get_document_by_name(object_name=object_name)
             if doc is None:
-                return HTTPException(status_code=404)
+                raise HTTPException(status_code=404)
             return doc
         except Exception as e:
             self.logger.error(e.args)
-            return HTTPException(status_code=500)
+            raise HTTPException(status_code=500)
       
     def fetch_document_by_id(self, doc_id: str):
         try:
             doc = self.service.get_document_by_id(doc_id=doc_id)
             if doc is None:
-                return HTTPException(status_code=404)
+                raise HTTPException(status_code=404)
             return doc
         except Exception as e:
             self.logger.error(e.args)
-            return HTTPException(status_code=500)
+            raise HTTPException(status_code=500)
 
     def upload_document(self, 
       file: Annotated[UploadFile, File()], 
@@ -112,7 +112,7 @@ class DocumentControllerV1(ABC):
             raise HTTPException(status_code=400, detail="Object name is required")
         except Exception as e:
             self.logger.error(e.args)
-            return HTTPException(status_code=500)
+            raise HTTPException(status_code=500)
 
     def update_document(self, doc_id: str, request: DocumentUpdate):
         raise HTTPException(status_code=501) # 501 Not Implemented

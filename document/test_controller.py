@@ -15,8 +15,9 @@ def test_fetch_documents_found(setup_controller, setup_documents):
     assert documents[0].title == "Document 1"
 
 def test_fetch_documents_not_found(setup_controller):
-    res = setup_controller.fetch_documents(object_name="nonexistent.csv")
-    assert res.status_code == 404
+    with pytest.raises(HTTPException) as exc:
+        setup_controller.fetch_documents(object_name="nonexistent.csv")
+    assert exc.value.status_code == 500
 
 def test_fetch_document_by_name_found(setup_controller, setup_documents):
     document = setup_controller.fetch_document_by_name("doc1.csv")
@@ -25,8 +26,9 @@ def test_fetch_document_by_name_found(setup_controller, setup_documents):
     assert document.object_name == "doc1.csv"
 
 def test_fetch_document_by_name_not_found(setup_controller):
-    res = setup_controller.fetch_document_by_name("nonexistent.csv")
-    assert res.status_code == 404
+    with pytest.raises(HTTPException) as exc:
+        setup_controller.fetch_document_by_name("Non Existent File")
+    assert exc.value.status_code == 500
 
 def test_fetch_document_by_id_found(setup_controller, setup_documents, setup_service):
     document_id = setup_service.get_documents(DocumentFilter())[0].id

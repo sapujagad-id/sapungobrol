@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from loguru import logger
+
 from document.document import ObjectNameError
 from document.dto import DocumentCreate, DocumentFilter, DocumentResponse, DocumentUpdate
 from document.repository import DocumentRepository
@@ -34,6 +36,7 @@ class DocumentService(ABC):
 class DocumentServiceV1(DocumentService):
     def __init__(self, repository: DocumentRepository):
         super().__init__()
+        self.logger = logger.bind(service="DocumentService")
         self.repository = repository
         
     def get_documents(self, filter: DocumentFilter) -> list[DocumentResponse] | None:
@@ -50,7 +53,7 @@ class DocumentServiceV1(DocumentService):
 
     def create_document(self, request: DocumentCreate):
         request.validate()
-        print(request.model_dump())
+        self.logger.debug(f"model dump: {request.model_dump()}" )
         if self.repository.get_document_by_name(request.object_name) is None:
             self.repository.create_document(request)
         else:
