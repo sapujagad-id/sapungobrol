@@ -49,7 +49,6 @@ class DocumentServiceV1(DocumentService):
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
             region_name=aws_region_name,
-            endpoint_url="https://broom-magang.s3.ap-southeast-3.amazonaws.com"
         )
         self.bucket_name = bucket_name
         self.logger = logger.bind(service="DocumentService")
