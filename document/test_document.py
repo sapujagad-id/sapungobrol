@@ -47,7 +47,7 @@ class TestDocument:
             doc = create_valid_document()
             doc.object_name = ""  # Clear object_name to trigger error
             doc.validate()
-        assert str(excinfo.value) == "Object name is required to identify the file"
+        assert str(excinfo.value) == "Object name is required"
 
     # Test for all required fields missing - using Pydantic's ValidationError
     def test_document_validation_errors(self):

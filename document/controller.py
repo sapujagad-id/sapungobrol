@@ -59,35 +59,34 @@ class DocumentControllerV1(ABC):
         try:
             docs = self.service.get_documents(filter=doc_filter)
             if docs is None:
-                return HTTPException(status_code=404)
+                raise HTTPException(status_code=404)
             return docs
         except Exception as e:
             self.logger.error(e.args)
-            return HTTPException(status_code=500)
+            raise HTTPException(status_code=500)
       
     def fetch_document_by_name(self, object_name: str):
         try:
             doc = self.service.get_document_by_name(object_name=object_name)
             if doc is None:
-                return HTTPException(status_code=404)
+                raise HTTPException(status_code=404)
             return doc
         except Exception as e:
             self.logger.error(e.args)
-            return HTTPException(status_code=500)
+            raise HTTPException(status_code=500)
       
     def fetch_document_by_id(self, doc_id: str):
         try:
             doc = self.service.get_document_by_id(doc_id=doc_id)
             if doc is None:
-                return HTTPException(status_code=404)
+                raise HTTPException(status_code=404)
             return doc
         except Exception as e:
             self.logger.error(e.args)
-            return HTTPException(status_code=500)
+            raise HTTPException(status_code=500)
 
     def upload_document(self, 
       file: Annotated[UploadFile, File()], 
-      # request: Annotated[DocumentCreate, Form()]
       type: Annotated[str, Form()],
       object_name: Annotated[str, Form()],
       title: Annotated[str, Form()],
@@ -104,15 +103,15 @@ class DocumentControllerV1(ABC):
             self.service.upload_document(file, object_name)
             self.service.create_document(request=doc_create)
             return {"detail": "Document created successfully!"}
-        except DocumentTypeError:
-            raise HTTPException(status_code=400, detail="Document Type is not valid")
-        except DocumentTitleError:
-            raise HTTPException(status_code=400, detail="Document title is required")
-        except ObjectNameError:
-            raise HTTPException(status_code=400, detail="Object name is required")
+        except DocumentTypeError as exc:
+            raise HTTPException(status_code=400, detail=exc.message)
+        except DocumentTitleError as exc:
+            raise HTTPException(status_code=400, detail=exc.message)
+        except ObjectNameError as exc:
+            raise HTTPException(status_code=400, detail=exc.message)
         except Exception as e:
             self.logger.error(e.args)
-            return HTTPException(status_code=500)
+            raise HTTPException(status_code=500)
 
     def update_document(self, doc_id: str, request: DocumentUpdate):
         raise HTTPException(status_code=501) # 501 Not Implemented

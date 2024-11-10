@@ -83,7 +83,6 @@ class DocumentServiceV1(DocumentService):
 
     def create_document(self, request: DocumentCreate):
         request.validate()
-        print(request.model_dump())
         if self.repository.get_document_by_name(request.object_name) is None:
             self.repository.create_document(request)
         else:
