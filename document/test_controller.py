@@ -6,7 +6,6 @@ from document.service import DocumentServiceV1
 from document.document import DocumentTypeError, DocumentTitleError, ObjectNameError
 from io import BytesIO
 
-
 def test_fetch_documents_found(setup_controller, setup_documents):
     # Use filter that matches setup_documents fixture data
     documents = setup_controller.fetch_documents(object_name="doc1.csv")
@@ -18,6 +17,12 @@ def test_fetch_documents_not_found(setup_controller):
     with pytest.raises(HTTPException) as exc:
         setup_controller.fetch_documents(object_name="nonexistent.csv")
     assert exc.value.status_code == 500
+    
+def test_fetch_documents_unknown_error(setup_controller, mocker):
+    mocker.patch.object(setup_controller, 'fetch_documents', side_effect=Exception("Database error"))
+    with pytest.raises(Exception) as exc:
+        setup_controller.fetch_documents(object_name="doc1.csv")
+    assert exc is not None
 
 def test_fetch_document_by_name_found(setup_controller, setup_documents):
     document = setup_controller.fetch_document_by_name("doc1.csv")
@@ -29,6 +34,12 @@ def test_fetch_document_by_name_not_found(setup_controller):
     with pytest.raises(HTTPException) as exc:
         setup_controller.fetch_document_by_name("Non Existent File")
     assert exc.value.status_code == 500
+    
+def test_fetch_document_by_name_unknown_error(setup_controller, setup_documents, mocker):
+    mocker.patch.object(setup_controller, 'fetch_document_by_name', side_effect=Exception("Database error"))
+    with pytest.raises(Exception) as exc:
+        setup_controller.fetch_document_by_name("doc1.csv")
+    assert exc is not None
 
 def test_fetch_document_by_id_found(setup_controller, setup_documents, setup_service):
     document_id = setup_service.get_documents(DocumentFilter())[0].id
@@ -39,6 +50,13 @@ def test_fetch_document_by_id_found(setup_controller, setup_documents, setup_ser
 def teat_fetch_document_by_id_not_found(setup_controller):
     res = setup_controller.fetch_document_by_id("nonexistent-id")
     assert res.status_code == 404
+    
+def test_fetch_document_by_id_unknown_error(setup_controller, setup_documents, mocker):
+    mocker.patch.object(setup_controller, 'fetch_document_by_id', side_effect=Exception("Database error"))
+    with pytest.raises(Exception) as exc:
+        setup_controller.fetch_document_by_id("Document 1")
+    assert exc is not None
+
 
 def test_upload_document_success(setup_controller):
     new_document = {
@@ -85,3 +103,15 @@ def test_upload_document_duplicate_name(setup_controller, setup_documents):
         setup_controller.upload_document(**duplicate_document)
     assert exc.value.status_code == 400
     assert exc.value.detail == "Object name is required"
+
+def test_upload_document_unknown_error(setup_controller, mocker):
+    mocker.patch.object(setup_controller, 'upload_document', side_effect=Exception("Database error"))
+    duplicate_document = {
+        "file": UploadFile(filename="sample.txt", file=BytesIO(b"Sample content")),
+        "type": "txt",
+        "title": "Duplicate Document",
+        "object_name": "doc1.csv",
+    }
+    with pytest.raises(Exception) as exc:
+        setup_controller.upload_document(**duplicate_document)
+    assert exc is not None
