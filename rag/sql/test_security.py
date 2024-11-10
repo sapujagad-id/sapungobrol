@@ -1,9 +1,9 @@
 import os
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from unittest.mock import patch, MagicMock
-from rag.sql.query_engine import extract_signature, run_query
+from rag.sql.local.local_query_engine import extract_signature, run_query
 from rag.sql.security import check_sql_security
 
 
@@ -63,7 +63,7 @@ def test_check_sql_security_non_modifying_query():
     assert is_valid
     assert message == "Valid non-modifying query"
         
-@patch("rag.sql.query_engine.setup_query_engine")
+@patch("rag.sql.local.local_query_engine.setup_query_engine")
 def test_run_query_security_check_fails(mock_setup_query_engine):
     """Test run_query raises ValueError when security check fails."""
     mock_query_engine = MagicMock()

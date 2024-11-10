@@ -17,6 +17,7 @@ class User(BaseModel):
   email_verified: bool
   login_method: LoginMethod
   created_at: datetime
+  access_level: int
   
   def validate(self):
     if not self.sub:

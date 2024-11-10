@@ -1,6 +1,7 @@
 from typing import List
-from rag.vectordb.pinecone_handler import PineconeHandler
+from rag.vectordb.pinecone.pinecone_handler import PineconeHandler
 from rag.parsing.parsing_pdf import PDFProcessor
+from rag.parsing.parsing_txt import TXTProcessor
 import openai
 import os
 
@@ -34,7 +35,7 @@ class PineconeNodeStorage:
 if __name__ == "__main__":  # pragma: no cover
     PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    DOCUMENT_PATH = "data/ppl_testing_pdf.pdf"
+    DOCUMENT_PATH = "C:/Users/arkan/Downloads/University/ppl/sapungobrol/data/ppl_faq (1).txt"
     INDEX_NAME = "broom"
 
 
@@ -49,7 +50,7 @@ if __name__ == "__main__":  # pragma: no cover
         dimension=1536
     )
 
-    processor = PDFProcessor(DOCUMENT_PATH)
+    processor = TXTProcessor(DOCUMENT_PATH)
     nodes = processor.process()
 
     pinecone_storage = PineconeNodeStorage(pinecone_handler)

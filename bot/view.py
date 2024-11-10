@@ -67,7 +67,8 @@ class BotViewV1(BotView):
                             "model_engines": [e.value for e in ModelEngine],
                             "bot":bot,
                             "message_adapters": [e.value for e in MessageAdapter],
-                            "user_profile": user_profile.get("data")
+                            "user_profile": user_profile.get("data"),
+                            "data_source":["docs1","docs2","docs3"]
                         }
         )
 
@@ -80,7 +81,8 @@ class BotViewV1(BotView):
             context={   
                 "model_engines": [e.value for e in ModelEngine],
                 "message_adapters": [e.value for e in MessageAdapter],
-                "user_profile": user_profile.get("data")
+                "user_profile": user_profile.get("data"),
+                "data_source":["docs1","docs2","docs3"]
             }
         )
     

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from uuid import uuid4
 from loguru import logger
-from sqlalchemy import Boolean, Column, DateTime, Enum, String, Uuid
+from sqlalchemy import Boolean, Column, DateTime, Enum, String, Uuid, Integer
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 
 from auth.user import GoogleUserInfo, LoginMethod, User
@@ -24,6 +24,7 @@ class UserModel(Base):
     email_verified = Column(Boolean, nullable=False)
     login_method = Column(Enum(LoginMethod, validate_strings=True), nullable=False)
     created_at = Column(DateTime, default=datetime.now)
+    access_level = Column(Integer, default=0, nullable=False)  
 
     def __repr__(self):
         return f"User id:{self.id}"
@@ -40,7 +41,6 @@ class AuthRepository(ABC):
     @abstractmethod
     def add_google_user(self, user_info_json: GoogleUserInfo) -> None:
         pass
-
 
 class PostgresAuthRepository(AuthRepository):
     def __init__(self, session: sessionmaker) -> None:
@@ -79,3 +79,4 @@ class PostgresAuthRepository(AuthRepository):
                 )
                 session.add(user)
                 session.commit()
+                

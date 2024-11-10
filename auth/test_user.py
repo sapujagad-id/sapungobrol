@@ -17,7 +17,8 @@ class TestUserValidation:
             email="manusia@broom.id",
             email_verified=True,
             login_method=LoginMethod.GOOGLE,
-            created_at=datetime.now()
+            created_at=datetime.now(),
+            access_level=0
         )
         with pytest.raises(SubNotFound):
             request.validate()
@@ -31,7 +32,9 @@ class TestUserValidation:
             email="me@gmail.com",
             email_verified=True,
             login_method=LoginMethod.GOOGLE,
-            created_at=datetime.now()
+            created_at=datetime.now(),
+            access_level=0
+
         )
         with pytest.raises(InvalidEmail):
             request.validate()
@@ -45,7 +48,9 @@ class TestUserValidation:
             email="",
             email_verified=True,
             login_method=LoginMethod.GOOGLE,
-            created_at=datetime.now()
+            created_at=datetime.now(),
+            access_level=0
+
         )
         with pytest.raises(InvalidEmail):
             request.validate()
@@ -59,7 +64,9 @@ class TestUserValidation:
             email="manusia@broom.id",
             email_verified=True,
             login_method=LoginMethod.GOOGLE,
-            created_at=datetime.now()
+            created_at=datetime.now(),
+            access_level=0
+
         )
         with pytest.raises(InvalidName):
             request.validate()
@@ -73,7 +80,8 @@ class TestUserValidation:
             email="manusia@broom.id",
             email_verified=True,
             login_method=LoginMethod.GOOGLE,
-            created_at=datetime.now()
+            created_at=datetime.now(),
+            access_level=0,
         )
         with pytest.raises(InvalidPictureURL):
             request.validate()
@@ -88,7 +96,9 @@ class TestUserValidation:
                 email="manusia@broom.id",
                 email_verified=True,
                 login_method="INVALID_METHOD",
-                created_at=datetime.now()
+                created_at=datetime.now(),
+                access_level=0
+
             )
 
     def test_empty_id(self):
@@ -101,7 +111,9 @@ class TestUserValidation:
                 email="manusia@broom.id",
                 email_verified=True,
                 login_method=LoginMethod.GOOGLE,
-                created_at=datetime.now()
+                created_at=datetime.now(),
+                access_level=0
+
             )          
 
     def test_valid_user(self):
@@ -113,7 +125,8 @@ class TestUserValidation:
             email="manusia@broom.id",
             email_verified=True,
             login_method=LoginMethod.GOOGLE,
-            created_at=datetime.now()
+            created_at=datetime.now(),
+            access_level=0
         )
         # Should not raise any exception
         request.validate()

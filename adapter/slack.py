@@ -39,8 +39,10 @@ class SlackAdapter:
         self.engine_selector = engine_selector
         self.bot_service = bot_service
         self.handler = SlackRequestHandler(self.app)
-        self.logger = logger.bind(service="SlackAdapter")
         self.app_user_id = self.app.client.auth_test()["user_id"]
+
+    def logger(self):
+        return logger.bind(service="SlackAdapter")
 
     # Function to listen for events on Slack. No need to test this since this is purely dependent on
     # Bolt
@@ -54,41 +56,49 @@ class SlackAdapter:
         payload = json.loads(payload_str)
 
         actions = payload["actions"]
-        if len(actions) == 1 and actions[0]["action_id"] == "ask_question":
-            channel_id = payload["channel"]["id"]
-            user_id = payload["user"]["id"]
-            slug = payload["state"]["values"]["bots"]["select_chatbot"][
-                "selected_option"
-            ]["value"]
-            question = payload["state"]["values"]["question"]["question"]["value"]
+        if len(actions) == 1:
+            action_id = actions[0]["action_id"]
 
-            try:
-                await self.ask_v2(
-                    channel_id=channel_id, user_id=user_id, slug=slug, question=question
-                )
-            except (EmptyQuestion, MissingChatbot) as e:
-                raise HTTPException(status_code=400, detail=e.message)
+            self.logger().bind(action_id=action_id).info("handling interaction")
+            if action_id == "ask_question":
 
-            response_url = payload["response_url"]
+                channel_id = payload["channel"]["id"]
+                user_id = payload["user"]["id"]
+                slug = payload["state"]["values"]["bots"]["select_chatbot"][
+                    "selected_option"
+                ]["value"]
+                question = payload["state"]["values"]["question"]["question"]["value"]
 
-            ack_payload = {
-                "response_type": "ephemeral",
-                "text": "",
-                "replace_original": True,
-                "delete_original": True,
-            }
+                try:
+                    await self.ask_v2(
+                        channel_id=channel_id,
+                        user_id=user_id,
+                        slug=slug,
+                        question=question,
+                    )
+                except (EmptyQuestion, MissingChatbot) as e:
+                    raise HTTPException(status_code=400, detail=e.message)
 
-            try:
-                res = requests.post(response_url, json=ack_payload)
-                if res.status_code != 200:
-                    raise UnableToRespondToInteraction
+                response_url = payload["response_url"]
 
-            except UnableToRespondToInteraction:
-                self.logger.bind(res=res.json()).error(
-                    "unable to respond to interaction"
-                )
-            except requests.RequestException as e:
-                self.logger.bind(err=e).error("unable to respond to interaction")
+                ack_payload = {
+                    "response_type": "ephemeral",
+                    "text": "",
+                    "replace_original": True,
+                    "delete_original": True,
+                }
+
+                try:
+                    res = requests.post(response_url, json=ack_payload)
+                    if res.status_code != 200:
+                        raise UnableToRespondToInteraction
+
+                except UnableToRespondToInteraction:
+                    self.logger().bind(res=res.json()).error(
+                        "unable to respond to interaction"
+                    )
+                except requests.RequestException as e:
+                    self.logger().bind(err=e).error("unable to respond to interaction")
 
         return Response(status_code=200)
 
@@ -123,16 +133,16 @@ class SlackAdapter:
         self, channel: str, ts: str, engine: ChatEngine, question: str
     ):
         try:
-            self.logger.info("generating response")
+            self.logger().info("generating response")
 
             chatbot_response = engine.generate_response(query=question)
 
-            self.logger.info("sending generated response")
+            self.logger().info("sending generated response")
 
             self.app.client.chat_update(channel=channel, ts=ts, text=chatbot_response)
 
         except ChatResponseGenerationError as e:  # pragma: no cover
-            self.logger.error(e)
+            self.logger().error(e)
             self.app.client.chat_update(
                 channel=channel,
                 ts=ts,
@@ -190,6 +200,8 @@ class SlackAdapter:
         }
 
     async def ask_v2(self, channel_id: str, user_id: str, slug: str, question: str):
+        self.logger().info("answering question")
+
         if question is None or len(question.strip()) < 1:
             raise EmptyQuestion
 
@@ -262,6 +274,7 @@ class SlackAdapter:
         self, chatbot, question, channel_id, thread_ts, history=None
     ):
         try:
+            self.logger().info("Processing query using chatbot")
             loading_message = self.app.client.chat_postMessage(
                 channel=channel_id,
                 text=":hourglass_flowing_sand: Processing your request, please wait...",

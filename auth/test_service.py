@@ -109,7 +109,7 @@ class TestAuthService:
         assert isinstance(response, RedirectResponse)
         assert response.status_code == 302 or 307
         assert "token" in response.headers['set-cookie']
-
+        
     def test_get_user_profile_success(self, setup_real_service: AuthServiceV1, setup_jwt_secret: str):
         token = jwt.encode({
             "sub": "test_sub", 
