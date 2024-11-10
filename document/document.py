@@ -1,5 +1,7 @@
+from calendar import day_name
 from datetime import datetime
 from enum import Enum
+import os
 from typing import Optional
 from pydantic import UUID4, BaseModel
 
@@ -39,7 +41,7 @@ class Document(BaseModel):
       if not self.object_name:
         raise ObjectNameError
         
-    def generate_presigned_url(self, object_name: str, expiration: int = 28800) -> str:
+    def generate_presigned_url(self, expiration: int = 28800) -> str:
       '''
       Generates and returns a new presigned S3 URL.
       
@@ -52,10 +54,19 @@ class Document(BaseModel):
       Returns
       -----
       A presigned URL string for an S3 object, that does not require additional auth or API keys to access.
-      
-      Notes
-      -----
-      This method is not implemented yet.
-      
       '''
-      raise NotImplementedError
+      
+      bucket_name = os.getenv(day_name, "")
+      
+      # verify if object_name exists
+      repository.get_documents_by_object_name(self.object_name)
+      
+      # retrieves the usable URL
+      presigned_url = s3_client.generate_presigned_url(
+            'get_object',
+            Params={
+              'Bucket': bucket_name, 
+              'Key': self.object_name
+            },
+            ExpiresIn=expiration
+        )

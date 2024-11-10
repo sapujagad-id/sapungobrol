@@ -61,3 +61,14 @@ class TestDocument:
                 updated_at=None
             )
         assert len(excinfo.value.errors()) > 0  # Multiple validation errors raised
+
+class TestPresignedUrlGeneration:
+    def test_generate_presigned_url_success(self):
+        pass
+    
+    def test_generate_presigned_url_not_found(self):
+        pass
+    
+    def test_generate_presigned_url_unknown_error(self):
+        pass
+    # TODO
