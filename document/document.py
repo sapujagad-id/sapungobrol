@@ -59,7 +59,9 @@ class Document(BaseModel):
       bucket_name = os.getenv(day_name, "")
       
       # verify if object_name exists
-      repository.get_documents_by_object_name(self.object_name)
+      doc = repository.get_documents_by_name(self.object_name)
+      if doc is None:
+        raise FileNotFoundError
       
       # retrieves the usable URL
       presigned_url = s3_client.generate_presigned_url(
