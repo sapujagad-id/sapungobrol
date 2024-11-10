@@ -8,7 +8,7 @@ from fastapi.responses import RedirectResponse
 from loguru import logger
 import requests
 
-from auth.repository import AuthRepository
+from auth.repository import AuthRepository, UserModel
 from auth.dto import GoogleCredentials, LoginResponse, ProfileResponse
 from .exceptions import NoTokenSupplied, UserNotFound
 from auth.user import GoogleUserInfo, User
