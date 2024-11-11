@@ -44,7 +44,7 @@ class TestReactionEvent:
 
         for event, expected_reaction in slack_reaction_events:
             reaction_event_create = ReactionEventCreate.from_slack_reaction(
-                bot_id,
+                str(bot_id),
                 message,
                 event,
             )
