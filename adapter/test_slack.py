@@ -18,6 +18,7 @@ from bot.helper import relative_time
 from chat import ChatEngineSelector, ChatOpenAI
 from chat.exceptions import ChatResponseGenerationError
 from bot.repository import BotModel
+from .reaction_event_repository import ReactionEventRepository
 
 
 class TestSlackAdapter:
@@ -29,8 +30,12 @@ class TestSlackAdapter:
             mock_engine_selector.select_engine = MagicMock(return_value=ChatOpenAI())
             mock_chatbot = mock_engine_selector.select_engine()
             mock_bot_service = MagicMock(spec=BotService)
+            mock_reaction_event_repository = MagicMock(spec=ReactionEventRepository)
             slack_adapter = SlackAdapter(
-                mock_app, mock_engine_selector, mock_bot_service
+                mock_app,
+                mock_engine_selector,
+                mock_bot_service,
+                mock_reaction_event_repository,
             )
             return mock_app, mock_chatbot, mock_bot_service, slack_adapter
 
