@@ -6,6 +6,8 @@ CREATE TYPE login_methods AS ENUM('GOOGLE');
 
 CREATE TYPE document_type AS ENUM ('csv', 'pdf', 'txt');
 
+CREATE TYPE reactions AS ENUM('POSITIVE', 'NEGATIVE');
+
 CREATE TABLE users (
     id UUID PRIMARY KEY,
     sub VARCHAR(127) NOT NULL,
@@ -40,4 +42,15 @@ CREATE TABLE documents (
   updated_at TIMESTAMPTZ DEFAULT NOW()
   -- created_by uuid NOT NULL, 
   -- FOREIGN KEY (created_by) REFERENCES users (id),
+);
+
+CREATE TABLE reaction_events (
+    id UUID PRIMARY KEY,
+    bot_id UUID NOT NULL, -- FK to bots(id)
+    reaction reactions NOT NULL,
+    source_adapter message_adapters NOT NULL,
+    source_adapter_message_id VARCHAR(255) NOT NULL,
+    source_adapter_user_id VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
