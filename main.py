@@ -24,6 +24,10 @@ import sentry_sdk
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 import os
 
+from document.controller import DocumentControllerV1
+from document.repository import PostgresDocumentRepository
+from document.service import DocumentServiceV1
+
 load_dotenv(override=True)
 
 sentry_sdk.init(
@@ -73,10 +77,17 @@ if __name__ == "__main__":
     engine_selector = ChatEngineSelector(
         openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key
     )
+    
+    document_repository = PostgresDocumentRepository(sessionmaker)
+
+    document_service = DocumentServiceV1(document_repository)
+
+    document_controller = DocumentControllerV1(document_service)
 
     slack_adapter = SlackAdapter(slack_app, engine_selector, bot_service)
 
     slack_app.event("message")(slack_adapter.event_message)
+    slack_app.event("reaction_added")(slack_adapter.reaction_added)
 
     app = FastAPI()
     app.add_middleware(RequestLoggingMiddleware)
@@ -113,7 +124,7 @@ if __name__ == "__main__":
         response_class=HTMLResponse,
         description="Page that displays chatbot in detail",
     )
-    
+
     app.add_api_route(
         "/data-source",
         endpoint=data_source_view.show_list_data_sources,
@@ -159,6 +170,34 @@ if __name__ == "__main__":
         endpoint=bot_controller.delete_chatbot,
         methods=["DELETE"],
         status_code=status.HTTP_204_NO_CONTENT,
+    )
+    app.add_api_route(
+        "/api/documents",
+        endpoint=document_controller.fetch_documents,
+        methods=["GET"],
+        status_code=status.HTTP_200_OK,
+        name="Get Documents",
+    )
+    app.add_api_route(
+        "/api/documents/id/{doc_id}",
+        endpoint=document_controller.fetch_document_by_id,
+        methods=["GET"],
+        status_code=status.HTTP_200_OK,
+        name="Fetch Document by ID",
+    )
+    app.add_api_route(
+        "/api/documents/{object_name}",
+        endpoint=document_controller.fetch_document_by_name,
+        methods=["GET"],
+        status_code=status.HTTP_200_OK,
+        name="Fetch Document by Object Name",
+    )
+    app.add_api_route(
+        "/api/documents",
+        endpoint=document_controller.upload_document,
+        methods=["POST"],
+        status_code=status.HTTP_200_OK,
+        name="Create and Upload Document",
     )
     app.add_api_route(
         "/api/slack/events", endpoint=slack_adapter.handle_events, methods=["POST"]
