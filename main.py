@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slack_bolt import App
 
-from adapter import SlackAdapter
+from adapter import SlackAdapter, PostgresReactionEventRepository
 from auth.controller import AuthControllerV1
 from auth.repository import PostgresAuthRepository
 from auth.service import AuthServiceV1
@@ -77,14 +77,21 @@ if __name__ == "__main__":
     engine_selector = ChatEngineSelector(
         openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key
     )
-    
+
     document_repository = PostgresDocumentRepository(sessionmaker)
 
     document_service = DocumentServiceV1(document_repository)
 
     document_controller = DocumentControllerV1(document_service)
 
-    slack_adapter = SlackAdapter(slack_app, engine_selector, bot_service)
+    reaction_event_repository = PostgresReactionEventRepository(sessionmaker)
+
+    slack_adapter = SlackAdapter(
+        slack_app,
+        engine_selector,
+        bot_service,
+        reaction_event_repository,
+    )
 
     slack_app.event("message")(slack_adapter.event_message)
     slack_app.event("reaction_added")(slack_adapter.reaction_added)
