@@ -13,6 +13,8 @@ from slack_sdk.errors import SlackApiError
 from bot.service import BotService
 from chat import ChatEngineSelector, ChatEngine
 from chat.exceptions import ChatResponseGenerationError
+from .reaction_event import ReactionEventCreate
+from .reaction_event_repository import ReactionEventRepository
 
 
 class UnableToRespondToInteraction(Exception):
@@ -35,10 +37,12 @@ class SlackAdapter:
         app: App,
         engine_selector: ChatEngineSelector,
         bot_service: BotService,
+        reaction_event_repository: ReactionEventRepository,
     ) -> None:
         self.app = app
         self.engine_selector = engine_selector
         self.bot_service = bot_service
+        self.reaction_event_repository = reaction_event_repository
         self.handler = SlackRequestHandler(self.app)
         self.app_user_id = self.app.client.auth_test()["user_id"]
 
@@ -141,6 +145,43 @@ class SlackAdapter:
 
     def negative_reaction(self, event: Dict[str, any]):
         self.logger().info("handle negative reaction")
+
+        # Fetch message data
+        res = self.app.client.conversations_history(
+            channel=event["item"]["channel"],
+            oldest=event["item"]["ts"],
+            inclusive=True,
+            include_all_metadata=True,
+            limit=1,
+        )
+        message = res["messages"][0]
+
+        # Check if message is start of conversation
+        if message["thread_ts"] is None or message["ts"] != message["thread_ts"]:
+            return
+
+        # Get bot slug and find bot to get bot id
+        metadata = message["metadata"]
+        if metadata is None:
+            return
+
+        metadata_event = metadata["event_type"]
+        if metadata_event != "chat-data":
+            return
+
+        bot_slug = metadata["event_payload"]["bot_slug"]
+        bot = self.bot_service.get_chatbot_by_slug(bot_slug)
+        if bot is None:
+            return
+
+        # Create reaction event
+        reaction_event_create = ReactionEventCreate.from_slack_reaction(
+            bot_id=bot.id,
+            message=message["text"],
+            event=event,
+        )
+
+        self.reaction_event_repository.create_reaction_event(reaction_event_create)
 
     def send_generated_response(
         self, channel: str, ts: str, engine: ChatEngine, question: str
