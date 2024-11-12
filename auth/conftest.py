@@ -57,6 +57,7 @@ def setup_real_service(setup_repository, setup_google_credentials, setup_jwt_sec
       setup_google_credentials,
       "http://localhost:8000",
       setup_jwt_secret,
+      "example@broom.id"
       )
     return service
 

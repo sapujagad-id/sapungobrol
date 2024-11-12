@@ -1,15 +1,24 @@
 <!-- navbar.html -->
 <nav class="bg-white shadow-sm" role="navigation" aria-label="site menu">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-        <div class="flex items-center">
+        <div class="flex items-center space-x-4">
+            <!-- Logo -->
             <img src="/assets/broom-logo.png" alt="Broom.id Logo" class="h-4 mx-4">
-            <h1 class="text-lg font-semibold">{{ title | default('') }}</h1>
+
+            {% if user_profile %}
+                <a href="/" class="text-lg font-semibold text-gray-700 hover:text-blue-500">Chatbot Library</a>
+                {% if user_profile.email in admin_emails %}
+                    <a href="/users" class="text-lg font-semibold text-gray-700 hover:text-blue-500">Users</a>
+                {% endif %}
+            {% endif %}
         </div>
+
+        <!-- User Profile Menu -->
         <div class="flex items-center relative">
             {% if user_profile %}
                 <div class="relative">
-                    <div class="relative flex items-center" id="userMenuButton">
-                        <img src={{user_profile.picture}} alt="Avatar" class="h-8 w-8 rounded-full">
+                    <div class="relative flex items-center cursor-pointer" id="userMenuButton">
+                        <img src="{{ user_profile.picture }}" alt="Avatar" class="h-8 w-8 rounded-full">
                         <svg class="w-4 h-4 ml-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
@@ -26,6 +35,7 @@
                     });
                 </script>
             {% else %}
+                <a href="/login" class="text-sm text-blue-600 hover:underline">Login</a>
             {% endif %}
         </div>
     </div>

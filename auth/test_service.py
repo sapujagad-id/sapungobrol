@@ -1,11 +1,11 @@
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from fastapi.responses import RedirectResponse
 import pytest
 from fastapi import HTTPException
-from auth.exceptions import NoTokenSupplied, UserNotFound
+from auth.exceptions import NoTokenSupplied, UserNotFound, UserUnauthorized
 from auth.repository import AuthRepository
 from auth.service import AuthServiceV1
-from jose import jwt
+from jose import jwt, ExpiredSignatureError, JWTError
 from uuid import uuid4
 from datetime import UTC, datetime, timedelta
 
@@ -109,7 +109,7 @@ class TestAuthService:
         assert isinstance(response, RedirectResponse)
         assert response.status_code == 302 or 307
         assert "token" in response.headers['set-cookie']
-
+        
     def test_get_user_profile_success(self, setup_real_service: AuthServiceV1, setup_jwt_secret: str):
         token = jwt.encode({
             "sub": "test_sub", 
@@ -144,3 +144,32 @@ class TestAuthService:
         )
         with pytest.raises(UserNotFound):
             setup_real_service.get_user_profile(token)
+
+    def test_get_all_users_basic_info_success(self, setup_real_service: AuthServiceV1):
+
+        setup_real_service.admin_emails = ["admin@broom.id"]
+        setup_real_service.jwt_secret = "testsecret"
+
+        token = jwt.encode({"email": "admin@broom.id"}, setup_real_service.jwt_secret, algorithm="HS256")
+
+        setup_real_service.repository.get_all_users_basic_info = MagicMock(return_value=[{"name": "User1", "email": "user1@broom.id"}])
+
+        users = setup_real_service.get_all_users_basic_info(token)
+        assert isinstance(users, list)
+        assert users == [{"name": "User1", "email": "user1@broom.id"}]
+        setup_real_service.repository.get_all_users_basic_info.assert_called_once()
+
+    def test_get_all_users_basic_info_no_token(self, setup_real_service: AuthServiceV1):
+
+        with pytest.raises(NoTokenSupplied):
+            setup_real_service.get_all_users_basic_info("")
+
+    def test_get_all_users_basic_info_unauthorized_user(self, setup_real_service: AuthServiceV1):
+
+        setup_real_service.admin_emails = ["admin@broom.id"]
+        setup_real_service.jwt_secret = "testsecret"
+
+        token = jwt.encode({"email": "unauthorized@broom.id"}, setup_real_service.jwt_secret, algorithm="HS256")
+
+        with pytest.raises(UserUnauthorized):
+            setup_real_service.get_all_users_basic_info(token)

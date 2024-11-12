@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Users - Broom.id</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" integrity="sha384-HtMZLkYo+pR5/u7zCzXxMJP6QoNnQJt1qkHM0EaOPvGDIzaVZbmYr/TlvUZ/sKAg" crossorigin="anonymous">
+</head>
+<body class="bg-gray-100">
+    <!-- Navbar -->
+    {% include 'navbar.html' %}
+
+    <main class="container mx-auto mt-8 px-4">
+        <div class="bg-white rounded shadow">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h2 class="text-xl font-semibold">List of Users</h2>
+            </div>
+
+            <!-- Content Table -->
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-4 py-2 text-left">Name</th>
+                        <th class="px-4 py-2 text-left">Email</th>
+                        <th class="px-4 py-2 text-left">Access Level</th>
+                        <th class="px-4 py-2"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr class="border-t">
+                        <td class="px-4 py-2">{{ user.name }}</td>
+                        <td class="px-4 py-2">{{ user.email }}</td>
+                        <td class="px-4 py-2">{{ user.access_level }}</td>
+                        <td class="px-4 py-2 text-right">
+                            <button 
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" 
+                                onclick="window.location.href='/edit-user/{{ user.id }}'">
+                                EDIT
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-4 flex justify-center">
+            <nav class="inline-flex rounded-md shadow" role="navigation" aria-label="links to nearby pages">
+                <!-- Pagination buttons (if needed) -->
+            </nav>
+        </div>
+    </main>
+</body>
+</html>
