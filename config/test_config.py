@@ -130,8 +130,51 @@ class TestAppConfig:
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()
     
-    def test_configure_empty_openai(self, monkeypatch):
+    def test_configure_empty_anthropic(self, monkeypatch):
         monkeypatch.setenv("ANTHROPIC_API_KEY", "")
 
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()
+
+    def test_configure_empty_postgres_db(self, monkeypatch):
+        monkeypatch.setenv("POSTGRES_DB", "")
+        
+        with pytest.raises(ValueError, match="invalid app config"):
+            AppConfig()
+
+    def test_configure_empty_postgres_user(self, monkeypatch):
+        monkeypatch.setenv("POSTGRES_USER", "")
+
+        with pytest.raises(ValueError, match="invalid app config"):
+            AppConfig()
+
+    def test_configure_empty_postgres_password(self, monkeypatch):
+        monkeypatch.setenv("POSTGRES_PASSWORD", "")
+
+        with pytest.raises(ValueError, match="invalid app config"):
+            AppConfig()
+
+    def test_configure_empty_postgres_host(self, monkeypatch):
+        monkeypatch.setenv("POSTGRES_HOST", "")
+
+        with pytest.raises(ValueError, match="invalid app config"):
+            AppConfig()
+    
+    def test_configure_default_postgres_port(self, monkeypatch):
+        monkeypatch.setenv("PORT", "")
+        monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")
+        monkeypatch.setenv("MAXIMUM_ACCESS_LEVEL", "5")
+        monkeypatch.setenv("ADMIN_EMAILS", "admin@broom.id,user@broom.id")
+        monkeypatch.setenv("POSTGRES_PORT", "")
+
+        config = AppConfig()
+
+        assert config.postgres_port == 5432
+
+    def test_configure_invalid_postgres_port(self, monkeypatch):
+        monkeypatch.setenv("POSTGRES_PORT", "invalid_port")
+
+        with pytest.raises(ValueError, match="invalid app config"):
+            AppConfig()
+            
