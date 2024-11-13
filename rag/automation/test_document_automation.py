@@ -59,7 +59,7 @@ def test_update_metadata(document_indexing, document):
     assert updated_node.metadata["updated_at"] == document.updated_at
 
 # Test for the fetch_documents method
-@patch("rag.indexing.document_indexing.datetime")
+@patch("rag.automation.document_automation.datetime")
 def test_fetch_documents_from_date(mock_datetime, document_indexing):
     mock_datetime.now.return_value = datetime(2024, 11, 7, 12, 0, 0)
     start_date = datetime(2024, 1, 1)
@@ -74,8 +74,8 @@ def test_fetch_documents_from_date(mock_datetime, document_indexing):
     assert documents == ["Mocked Document"]
 
 # Test for the process_documents method flow with CSV format
-@patch("rag.indexing.document_indexing.CSVProcessor.process")
-@patch("rag.indexing.document_indexing.Document.generate_presigned_url")
+@patch("rag.automation.document_automation.CSVProcessor.process")
+@patch("rag.automation.document_automation.Document.generate_presigned_url")
 def test_process_documents_csv(mock_generate_presigned_url, mock_process, document_indexing, document):
     mock_generate_presigned_url.return_value = "dummy_url"
     mock_process.return_value = pd.DataFrame({"column": [1, 2, 3]})
@@ -90,8 +90,8 @@ def test_process_documents_csv(mock_generate_presigned_url, mock_process, docume
     mock_process.assert_called_once()
 
 # Test for the process_documents method flow with PDF format
-@patch("rag.indexing.document_indexing.PDFProcessor.process")
-@patch("rag.indexing.document_indexing.Document.generate_presigned_url")
+@patch("rag.automation.document_automation.PDFProcessor.process")
+@patch("rag.automation.document_automation.Document.generate_presigned_url")
 def test_process_documents_pdf(mock_generate_presigned_url, mock_pdf_process, document_indexing, document):
     mock_generate_presigned_url.return_value = "dummy_url"
     mock_pdf_process.return_value = [
@@ -110,8 +110,8 @@ def test_process_documents_pdf(mock_generate_presigned_url, mock_pdf_process, do
     document_indexing._store_vector.assert_called_once()
 
 # Test for the process_documents method flow with TXT format
-@patch("rag.indexing.document_indexing.TXTProcessor.process")
-@patch("rag.indexing.document_indexing.Document.generate_presigned_url")
+@patch("rag.automation.document_automation.TXTProcessor.process")
+@patch("rag.automation.document_automation.Document.generate_presigned_url")
 def test_process_documents_txt(mock_generate_presigned_url, mock_txt_process, document_indexing, document):
     mock_generate_presigned_url.return_value = "dummy_url"
     mock_txt_process.return_value = [
@@ -129,9 +129,9 @@ def test_process_documents_txt(mock_generate_presigned_url, mock_txt_process, do
     mock_txt_process.assert_called_once()
     document_indexing._store_vector.assert_called_once()
 
-@patch("rag.indexing.document_indexing.get_postgres_engine")
+@patch("rag.automation.document_automation.get_postgres_engine")
 @patch("pandas.DataFrame.to_sql")
-@patch("rag.indexing.document_indexing.text")
+@patch("rag.automation.document_automation.text")
 def test_store_tabular(mock_text, mock_to_sql, mock_get_engine, document):
     mock_engine = MagicMock()
     mock_get_engine.return_value = mock_engine
@@ -191,8 +191,8 @@ def test_store_tabular(mock_text, mock_to_sql, mock_get_engine, document):
     )
 
 @patch("os.getenv")
-@patch("rag.indexing.document_indexing.PostgresHandler")
-@patch("rag.indexing.document_indexing.PostgresNodeStorage")
+@patch("rag.automation.document_automation.PostgresHandler")
+@patch("rag.automation.document_automation.PostgresNodeStorage")
 def test_store_vector(mock_postgres_storage, mock_postgres_handler, mock_getenv):
     mock_getenv.side_effect = lambda key, default=None: {
         "POSTGRES_DB": "test_db",
