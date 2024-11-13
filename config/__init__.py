@@ -84,11 +84,11 @@ class AppConfig:
         if not found:
             invalid = True
 
-        self.maximum_access_level, found = self.validate_env_var("MAXIMUM_ACCESS_LEVEL")
+        self.total_access_levels, found = self.validate_env_var("TOTAL_ACCESS_LEVELS")
         if not found:
             invalid = True
         else:
-            self.maximum_access_level = int(self.maximum_access_level)
+            self.total_access_levels = int(self.total_access_levels)
 
         self.admin_emails, found = self.parse_env_list("ADMIN_EMAILS")
         if not found:

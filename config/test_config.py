@@ -1,8 +1,8 @@
+import pytest
 from loguru import logger
 
-from . import AppConfig, InvalidLogLevelException, parse_log_level, configure_logger
-
-import pytest
+from . import (AppConfig, InvalidLogLevelException, configure_logger,
+               parse_log_level)
 
 
 class TestAppConfig:
@@ -28,7 +28,7 @@ class TestAppConfig:
         monkeypatch.setenv("PORT", "")
         monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")
-        monkeypatch.setenv("MAXIMUM_ACCESS_LEVEL", "5")
+        monkeypatch.setenv("TOTAL_ACCESS_LEVELS", "5")
         monkeypatch.setenv("ADMIN_EMAILS", "admin@broom.id,user@broom.id")
 
         config = AppConfig()
@@ -47,8 +47,8 @@ class TestAppConfig:
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()
 
-    def test_config_empty_maximum_access_level(self, monkeypatch):
-        monkeypatch.setenv("MAXIMUM_ACCESS_LEVEL", "")
+    def test_config_empty_total_access_levels(self, monkeypatch):
+        monkeypatch.setenv("TOTAL_ACCESS_LEVELS", "")
 
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()
@@ -63,7 +63,7 @@ class TestAppConfig:
     def test_config(self, monkeypatch):
         monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")
-        monkeypatch.setenv("MAXIMUM_ACCESS_LEVEL", "5")
+        monkeypatch.setenv("TOTAL_ACCESS_LEVELS", "5")
         monkeypatch.setenv("ADMIN_EMAILS", "admin@broom.id,user@broom.id")
 
         config = AppConfig()
@@ -164,7 +164,7 @@ class TestAppConfig:
         monkeypatch.setenv("PORT", "")
         monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")
-        monkeypatch.setenv("MAXIMUM_ACCESS_LEVEL", "5")
+        monkeypatch.setenv("TOTAL_ACCESS_LEVELS", "5")
         monkeypatch.setenv("ADMIN_EMAILS", "admin@broom.id,user@broom.id")
         monkeypatch.setenv("POSTGRES_PORT", "")
 
