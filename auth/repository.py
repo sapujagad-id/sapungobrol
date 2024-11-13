@@ -3,8 +3,8 @@ from datetime import datetime
 from uuid import uuid4
 from loguru import logger
 from sqlalchemy import Boolean, Column, DateTime, Enum, String, Uuid, Integer
-from sqlalchemy.orm import sessionmaker, Session, declarative_base
-
+from sqlalchemy.orm import sessionmaker, Session, declarative_base, load_only
+from config import AppConfig
 from auth.user import GoogleUserInfo, LoginMethod, User
 
 Base = declarative_base()
@@ -15,6 +15,7 @@ class UserModel(Base):
     """
 
     __tablename__ = "users"
+    USER_BASIC_INFO_FIELDS = ["name", "email", "access_level"]
 
     id = Column(Uuid, primary_key=True)
     sub = Column(String(127), nullable=False)
@@ -42,6 +43,10 @@ class AuthRepository(ABC):
     def add_google_user(self, user_info_json: GoogleUserInfo) -> None:
         pass
 
+    @abstractmethod
+    def get_all_users_basic_info(self) -> list[dict]:
+        pass
+      
 class PostgresAuthRepository(AuthRepository):
     def __init__(self, session: sessionmaker) -> None:
         self.create_session = session
@@ -79,4 +84,11 @@ class PostgresAuthRepository(AuthRepository):
                 )
                 session.add(user)
                 session.commit()
-                
+    
+    def get_all_users_basic_info(self) -> list[dict]:
+        with self.create_session() as session:
+            with self.logger.catch(message="get all users error", reraise=True):
+                assert isinstance(session, Session)
+                load_fields = [getattr(UserModel, field) for field in UserModel.USER_BASIC_INFO_FIELDS]
+                users = session.query(UserModel).options(load_only(*load_fields)).all()
+                return [{field: getattr(user, field) for field in UserModel.USER_BASIC_INFO_FIELDS} for user in users]

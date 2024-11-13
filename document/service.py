@@ -6,7 +6,7 @@ import boto3
 from botocore.exceptions import BotoCoreError, NoCredentialsError, PartialCredentialsError
 
 from document.document import ObjectNameError
-from document.dto import DocumentCreate, DocumentFilter, DocumentResponse, DocumentUpdate
+from document.dto import AWSConfig, DocumentCreate, DocumentFilter, DocumentResponse, DocumentUpdate
 from document.repository import DocumentRepository
 
 
@@ -41,16 +41,16 @@ class DocumentService(ABC):
     #     pass
       
 class DocumentServiceV1(DocumentService):
-    def __init__(self, aws_access_key_id, aws_secret_access_key, bucket_name, aws_region_name, repository: DocumentRepository):
+    def __init__(self, aws_config: AWSConfig, repository: DocumentRepository):
         super().__init__()
         self.repository = repository
         self.s3_client = boto3.client(
             's3',
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            region_name=aws_region_name,
+            aws_access_key_id=aws_config.aws_access_key_id,
+            aws_secret_access_key=aws_config.aws_secret_access_key,
+            region_name=aws_config.aws_region,
         )
-        self.bucket_name = bucket_name
+        self.bucket_name = aws_config.aws_public_bucket_name
         self.logger = logger.bind(service="DocumentService")
 
     def upload_document(self, file_content, object_name):
@@ -83,6 +83,7 @@ class DocumentServiceV1(DocumentService):
 
     def create_document(self, request: DocumentCreate):
         request.validate()
+        self.logger.debug(f"model dump: {request.model_dump()}" )
         if self.repository.get_document_by_name(request.object_name) is None:
             self.repository.create_document(request)
         else:

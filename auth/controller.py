@@ -10,7 +10,7 @@ import requests
 from auth.dto import ProfileResponse
 from auth.service import AuthService
 from auth.user import GoogleUserInfo
-from auth.exceptions import NoTokenSupplied, UserNotFound
+from auth.exceptions import NoTokenSupplied, UserNotFound, UserUnauthorized
 from config import AppConfig
 
 class AuthController(ABC):
@@ -24,6 +24,10 @@ class AuthController(ABC):
   
   @abstractmethod
   async def authorize_google(self, request: Request, code: str) -> Response:
+    pass
+
+  @abstractmethod
+  def get_all_users_basic_info(self, request: Request):
     pass
   
   @abstractmethod
@@ -52,6 +56,20 @@ class AuthControllerV1(AuthController):
     response = self.service.authorize_google(request, code)
 
     return response
+  
+  def get_all_users_basic_info(self, request: Request):
+    token = request.cookies.get("token")
+    try:
+      all_user = self.service.get_all_users_basic_info(token)
+      return all_user
+    except (NoTokenSupplied, UserUnauthorized):
+      raise HTTPException(status_code=401, detail="You are not authenticated")
+    except ExpiredSignatureError:
+      raise HTTPException(status_code=400, detail="Your token has expired, please login again")    
+    except JWTError:
+      raise HTTPException(status_code=400, detail="Invalid token signature")
+    except UserNotFound:
+      raise HTTPException(status_code=404, detail="User not found")
 
   def user_profile_google(self, request: Request) -> ProfileResponse:
     token = request.cookies.get("token")

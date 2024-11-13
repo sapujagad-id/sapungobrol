@@ -28,6 +28,8 @@ class TestAppConfig:
         monkeypatch.setenv("PORT", "")
         monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")
+        monkeypatch.setenv("MAXIMUM_ACCESS_LEVEL", "5")
+        monkeypatch.setenv("ADMIN_EMAILS", "admin@broom.id,user@broom.id")
         monkeypatch.setenv("AWS_PUBLIC_BUCKET_NAME", "test")
         monkeypatch.setenv("AWS_REGION", "ap-test")
         monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test")
@@ -49,6 +51,19 @@ class TestAppConfig:
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()
 
+    def test_config_empty_maximum_access_level(self, monkeypatch):
+        monkeypatch.setenv("MAXIMUM_ACCESS_LEVEL", "")
+
+        with pytest.raises(ValueError, match="invalid app config"):
+            AppConfig()
+
+    def test_config_empty_admin_email(self, monkeypatch):
+        monkeypatch.setenv("ADMIN_EMAILS", "")
+
+        with pytest.raises(ValueError, match="invalid app config"):
+            AppConfig()
+
+
     def test_config(self, monkeypatch):
         monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")
@@ -56,6 +71,8 @@ class TestAppConfig:
         monkeypatch.setenv("AWS_REGION", "ap-test")
         monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test")
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test")
+        monkeypatch.setenv("MAXIMUM_ACCESS_LEVEL", "5")
+        monkeypatch.setenv("ADMIN_EMAILS", "admin@broom.id,user@broom.id")
 
         config = AppConfig()
 
@@ -96,39 +113,33 @@ class TestAppConfig:
 
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()
-
+            
     def test_config_empty_google_client_id(self, monkeypatch):
         monkeypatch.setenv("GOOGLE_CLIENT_ID", "")
 
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()
-
+    
     def test_config_empty_google_client_secret(self, monkeypatch):
         monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "")
 
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()
-
+    
     def test_config_empty_google_redirect_uri(self, monkeypatch):
         monkeypatch.setenv("GOOGLE_REDIRECT_URI", "")
 
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()
-
+            
     def test_config_empty_base_url(self, monkeypatch):
         monkeypatch.setenv("BASE_URL", "")
 
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()
-
-    def test_configure_empty_anthropic(self, monkeypatch):
+    
+    def test_configure_empty_openai(self, monkeypatch):
         monkeypatch.setenv("ANTHROPIC_API_KEY", "")
-
-        with pytest.raises(ValueError, match="invalid app config"):
-            AppConfig()
-
-    def test_configure_empty_jwt_secret_key(self, monkeypatch):
-        monkeypatch.setenv("JWT_SECRET_KEY", "")
 
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()

@@ -9,7 +9,7 @@ from auth.controller import AuthControllerV1
 from auth.dto import ProfileResponse
 from document.controller import DocumentControllerV1
 from document.document import DocumentType
-from document.dto import DocumentCreate, DocumentFilter
+from document.dto import AWSConfig, DocumentCreate, DocumentFilter
 from document.repository import DocumentModel, PostgresDocumentRepository
 from document.service import DocumentServiceV1
 from document.view import DocumentViewV1
@@ -33,11 +33,12 @@ def setup_service(mock_boto_client, setup_repository):
     mock_s3_client = MagicMock()
     mock_boto_client.return_value = mock_s3_client
     
+    aws_config = AWSConfig(aws_access_key_id="test_access_key",
+                           aws_secret_access_key="test_secret_key", 
+                           aws_public_bucket_name="test_bucket", 
+                           aws_region="ap-test-3")
     service = DocumentServiceV1(
-        aws_access_key_id="test_access_key",
-        aws_secret_access_key="test_secret_key",
-        bucket_name="test_bucket",
-        aws_region_name="ap-southeast-3",
+        aws_config,
         repository=setup_repository
     )
     
