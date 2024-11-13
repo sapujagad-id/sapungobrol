@@ -3,35 +3,40 @@ from .anthropic_chat import ChatAnthropic
 from unittest.mock import patch, MagicMock
 from chat.exceptions import ChatResponseGenerationError
 
+from rag.retriever.retriever import Retriever
+
+
+@pytest.fixture
+def retriever():
+    mock_postgres_handler = MagicMock()
+    return Retriever(mock_postgres_handler)
 
 @pytest.fixture
 def sample_query():
     return "Who is Jokowi?"
 
+@pytest.fixture
+def sample_access_level():
+    return 1
 
 @pytest.fixture
-def sample_context():
-    return "Jokowi is the president of Indonesia."
-
-
-@pytest.fixture
-def chat():
-    return ChatAnthropic(api_key="random-str")
+def chat(retriever):
+    return ChatAnthropic(retriever, api_key="random-str")
 
 
 class TestChatAnthropic:
 
-    def test_generate_response_with_context(self, mocker, chat, sample_query, sample_context):
+    def test_generate_response_with_access_level(self, mocker, chat, sample_query, sample_access_level):
 
         mock_create = mocker.patch.object(chat, "generate_response")
         mock_create.return_value = "Mocked response content"
         
-        response = chat.generate_response(query=sample_query, context=sample_context)
+        response = chat.generate_response(query=sample_query, access_level=sample_access_level)
         
         assert response == "Mocked response content"
         mock_create.assert_called_once()
 
-    def test_generate_response_without_context(self, mocker, chat, sample_query):
+    def test_generate_response_without_access_level(self, mocker, chat, sample_query):
 
         mock_create = mocker.patch.object(chat, "generate_response")
         mock_create.return_value = "Mocked response content"

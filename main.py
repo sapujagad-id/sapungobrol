@@ -75,7 +75,13 @@ if __name__ == "__main__":
 
     data_source_view = DataSourceViewV1(auth_controller)
     engine_selector = ChatEngineSelector(
-        openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key
+        openai_api_key=config.openai_api_key,
+        anthropic_api_key=config.anthropic_api_key,
+        postgres_db=config.postgres_db,
+        postgres_user=config.postgres_user,
+        postgres_password=config.postgres_password,
+        postgres_host=config.postgres_host,
+        postgres_port=config.postgres_port,
     )
 
     document_repository = PostgresDocumentRepository(sessionmaker)
