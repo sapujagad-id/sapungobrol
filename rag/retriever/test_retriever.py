@@ -1,23 +1,30 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from rag.retriever.retriever import Retriever
 
 
 @pytest.fixture
 def retriever():
-    return Retriever()
+    mock_postgres_handler = MagicMock()
+    return Retriever(mock_postgres_handler)
 
+@patch("openai.embeddings.create")
+def test_retrieve_context_vector(mock_create_embedding, retriever):
+    mock_embedding = MagicMock()
+    mock_create_embedding.return_value = MagicMock(data=[MagicMock(embedding=[0.1, 0.2, 0.3])])
 
-def test_retrieve_context_vector(retriever):
-    # Mock the method to simulate a vector retrieval
-    retriever._retrieve_context_vector = MagicMock(return_value=["Vector Context 1", "Vector Context 2"])
+    retriever.postgres_handler.query.return_value = ["result1", "result2"]
 
-    result = retriever._retrieve_context_vector(query="sample query", access_level=1, top_k=5)
+    query = "test query"
+    access_level = "public"
+    top_k = 2
+    result = retriever._retrieve_context_vector(query, access_level, top_k)
 
-    # Validate the returned vector context
-    assert len(result) == 2
-    assert result[0] == "Vector Context 1"
-    assert result[1] == "Vector Context 2"
+    mock_create_embedding.assert_called_once_with(input=query, model="text-embedding-3-small")
+
+    retriever.postgres_handler.query.assert_called_once_with([0.1, 0.2, 0.3], access_level=access_level, top_k=top_k)
+
+    assert result == ["result1", "result2"]
 
 
 def test_retrieve_context_tabular(retriever):

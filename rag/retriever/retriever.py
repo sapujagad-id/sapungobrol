@@ -1,6 +1,9 @@
+from rag.vectordb.postgres_handler import PostgresHandler
+import openai
+
 class Retriever:
-    def __init__(self):
-        pass
+    def __init__(self, postgres_handler: PostgresHandler):
+        self.postgres_handler = postgres_handler
 
     def _retrieve_context_vector(self, query, access_level, top_k=5) -> list:
         return []
