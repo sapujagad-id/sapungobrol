@@ -93,6 +93,32 @@ class AppConfig:
         self.admin_emails, found = self.parse_env_list("ADMIN_EMAILS")
         if not found:
             invalid = True
+        
+        self.postgres_db, found = self.validate_env_var("POSTGRES_DB")
+        if not found:
+            invalid = True
+        
+        self.postgres_user, found = self.validate_env_var("POSTGRES_USER")
+        if not found:
+            invalid = True
+        
+        self.postgres_password, found = self.validate_env_var("POSTGRES_PASSWORD")
+        if not found:
+            invalid = True
+        
+        self.postgres_host, found = self.validate_env_var("POSTGRES_HOST")
+        if not found:
+            invalid = True
+        
+        self.postgres_port, found = self.validate_env_var("POSTGRES_PORT")
+        if not found:
+            self.postgres_port = 5432
+        else:
+            try:
+                self.postgres_port = int(self.postgres_port)
+            except ValueError:
+                logging.error("config error: 'POSTGRES_PORT' must be integer")
+                invalid = True
 
         if invalid:
             raise ValueError("invalid app config")
