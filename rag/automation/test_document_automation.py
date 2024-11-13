@@ -4,7 +4,7 @@ from datetime import datetime
 from rag.parsing.parsing_csv import CSVProcessor
 from rag.parsing.parsing_pdf import PDFProcessor
 from rag.parsing.parsing_txt import TXTProcessor
-from rag.indexing.document_indexing import DocumentIndexing, Document
+from rag.automation.document_automation import DocumentIndexing, Document
 from sqlalchemy import text
 import pandas as pd
 # Fixture for a sample Document instance

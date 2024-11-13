@@ -4,34 +4,16 @@ from rag.parsing.parsing_pdf import PDFProcessor
 from rag.sql.postgres_db_loader import get_postgres_engine
 from rag.vectordb.postgres_handler import PostgresHandler
 from rag.vectordb.postgres_node_storage import PostgresNodeStorage
+from document.document import Document
+from document.service import DocumentServiceV1
 from sqlalchemy import text
 from datetime import datetime
 import pandas as pd
 import os
-
-class Document:
-    def __init__(self, id, title, type, object_name, created_at, updated_at, access_level):
-        self.id = id
-        self.title = title
-        self.type = type
-        self.object_name = object_name
-        self.created_at = created_at
-        self.updated_at = updated_at
-        self.access_level = access_level
-
-    def generate_presigned_url(self) -> str:
-        # Placeholder method to generate a presigned URL
-        return '' # Example implementation
-
-class DocumentServiceV1:
-
-    def get_documents(self, doc_filter) -> list[Document]:
-
-        return []
     
 class DocumentIndexing:
-    def __init__(self):
-        self.service = DocumentServiceV1()
+    def __init__(self, service: DocumentServiceV1):
+        self.service = service
 
     def fetch_documents(self, start_date: datetime = None):
         doc_filter = {
@@ -151,3 +133,4 @@ class DocumentIndexing:
         postgres_storage.store_nodes([node.text for node in nodes], access_level)
 
         postgres_handler.close()
+    
