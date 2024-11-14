@@ -26,8 +26,9 @@ class Document:
 class DocumentServiceV1:
 
     def get_documents(self, doc_filter) -> list[Document]:
+        doc_filter = []
 
-        return []
+        return doc_filter
     
 class DocumentIndexing:
     def __init__(self):
