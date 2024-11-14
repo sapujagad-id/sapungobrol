@@ -36,7 +36,8 @@ def setup_service(mock_boto_client, setup_repository):
     aws_config = AWSConfig(aws_access_key_id="test_access_key",
                            aws_secret_access_key="test_secret_key", 
                            aws_public_bucket_name="test_bucket", 
-                           aws_region="ap-test-3")
+                           aws_region="ap-test-3",
+                           aws_endpoint_url="aws-endpoint")
     service = DocumentServiceV1(
         aws_config,
         repository=setup_repository
