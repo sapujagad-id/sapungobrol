@@ -61,3 +61,40 @@ class TestDocument:
                 updated_at=None
             )
         assert len(excinfo.value.errors()) > 0  # Multiple validation errors raised
+
+    @patch("boto3.client")
+    def test_generate_presigned_url_success(self, mock_s3_client):
+        # Arrange
+        document = create_valid_document()
+        document.object_name = "sample.csv"
+        presigned_url = "https://example.com/sample.csv?X-Amz-Security-Token=..."
+        
+        # Mock S3 client response for generate_presigned_url
+        mock_s3_client.return_value.generate_presigned_url.return_value = presigned_url
+        
+        # Act
+        response = document.generate_presigned_url(mock_s3_client.return_value, "test-bucket")
+
+        # Assert
+        assert response == presigned_url
+        mock_s3_client.return_value.generate_presigned_url.assert_called_once_with(
+            'get_object',
+            Params={'Bucket': "test-bucket", 'Key': "sample.csv"},
+            ExpiresIn=28800
+        )
+
+    @patch("boto3.client")
+    def test_generate_presigned_url_failure(self, mock_s3_client):
+        # Arrange
+        document = create_valid_document()
+        document.object_name = "sample.csv"
+        
+        # Simulate a ClientError when generate_presigned_url is called
+        mock_s3_client.return_value.generate_presigned_url.side_effect = ClientError(
+            error_response={"Error": {"Code": "403", "Message": "Forbidden"}},
+            operation_name="generate_presigned_url"
+        )
+        
+        # Act & Assert
+        with pytest.raises(DocumentPresignedURLError):
+            document.generate_presigned_url(mock_s3_client.return_value, "test-bucket")
