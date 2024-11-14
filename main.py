@@ -17,6 +17,8 @@ from data_source.view import DataSourceViewV1
 from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
 
+from document.dto import AWSConfig
+from document.view import DocumentViewV1
 from web.logging import RequestLoggingMiddleware
 
 import uvicorn
@@ -47,6 +49,13 @@ if __name__ == "__main__":
         client_id=config.google_client_id,
         client_secret=config.google_client_secret,
         redirect_uri=config.google_redirect_uri,
+    )
+
+    aws_config = AWSConfig(
+        aws_access_key_id=config.aws_access_key_id,
+        aws_secret_access_key=config.aws_secret_access_key,
+        aws_public_bucket_name=config.aws_public_bucket_name,
+        aws_region=config.aws_region
     )
 
     configure_logger(config.log_level)
@@ -86,9 +95,11 @@ if __name__ == "__main__":
 
     document_repository = PostgresDocumentRepository(sessionmaker)
 
-    document_service = DocumentServiceV1(document_repository)
+    document_service = DocumentServiceV1(aws_config, document_repository)
 
     document_controller = DocumentControllerV1(document_service)
+
+    document_view = DocumentViewV1(document_service, auth_controller)
 
     reaction_event_repository = PostgresReactionEventRepository(sessionmaker)
 
@@ -140,19 +151,17 @@ if __name__ == "__main__":
     )
 
     app.add_api_route(
-        "/data-source",
-        endpoint=data_source_view.show_list_data_sources,
+        "/document",
+        endpoint=document_view.show_list_documents,
         response_class=HTMLResponse,
-        description="Page that displays list of data source",
+        description="Page that displays list of documents",
     )
-
     app.add_api_route(
         "/users",
         endpoint=user_view.view_users,
         response_class=HTMLResponse,
         description="Page that displays all users",
     )
-
 
     app.add_api_route(
         "/api/bots",
