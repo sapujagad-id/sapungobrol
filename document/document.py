@@ -19,6 +19,11 @@ class DocumentTypeError(Exception):
         self.message = message
         super().__init__(self.message)  
 
+class DocumentPresignedURLError(Exception):
+    def __init__(self, message="Failed to generate presigned URL"):
+        self.message = message
+        super().__init__(self.message)
+
 class DocumentType(str, Enum):
     CSV = "csv"
     PDF = "pdf"
@@ -58,4 +63,12 @@ class Document(BaseModel):
         A presigned URL string for an S3 object, that does not require additional auth or API keys to access.
 
         '''
-        raise NotImplementedError
+        try:
+            response = s3_client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': bucket_name, 'Key': self.object_name},
+                ExpiresIn=expiration
+            )
+            return response
+        except ClientError:
+            raise DocumentPresignedURLError

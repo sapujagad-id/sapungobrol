@@ -2,7 +2,9 @@ from pydantic import ValidationError
 import pytest
 from datetime import datetime
 from uuid import uuid4
-from document import Document, DocumentTitleError, DocumentType, DocumentTypeError, ObjectNameError
+from unittest.mock import Mock, patch
+from document import Document, DocumentTitleError, DocumentType, DocumentTypeError, ObjectNameError, DocumentPresignedURLError
+from botocore.exceptions import ClientError
 
 # Helper to create a valid document
 def create_valid_document():
