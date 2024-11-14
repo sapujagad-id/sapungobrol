@@ -97,6 +97,7 @@ if __name__ == "__main__":
         engine_selector,
         bot_service,
         reaction_event_repository,
+        auth_repository
     )
 
     slack_app.event("message")(slack_adapter.event_message)
