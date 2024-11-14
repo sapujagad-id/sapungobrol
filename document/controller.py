@@ -97,10 +97,10 @@ class DocumentControllerV1(ABC):
           title=title,
         )
         
-        # TODO: S3 integration (upload file)
         self.logger.info(file.filename)
         
         try:
+            self.service.upload_document(file, object_name)
             self.service.create_document(request=doc_create)
             return {"detail": "Document created successfully!"}
         except DocumentTypeError as exc:
