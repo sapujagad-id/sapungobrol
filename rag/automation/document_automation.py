@@ -25,10 +25,9 @@ class Document:
 
 class DocumentServiceV1:
 
-    def get_documents(self, doc_filter) -> list[Document]:
-        doc_filter = []
+    def get_documents(self) -> list[Document]: # add doc_filter param when needed
 
-        return doc_filter
+        return []
     
 class DocumentIndexing:
     def __init__(self):

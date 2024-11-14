@@ -242,7 +242,6 @@ def test_generate_presigned_url():
 
 def test_get_documents():
     service = DocumentServiceV1()
-    doc_filter = {"created_after": "2024-01-01T00:00:00", "created_before": "2024-12-31T23:59:59"}
-    documents = service.get_documents(doc_filter)
+    documents = service.get_documents()
     assert isinstance(documents, list), "Expected get_documents to return a list"
     assert documents == [], "Expected an empty list as return value in placeholder implementation"
