@@ -631,6 +631,46 @@ class TestSlackAdapter:
                 slug="12",
                 question="",
             )
+    
+    @pytest.mark.asyncio
+    async def test_ask_v2_user_not_found(self, mock_slack_adapter):
+        mock_app, _, _, slack_adapter = mock_slack_adapter
+
+        mock_app.client.users_info = MagicMock(
+            return_value={"user": {"profile": {"email": "nonexistent_user@example.com"}}}
+        )
+        slack_adapter.auth_respository.find_user_by_email = MagicMock(return_value=None)
+        mock_app.client.chat_postMessage = MagicMock(
+            return_value={"ts": "1234567890.123456"}
+        )
+
+        await slack_adapter.ask_v2(
+            channel_id="C12345678",
+            user_id="U12345678",
+            slug="test-bot-slug",
+            question="What's the answer to life?",
+        )
+
+        slack_adapter.auth_respository.find_user_by_email.assert_called_with(
+            "nonexistent_user@example.com"
+        )
+
+        expected_calls = [
+            call(
+                channel="C12345678",
+                text='<@U12345678> asked: \n\n"What\'s the answer to life?" ',
+                metadata={
+                    "event_type": "chat-data",
+                    "event_payload": {"bot_slug": "test-bot-slug"},
+                },
+            ),
+            call(
+                channel="C12345678",
+                text=":hourglass_flowing_sand: Processing your request, please wait...",
+                thread_ts="1234567890.123456",
+            ),
+        ]
+        mock_app.client.chat_postMessage.assert_has_calls(expected_calls, any_order=False)
 
     @pytest.mark.asyncio
     async def test_ask_method(self, mock_slack_adapter, mock_request):
