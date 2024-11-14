@@ -12,6 +12,7 @@ from .slack import (
 from slack_sdk.errors import SlackApiError
 from datetime import datetime
 from uuid import uuid4
+from auth.repository import AuthRepository
 from bot.bot import BotResponse, MessageAdapter, ModelEngine
 from bot.service import BotService
 from bot.helper import relative_time
@@ -27,16 +28,19 @@ class TestSlackAdapter:
     def mock_slack_adapter(self):
         with patch("slack_bolt.App") as MockApp:
             mock_app = MockApp()
+            mock_retriever = MagicMock()
             mock_engine_selector = MagicMock(spec=ChatEngineSelector)
-            mock_engine_selector.select_engine = MagicMock(return_value=ChatOpenAI())
+            mock_engine_selector.select_engine = MagicMock(return_value=ChatOpenAI(mock_retriever))
             mock_chatbot = mock_engine_selector.select_engine()
             mock_bot_service = MagicMock(spec=BotService)
             mock_reaction_event_repository = MagicMock(spec=ReactionEventRepository)
+            mock_auth_repository = MagicMock(spec=AuthRepository)
             slack_adapter = SlackAdapter(
                 mock_app,
                 mock_engine_selector,
                 mock_bot_service,
                 mock_reaction_event_repository,
+                mock_auth_repository,
             )
             return mock_app, mock_chatbot, mock_bot_service, slack_adapter
 
@@ -491,7 +495,7 @@ class TestSlackAdapter:
         mock_chatbot.generate_response = MagicMock(return_value="I'm fine, thank you!")
 
         slack_adapter.send_generated_response(
-            "C12345678", "1234567890.654321", mock_chatbot, "How are you?"
+            "C12345678", "1234567890.654321", mock_chatbot, "How are you?", 1
         )
         mock_app.client.chat_update.assert_called_once_with(
             channel="C12345678",
@@ -512,7 +516,7 @@ class TestSlackAdapter:
         )
 
         slack_adapter.send_generated_response(
-            "C12345678", "1234567890.654321", mock_chatbot, "How are you?"
+            "C12345678", "1234567890.654321", mock_chatbot, "How are you?", 1
         )
 
         mock_app.client.chat_update.assert_called_once_with(
@@ -770,7 +774,8 @@ class TestSlackAdapter:
         time.sleep(1)
 
         mock_chatbot.generate_response.assert_called_once_with(
-            query='<@U12345678> asked: \n\n"How is the weather?" '
+            query='<@U12345678> asked: \n\n"How is the weather?" ',
+            access_level=1
         )
         assert mock_app.client.chat_postMessage.call_count == 2
         mock_app.client.chat_postMessage.assert_any_call(
@@ -821,7 +826,8 @@ class TestSlackAdapter:
         time.sleep(1)
 
         mock_chatbot.generate_response.assert_called_once_with(
-            query='<@U12345678> asked: \n\n"Explain quantum computing" '
+            query='<@U12345678> asked: \n\n"Explain quantum computing" ',
+            access_level=1
         )
         assert mock_app.client.chat_postMessage.call_count == 2
         mock_app.client.chat_postMessage.assert_any_call(
@@ -1116,8 +1122,9 @@ class TestSlackAdapter:
 
         mock_chatbot.add_chat_history = MagicMock()
 
+        mock_retriever = MagicMock()
         bot = BotModel()
-        bot.model = ChatOpenAI()
+        bot.model = ChatOpenAI(mock_retriever)
 
         with patch("threading.Thread") as mock_thread:
             response = await slack_adapter.process_chatbot_request(

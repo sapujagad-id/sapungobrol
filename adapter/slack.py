@@ -336,7 +336,7 @@ class SlackAdapter:
             raise HTTPException(status_code=400, detail=f"Slack API Error: {e}")
 
     async def process_chatbot_request(
-        self, chatbot, question, channel_id, thread_ts, access_level, history=None,
+        self, chatbot, question, channel_id, thread_ts, access_level=1, history=None,
     ):
         try:
             self.logger().info("Processing query using chatbot")
