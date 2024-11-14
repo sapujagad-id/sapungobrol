@@ -25,7 +25,8 @@ class Document:
 
 class DocumentServiceV1:
 
-    def get_documents(self) -> list[Document]: # add doc_filter param when needed
+    def get_documents(self, doc_filter) -> list[Document]:
+        del doc_filter
 
         return []
     
