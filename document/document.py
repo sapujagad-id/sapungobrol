@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 from pydantic import UUID4, BaseModel
+from botocore.exceptions import ClientError
 
 class DocumentTitleError(Exception):
     def __init__(self, message="Document title is required"):
@@ -17,6 +18,11 @@ class DocumentTypeError(Exception):
     def __init__(self, message="Data Source Type is not valid"):
         self.message = message
         super().__init__(self.message)  
+
+class DocumentPresignedURLError(Exception):
+    def __init__(self, message="Failed to generate presigned URL"):
+        self.message = message
+        super().__init__(self.message)
 
 class DocumentType(str, Enum):
     CSV = "csv"
@@ -39,23 +45,22 @@ class Document(BaseModel):
       if not self.object_name:
         raise ObjectNameError
         
-    def generate_presigned_url(self, object_name: str, expiration: int = 28800) -> str:
-      '''
-      Generates and returns a new presigned S3 URL.
-      
-      Parameters
-      -----
-      object_name (str): the object name, key identifier for the file. this is stored in the DB
-      
-      expiration (int): time until presigned URL expires, in seconds. default is 28800s (8 hours)
-      
-      Returns
-      -----
-      A presigned URL string for an S3 object, that does not require additional auth or API keys to access.
-      
-      Notes
-      -----
-      This method is not implemented yet.
-      
-      '''
-      raise NotImplementedError
+    def generate_presigned_url(self, s3_client, bucket_name: str, expiration: int = 28800) -> str:
+        '''
+        Generates and returns a new presigned S3 URL.
+
+        Parameters
+        -----
+        s3_client: boto3 S3 client instance
+            The initialized S3 client to use for URL generation.
+
+        bucket_name (str): Name of the S3 bucket where the object is stored.
+
+        expiration (int): time until presigned URL expires, in seconds. default is 28800s (8 hours)
+
+        Returns
+        -----
+        A presigned URL string for an S3 object, that does not require additional auth or API keys to access.
+
+        '''
+        raise NotImplementedError
