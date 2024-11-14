@@ -21,10 +21,13 @@ class ChatEngine(ABC):
     def retrieve(self, query: str, access_level: int):
         return self.retriever.query(query, access_level)
 
-    def generate_response(self, query: str, access_level: int = 0) -> str:
+    def generate_response(self, query: str, access_level: int = 1) -> str:
         if not query:
             return ""
-
+        
+        if access_level < 1:
+            access_level = 1
+        
         context = self.retrieve(query, access_level)
         full_input = f"Given a context: {context}\n Given a query: {query}\n Please answer query based on the given context." if context else query
 
