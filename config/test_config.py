@@ -34,6 +34,11 @@ class TestAppConfig:
         monkeypatch.setenv("AWS_REGION", "ap-test")
         monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test")
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test")
+        monkeypatch.setenv("POSTGRES_DB", "test")
+        monkeypatch.setenv("POSTGRES_USER", "test")
+        monkeypatch.setenv("POSTGRES_PASSWORD", "test")
+        monkeypatch.setenv("POSTGRES_HOST", "test")
+        monkeypatch.setenv("POSTGRES_PORT", "5432")
 
         config = AppConfig()
 
@@ -73,6 +78,11 @@ class TestAppConfig:
         monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test")
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test")
         monkeypatch.setenv("ADMIN_EMAILS", "admin@broom.id,user@broom.id")
+        monkeypatch.setenv("POSTGRES_DB", "test")
+        monkeypatch.setenv("POSTGRES_USER", "test")
+        monkeypatch.setenv("POSTGRES_PASSWORD", "test")
+        monkeypatch.setenv("POSTGRES_HOST", "test")
+        monkeypatch.setenv("POSTGRES_PORT", "5432")
 
         config = AppConfig()
 
@@ -174,7 +184,15 @@ class TestAppConfig:
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")
         monkeypatch.setenv("TOTAL_ACCESS_LEVELS", "5")
         monkeypatch.setenv("ADMIN_EMAILS", "admin@broom.id,user@broom.id")
-        monkeypatch.setenv("POSTGRES_PORT", "")
+        monkeypatch.setenv("POSTGRES_DB", "test")
+        monkeypatch.setenv("POSTGRES_USER", "test")
+        monkeypatch.setenv("POSTGRES_PASSWORD", "test")
+        monkeypatch.setenv("POSTGRES_HOST", "test")
+        monkeypatch.setenv("POSTGRES_PORT", "5432")
+        monkeypatch.setenv("AWS_PUBLIC_BUCKET_NAME", "test")
+        monkeypatch.setenv("AWS_REGION", "ap-test")
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test")
 
         config = AppConfig()
 
