@@ -4,7 +4,7 @@ from datetime import datetime
 from rag.parsing.parsing_csv import CSVProcessor
 from rag.parsing.parsing_pdf import PDFProcessor
 from rag.parsing.parsing_txt import TXTProcessor
-from rag.automation.document_automation import DocumentIndexing, Document
+from rag.automation.document_automation import DocumentIndexing, Document, DocumentServiceV1
 from sqlalchemy import text
 import pandas as pd
 # Fixture for a sample Document instance
@@ -225,3 +225,23 @@ def test_store_vector(mock_postgres_storage, mock_postgres_handler, mock_getenv)
     )
 
     mock_handler_instance.close.assert_called_once()
+    
+def test_generate_presigned_url():
+    document = Document(
+        id="123",
+        title="Sample Document",
+        type="txt",
+        object_name="sample.txt",
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+        access_level=1
+    )
+    url = document.generate_presigned_url()
+    assert isinstance(url, str), "Expected a string for the presigned URL"
+    assert url == "", "Expected the presigned URL to be an empty string in placeholder implementation"
+
+def test_get_documents():
+    service = DocumentServiceV1()
+    documents = service.get_documents()
+    assert isinstance(documents, list), "Expected get_documents to return a list"
+    assert documents == [], "Expected an empty list as return value in placeholder implementation"
