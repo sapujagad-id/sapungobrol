@@ -25,7 +25,7 @@ class ChatEngine(ABC):
         if not query:
             return ""
         
-        if access_level < 1:
+        if not access_level or access_level < 1:
             access_level = 1
         
         context = self.retrieve(query, access_level)
