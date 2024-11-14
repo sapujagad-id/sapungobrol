@@ -10,7 +10,6 @@ def retriever():
 
 @patch("openai.embeddings.create")
 def test_retrieve_context_vector(mock_create_embedding, retriever):
-    mock_embedding = MagicMock()
     mock_create_embedding.return_value = MagicMock(data=[MagicMock(embedding=[0.1, 0.2, 0.3])])
 
     retriever.postgres_handler.query.return_value = ["result1", "result2"]
