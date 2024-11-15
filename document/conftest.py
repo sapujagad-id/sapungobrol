@@ -66,6 +66,7 @@ def setup_documents(setup_repository):
             title="Document 1",
             type=DocumentType.CSV,
             object_name="doc1.csv",
+            access_level=0,
             created_at=datetime.now(),
             updated_at=datetime.now()
         ),
@@ -73,6 +74,7 @@ def setup_documents(setup_repository):
             title="Document 2",
             type=DocumentType.PDF,
             object_name="doc2.pdf",
+            access_level=0,
             created_at=datetime.now(),
             updated_at=datetime.now()
         ),

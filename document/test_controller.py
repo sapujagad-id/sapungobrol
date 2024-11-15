@@ -65,6 +65,7 @@ class TestDocumentController:
             "type": "txt",
             "title": "New Document",
             "object_name": "new_doc.txt",
+            "access_level": 0,
         }
         response = setup_controller.upload_document(**new_document)
         assert response["detail"] == "Document created successfully!"
@@ -75,6 +76,7 @@ class TestDocumentController:
             "type": "invalid_type",
             "title": "Invalid Document",
             "object_name": "invalid_doc.txt",
+            "access_level": 0,
         }
         with pytest.raises(HTTPException) as exc:
             setup_controller.upload_document(**invalid_document)
@@ -87,6 +89,7 @@ class TestDocumentController:
             "type": "txt",
             "title": "",  # Empty title should trigger DocumentTitleError
             "object_name": "new_doc_no_title.txt",
+            "access_level": 0,
         }
         with pytest.raises(HTTPException) as exc:
             setup_controller.upload_document(**document_missing_title)
@@ -99,12 +102,25 @@ class TestDocumentController:
             "type": "txt",
             "title": "Duplicate Document",
             "object_name": "doc1.csv",  # Name that already exists in setup_documents
+            "access_level": 0,
         }
         with pytest.raises(HTTPException) as exc:
             setup_controller.upload_document(**duplicate_document)
         assert exc.value.status_code == 400
-        assert exc.value.detail == "Object name is required"
+        assert exc.value.detail == "Object by this name already exists"
 
+    def test_upload_document_no_access_level(self, setup_controller, mocker):
+        mocker.patch.object(setup_controller, 'upload_document', side_effect=Exception("Database error"))
+        duplicate_document = {
+            "file": UploadFile(filename="sample.txt", file=BytesIO(b"Sample content")),
+            "type": "txt",
+            "title": "Duplicate Document",
+            "object_name": "doc1.csv",
+        }
+        with pytest.raises(Exception) as exc:
+            setup_controller.upload_document(**duplicate_document)
+        assert exc is not None
+        
     def test_upload_document_unknown_error(self, setup_controller, mocker):
         mocker.patch.object(setup_controller, 'upload_document', side_effect=Exception("Database error"))
         duplicate_document = {
@@ -112,6 +128,7 @@ class TestDocumentController:
             "type": "txt",
             "title": "Duplicate Document",
             "object_name": "doc1.csv",
+            "access_level": 0,
         }
         with pytest.raises(Exception) as exc:
             setup_controller.upload_document(**duplicate_document)

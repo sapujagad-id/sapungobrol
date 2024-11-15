@@ -31,6 +31,7 @@ class Document(BaseModel):
     object_name: str
     created_at: datetime
     updated_at: datetime
+    access_level: int
     
     def validate(self):
       if self.type not in DocumentType._value2member_map_:
