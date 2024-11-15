@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Document - Broom.id</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.0.0/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.0.0/dist/js/tom-select.complete.min.js"></script>
+    <script>
+      function showFileName() {
+        const fileInput = document.getElementById('file');
+        const fileNameDisplay = document.getElementById('file-name');
+        const fileName = fileInput.files.length > 0 ? fileInput.files[0].name : "No file selected";
+        
+        const fileSelect = document.getElementById('file-select');
+        fileSelect.textContent = "Select Another File"
+
+        fileNameDisplay.textContent = fileName;
+      }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <!-- Navbar -->
+    {% set title = 'New Document' %}
+    {% include 'navbar.html' %}
+
+    <main class="container mx-auto mt-8 px-4">
+        <form 
+            id="chatbot-form" 
+            method="POST" 
+            action="/api/documents"  
+            enctype="multipart/form-data" 
+            class="bg-white shadow-md rounded-lg p-6" 
+        >
+            <div class="mb-4">
+                <label for="title" class="block text-gray-700 text-sm font-bold mb-2">Document Title</label>
+                <input type="text" id="title" name="title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter title of document">
+            </div>
+            
+            <div class="mb-4">
+                <label for="object_name" class="block text-gray-700 text-sm font-bold mb-2">Object Name</label>
+                <textarea id="object_name" name="object_name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" rows="4" placeholder="Enter a unique identifier for document file"></textarea>
+            </div>
+
+            <div class="mb-4">
+              <label for="file" class="block text-gray-700 text-sm font-bold mb-2">File</label>
+              <div class="border border-dashed border-gray-500 relative text-gray-700 text-sm">
+                  <input 
+                    type="file" 
+                    id="file" 
+                    class="cursor-pointer relative block opacity-0 w-full h-full p-10 z-50"
+                    onchange="showFileName()"
+                    name="file"
+                  >
+                  <div class="text-center py-5 absolute top-0 right-0 left-0 m-auto">
+                      <h4 id="file-name">
+                          Drop file anywhere to upload
+                          <br/>or
+                      </h4>
+                      <p class="font-bold" id="file-select">Select File</p>
+                  </div>
+                  <!-- <p id="file-name" class="text-center mt-4 text-gray-700"></p> -->
+              </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="type" class="block text-gray-700 text-sm font-bold mb-2">Documentz Type</label>
+                <select id="type" name="type" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    {% for type in document_types %}
+                        <option 
+                            value="{{ type }}"
+                        >
+                            {{ type }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label for="access_level" class="block text-gray-700 text-sm font-bold mb-2">Access Level</label>
+                <select id="access_level" name="access_level" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    {% for level in access_levels %}
+                        <option value="{{ level }}">{{ level }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex items-center justify-end">
+                <button id="create-bot-button" type="submit" 
+                        class="text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-all" 
+                        style="background-color: #2a4365;" 
+                        onmouseover="this.style.backgroundColor='#1e3150'" 
+                        onmouseout="this.style.backgroundColor='#2a4365'"
+                        onfocus="this.style.backgroundColor='#1e3150'" 
+                        onblur="this.style.backgroundColor='#2a4365'">
+                    Create Document
+                </button>
+            </div>
+        </form>
+    </main>
+</body>
+</html>
