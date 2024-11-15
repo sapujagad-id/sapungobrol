@@ -39,3 +39,11 @@ class DataSourceViewV1(DataSourceView):
                 "user_profile": user_profile.get("data")
             }
         )
+        
+    @login_required()
+    def new_document_view(self, request: Request):
+        user_profile = self.auth_controller.user_profile_google(request)
+        return self.templates.TemplateResponse(
+            request=request, 
+            name="new-document.html", 
+        )
