@@ -87,4 +87,4 @@ class DocumentServiceV1(DocumentService):
         if self.repository.get_document_by_name(request.object_name) is None:
             self.repository.create_document(request)
         else:
-            raise ObjectNameError
+            raise ObjectNameError("Object by this name already exists")

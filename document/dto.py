@@ -11,11 +11,13 @@ class DocumentFilter(TypedDict):
   created_before: Optional[str]
   updated_after: Optional[str] 
   updated_before: Optional[str] 
+  access_level: Optional[int]
   
 class DocumentCreate(BaseModel):
   type: str
   title: str
   object_name: str
+  access_level: int
   
   def validate(self):
     if self.type not in DocumentType._value2member_map_:

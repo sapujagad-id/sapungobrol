@@ -11,13 +11,15 @@ def get_sample_document_models():
             id=uuid4(),
             type=DocumentType.CSV.value,
             title="CSV Document",
-            object_name="csv_object"
+            object_name="csv_object",
+            access_level=0,
         ),
         DocumentModel(
             id=uuid4(),
             type=DocumentType.PDF.value,
             title="PDF Document",
-            object_name="pdf_object"
+            object_name="pdf_object",
+            access_level=0,
         )
     ]
     
@@ -28,6 +30,7 @@ class TestDocumentRepository:
             type=DocumentType.CSV.value,
             title="Sample Document",
             object_name="sample_object",
+            access_level=0,
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -49,6 +52,7 @@ class TestDocumentRepository:
             type=DocumentType.PDF.value,
             title="PDF Document",
             object_name="pdf_object",
+            access_level=0,
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -68,6 +72,7 @@ class TestDocumentRepository:
             type=DocumentType.TXT.value,
             title="Text Document",
             object_name="text_object",
+            access_level=0,
             created_at=datetime.now(),
             updated_at=datetime.now()
         )

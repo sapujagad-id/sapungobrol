@@ -12,7 +12,8 @@ def create_valid_document():
         title="Sample Document",
         object_name="sample.csv",
         created_at=datetime.now(),
-        updated_at=datetime.now()
+        updated_at=datetime.now(),
+        access_level=0
     )
     
 class TestDocument:
@@ -58,6 +59,7 @@ class TestDocument:
                 title=None,  # Missing title
                 object_name=None,  # Missing object_name
                 created_at=None,
-                updated_at=None
+                updated_at=None,
+                access_level=None
             )
         assert len(excinfo.value.errors()) > 0  # Multiple validation errors raised

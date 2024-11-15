@@ -3,7 +3,7 @@ from datetime import datetime
 from uuid import uuid4
 from loguru import logger
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
-from sqlalchemy import Column, Enum, Uuid, String, Text, DateTime
+from sqlalchemy import Column, Enum, Integer, Uuid, String, Text, DateTime
 from uuid import UUID as pythonUUID
 
 from document.document import DocumentType
@@ -20,6 +20,7 @@ class DocumentModel(Base):
     object_name = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
+    access_level = Column(Integer, nullable=True)
     
 class DocumentRepository(ABC):
     @abstractmethod

@@ -33,6 +33,7 @@ class TestDocumentService:
             type=DocumentType.TXT,
             title="New Document",
             object_name="new_doc.txt",
+            access_level=0,
         )
         setup_service.create_document(new_document)
         document = setup_repository.get_documents(DocumentFilter(object_name="new_doc.txt"))
@@ -44,6 +45,7 @@ class TestDocumentService:
             type=DocumentType.CSV,
             title="Real Document",
             object_name="doc1.csv",
+            access_level=0,
         )
         setup_service.create_document(existing_document)
         existing_document.title = "Duplicate Document"
