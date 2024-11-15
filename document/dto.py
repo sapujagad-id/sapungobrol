@@ -35,3 +35,9 @@ class DocumentUpdate(TypedDict):
 
 class DocumentResponse(Document):
   ''' '''
+
+class AWSConfig(BaseModel):
+    aws_access_key_id: str
+    aws_secret_access_key: str
+    aws_public_bucket_name: str
+    aws_region: str

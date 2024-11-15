@@ -30,6 +30,10 @@ class TestAppConfig:
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")
         monkeypatch.setenv("MAXIMUM_ACCESS_LEVEL", "5")
         monkeypatch.setenv("ADMIN_EMAILS", "admin@broom.id,user@broom.id")
+        monkeypatch.setenv("AWS_PUBLIC_BUCKET_NAME", "test")
+        monkeypatch.setenv("AWS_REGION", "ap-test")
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test")
 
         config = AppConfig()
 
@@ -86,6 +90,10 @@ class TestAppConfig:
         monkeypatch.setenv("SLACK_CLIENT_ID", "123456.789")
         monkeypatch.setenv("SLACK_CLIENT_SECRET", "1a2b3c4d5e6f")
         monkeypatch.setenv("SLACK_SCOPES", "channels:history")
+        monkeypatch.setenv("AWS_PUBLIC_BUCKET_NAME", "test")
+        monkeypatch.setenv("AWS_REGION", "ap-test")
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test")
         monkeypatch.setenv("MAXIMUM_ACCESS_LEVEL", "5")
         monkeypatch.setenv("ADMIN_EMAILS", "admin@broom.id,user@broom.id")
 

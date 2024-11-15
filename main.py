@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from slack_bolt import App
 from slack_bolt.oauth.oauth_settings import OAuthSettings
 
-from adapter import SlackAdapter
+from adapter import SlackAdapter, PostgresReactionEventRepository
 from adapter.view import SlackViewV1
 from auth.controller import AuthControllerV1
 from auth.repository import PostgresAuthRepository
@@ -19,6 +19,8 @@ from data_source.view import DataSourceViewV1
 from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
 
+from document.dto import AWSConfig
+from document.view import DocumentViewV1
 from web.logging import RequestLoggingMiddleware
 
 import uvicorn
@@ -49,6 +51,13 @@ if __name__ == "__main__":
         client_id=config.google_client_id,
         client_secret=config.google_client_secret,
         redirect_uri=config.google_redirect_uri,
+    )
+
+    aws_config = AWSConfig(
+        aws_access_key_id=config.aws_access_key_id,
+        aws_secret_access_key=config.aws_secret_access_key,
+        aws_public_bucket_name=config.aws_public_bucket_name,
+        aws_region=config.aws_region
     )
 
     configure_logger(config.log_level)
@@ -91,14 +100,23 @@ if __name__ == "__main__":
     engine_selector = ChatEngineSelector(
         openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key
     )
-    
+
     document_repository = PostgresDocumentRepository(sessionmaker)
 
-    document_service = DocumentServiceV1(document_repository)
+    document_service = DocumentServiceV1(aws_config, document_repository)
 
     document_controller = DocumentControllerV1(document_service)
 
-    slack_adapter = SlackAdapter(slack_app, engine_selector, bot_service)
+    document_view = DocumentViewV1(document_service, auth_controller)
+
+    reaction_event_repository = PostgresReactionEventRepository(sessionmaker)
+
+    slack_adapter = SlackAdapter(
+        slack_app,
+        engine_selector,
+        bot_service,
+        reaction_event_repository,
+    )
 
     slack_view = SlackViewV1(auth_controller, config.slack_client_id, config.slack_scopes, config.admin_emails)
 
@@ -142,12 +160,11 @@ if __name__ == "__main__":
     )
 
     app.add_api_route(
-        "/data-source",
-        endpoint=data_source_view.show_list_data_sources,
+        "/document",
+        endpoint=document_view.show_list_documents,
         response_class=HTMLResponse,
-        description="Page that displays list of data source",
+        description="Page that displays list of documents",
     )
-
     app.add_api_route(
         "/users",
         endpoint=user_view.view_users,

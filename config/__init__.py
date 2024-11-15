@@ -106,6 +106,22 @@ class AppConfig:
         if not found:
             invalid = True
 
+        self.aws_access_key_id, found = self.validate_env_var("AWS_ACCESS_KEY_ID")
+        if not found:
+            invalid = True
+
+        self.aws_secret_access_key, found = self.validate_env_var("AWS_SECRET_ACCESS_KEY")
+        if not found:
+            invalid = True
+
+        self.aws_public_bucket_name, found = self.validate_env_var("AWS_PUBLIC_BUCKET_NAME")
+        if not found:
+            invalid = True
+
+        self.aws_region, found = self.validate_env_var("AWS_REGION")
+        if not found:
+            invalid = True
+
         if invalid:
             raise ValueError("invalid app config")
 

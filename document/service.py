@@ -1,13 +1,20 @@
 from abc import ABC, abstractmethod
+import io
 
 from loguru import logger
+import boto3
+from botocore.exceptions import BotoCoreError, NoCredentialsError, PartialCredentialsError
 
 from document.document import ObjectNameError
-from document.dto import DocumentCreate, DocumentFilter, DocumentResponse, DocumentUpdate
+from document.dto import AWSConfig, DocumentCreate, DocumentFilter, DocumentResponse, DocumentUpdate
 from document.repository import DocumentRepository
 
 
 class DocumentService(ABC):
+    @abstractmethod
+    def upload_document(self, file, object_name):
+        pass
+
     @abstractmethod
     def get_documents(self, filter: DocumentFilter) -> list[DocumentResponse]:
         pass
@@ -34,10 +41,33 @@ class DocumentService(ABC):
     #     pass
       
 class DocumentServiceV1(DocumentService):
-    def __init__(self, repository: DocumentRepository):
+    def __init__(self, aws_config: AWSConfig, repository: DocumentRepository):
         super().__init__()
-        self.logger = logger.bind(service="DocumentService")
         self.repository = repository
+        self.s3_client = boto3.client(
+            's3',
+            aws_access_key_id=aws_config.aws_access_key_id,
+            aws_secret_access_key=aws_config.aws_secret_access_key,
+            region_name=aws_config.aws_region,
+        )
+        self.bucket_name = aws_config.aws_public_bucket_name
+        self.logger = logger.bind(service="DocumentService")
+
+    def upload_document(self, file_content, object_name):
+        try:
+            file_content_bytes = file_content.file.read()
+            file_object = io.BytesIO(file_content_bytes)
+
+            self.s3_client.upload_fileobj(file_object, self.bucket_name, object_name)
+        except NoCredentialsError:
+            self.logger.error("AWS credentials not found.")
+            raise
+        except PartialCredentialsError:
+            self.logger.error("Incomplete AWS credentials.")
+            raise
+        except BotoCoreError as e:
+            self.logger.error(f"Error uploading file to S3: {e}")
+            raise
         
     def get_documents(self, filter: DocumentFilter) -> list[DocumentResponse] | None:
         docs = self.repository.get_documents(filter=filter)
