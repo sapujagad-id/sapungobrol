@@ -19,6 +19,7 @@ from data_source.view import DataSourceViewV1
 from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
 
+from adapter.dto import SlackConfig
 from document.dto import AWSConfig
 from document.view import DocumentViewV1
 from web.logging import RequestLoggingMiddleware
@@ -59,6 +60,16 @@ if __name__ == "__main__":
         aws_public_bucket_name=config.aws_public_bucket_name,
         aws_region=config.aws_region
     )
+
+    slack_config = SlackConfig(
+        slack_bot_token=config.slack_bot_token,
+        slack_signing_secret=config.slack_signing_secret,
+        slack_client_id=config.slack_client_id,
+        slack_client_secret=config.slack_client_secret,
+        slack_scopes=config.slack_scopes
+    )
+    
+
 
     configure_logger(config.log_level)
 

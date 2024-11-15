@@ -5,6 +5,7 @@ from jose import jwt
 from datetime import datetime, timedelta, timezone
 
 from .view import SlackViewV1
+from .dto import SlackConfig
 from auth.controller import AuthControllerV1
 from auth.repository import PostgresAuthRepository
 from auth.service import AuthServiceV1
@@ -38,10 +39,16 @@ class TestSlackViewV1:
 
     @pytest.mark.asyncio
     async def test_install_authorized(self, setup_controller, setup_jwt_secret):
+        slack_config = SlackConfig(
+            slack_bot_token="",
+            slack_signing_secret="",
+            slack_client_id="test_client_id",
+            slack_client_secret="",
+            slack_scopes=["channels:history", "chat:write"],
+        )
         slack_view = SlackViewV1(
             auth_controller=setup_controller,
-            client_id="test_client_id",
-            slack_scopes=["channels:history", "chat:write"],
+            slack_config=slack_config,
             admin_emails=["admin@broom.id"]
         )
 
@@ -64,10 +71,17 @@ class TestSlackViewV1:
 
     @pytest.mark.asyncio
     async def test_install_unauthorized(self, setup_controller, setup_jwt_secret):
+        slack_config = SlackConfig(
+            slack_bot_token="",
+            slack_signing_secret="",
+            slack_client_id="test_client_id",
+            slack_client_secret="",
+            slack_scopes=["channels:history", "chat:write"],
+        )
+
         slack_view = SlackViewV1(
             auth_controller=setup_controller,
-            client_id="test_client_id",
-            slack_scopes=["channels:history", "chat:write"],
+            slack_config=slack_config,
             admin_emails=["admin@broom.id"]
         )
 
