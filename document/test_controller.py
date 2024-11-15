@@ -107,7 +107,7 @@ class TestDocumentController:
         with pytest.raises(HTTPException) as exc:
             setup_controller.upload_document(**duplicate_document)
         assert exc.value.status_code == 400
-        assert exc.value.detail == "Object name is required"
+        assert exc.value.detail == "Object by this name already exists"
 
     def test_upload_document_no_access_level(self, setup_controller, mocker):
         mocker.patch.object(setup_controller, 'upload_document', side_effect=Exception("Database error"))
