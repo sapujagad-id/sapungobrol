@@ -3,8 +3,10 @@ from fastapi import FastAPI, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slack_bolt import App
+from slack_bolt.oauth.oauth_settings import OAuthSettings
 
 from adapter import SlackAdapter
+from adapter.view import SlackViewV1
 from auth.controller import AuthControllerV1
 from auth.repository import PostgresAuthRepository
 from auth.service import AuthServiceV1
@@ -53,8 +55,20 @@ if __name__ == "__main__":
 
     sessionmaker = config_db(config.database_url)
 
+    oauth_settings = OAuthSettings(
+        client_id=config.slack_client_id,
+        client_secret=config.slack_client_secret,
+        scopes=config.slack_scopes,
+        redirect_uri=None,
+        install_path="/slack/install",
+        redirect_uri_path="/api/slack/oauth_redirect",
+        state_validation_enabled=False
+    )
+
     slack_app = App(
-        token=config.slack_bot_token, signing_secret=config.slack_signing_secret
+        token=config.slack_bot_token, 
+        signing_secret=config.slack_signing_secret,
+        oauth_settings=oauth_settings,
     )
 
     auth_repository = PostgresAuthRepository(sessionmaker)
@@ -85,6 +99,8 @@ if __name__ == "__main__":
     document_controller = DocumentControllerV1(document_service)
 
     slack_adapter = SlackAdapter(slack_app, engine_selector, bot_service)
+
+    slack_view = SlackViewV1(auth_controller, config.slack_client_id, config.slack_scopes, config.admin_emails)
 
     slack_app.event("message")(slack_adapter.event_message)
     slack_app.event("reaction_added")(slack_adapter.reaction_added)
@@ -138,7 +154,6 @@ if __name__ == "__main__":
         response_class=HTMLResponse,
         description="Page that displays all users",
     )
-
 
     app.add_api_route(
         "/api/bots",
@@ -202,6 +217,15 @@ if __name__ == "__main__":
     app.add_api_route(
         "/api/slack/events", endpoint=slack_adapter.handle_events, methods=["POST"]
     )
+
+    app.add_api_route(
+        "/slack/install", endpoint=slack_view.install, methods=["GET"]
+    )
+
+    app.add_api_route(
+        "/api/slack/oauth_redirect", endpoint=slack_adapter.oauth_redirect, methods=["GET", "POST"]
+    )
+
     app.add_api_route(
         "/api/slack/interactivity",
         endpoint=slack_adapter.handle_interactions,

@@ -14,7 +14,6 @@ from bot.service import BotService
 from chat import ChatEngineSelector, ChatEngine
 from chat.exceptions import ChatResponseGenerationError
 
-
 class UnableToRespondToInteraction(Exception):
     pass
 
@@ -48,6 +47,9 @@ class SlackAdapter:
     # Function to listen for events on Slack. No need to test this since this is purely dependent on
     # Bolt
     async def handle_events(self, req: Request):  # pragma: no cover
+        return await self.handler.handle(req)
+
+    async def oauth_redirect(self, req: Request): # pragma: no cover
         return await self.handler.handle(req)
 
     async def handle_interactions(self, req: Request):
