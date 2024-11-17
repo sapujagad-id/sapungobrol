@@ -34,6 +34,7 @@ class TestAppConfig:
         monkeypatch.setenv("AWS_REGION", "ap-test")
         monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test")
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test")
+        monkeypatch.setenv("AWS_ENDPOINT_URL", "test")
 
         config = AppConfig()
 
@@ -71,6 +72,7 @@ class TestAppConfig:
         monkeypatch.setenv("AWS_REGION", "ap-test")
         monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test")
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test")
+        monkeypatch.setenv("AWS_ENDPOINT_URL", "test")
         monkeypatch.setenv("MAXIMUM_ACCESS_LEVEL", "5")
         monkeypatch.setenv("ADMIN_EMAILS", "admin@broom.id,user@broom.id")
 

@@ -55,7 +55,8 @@ if __name__ == "__main__":
         aws_access_key_id=config.aws_access_key_id,
         aws_secret_access_key=config.aws_secret_access_key,
         aws_public_bucket_name=config.aws_public_bucket_name,
-        aws_region=config.aws_region
+        aws_region=config.aws_region,
+        aws_endpoint_url=config.aws_endpoint_url
     )
 
     configure_logger(config.log_level)

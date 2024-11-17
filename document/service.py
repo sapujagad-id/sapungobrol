@@ -49,6 +49,7 @@ class DocumentServiceV1(DocumentService):
             aws_access_key_id=aws_config.aws_access_key_id,
             aws_secret_access_key=aws_config.aws_secret_access_key,
             region_name=aws_config.aws_region,
+            endpoint_url=aws_config.aws_endpoint_url
         )
         self.bucket_name = aws_config.aws_public_bucket_name
         self.logger = logger.bind(service="DocumentService")

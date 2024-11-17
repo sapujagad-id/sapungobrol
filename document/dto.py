@@ -43,3 +43,4 @@ class AWSConfig(BaseModel):
     aws_secret_access_key: str
     aws_public_bucket_name: str
     aws_region: str
+    aws_endpoint_url: str
