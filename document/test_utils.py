@@ -8,7 +8,7 @@ class TestGeneratePresignedURL:
     def mock_s3_client(self, mock_boto_client):
         """Fixture to mock the S3 client"""
         mock_client = MagicMock()
-        mock_client.generate_presigned_url.return_value = "http://mockurl.com"
+        mock_client.generate_presigned_url.return_value = "https://mockurl.com"
         mock_boto_client.return_value = mock_client
         return mock_client
 
@@ -30,7 +30,7 @@ class TestGeneratePresignedURL:
         )
 
         # Assert the generated URL is correct
-        assert url == "http://mockurl.com"
+        assert url == "https://mockurl.com"
 
     def test_generate_presigned_url_failure(self, mock_s3_client, setup_documents):
         """Test the failure path when presigned URL generation fails"""
