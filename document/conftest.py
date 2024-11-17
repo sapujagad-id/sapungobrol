@@ -96,3 +96,8 @@ def dummy_user_profile():
 def setup_jwt_secret():
     """Set up a mock JWT secret."""
     return "some_arbitrary_secret_here"
+
+@pytest.fixture
+def mock_boto_client():
+    """Fixture to mock the boto3 S3 client"""
+    return MagicMock()
