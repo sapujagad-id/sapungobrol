@@ -21,14 +21,5 @@ def generate_presigned_url(doc_model, s3_client, bucket_name: str, expiration: i
     -----
     DocumentPresignedURLError: If generating the presigned URL fails.
     """
-
-    doc_data = {
-                "id": doc_model.id,
-                "type": doc_model.type,
-                "title": doc_model.title,
-                "object_name": doc_model.object_name,
-                "created_at": doc_model.created_at,
-                "updated_at": doc_model.updated_at
-            }
-    document_obj = Document(**doc_data)
+    document_obj = Document(**doc_model.__dict__)
     return document_obj.generate_presigned_url(s3_client, bucket_name, expiration)
