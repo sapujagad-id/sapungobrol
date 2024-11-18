@@ -30,6 +30,8 @@ from document.controller import DocumentControllerV1
 from document.repository import PostgresDocumentRepository
 from document.service import DocumentServiceV1
 
+from rag.automation.document_automation import DocumentIndexing
+
 load_dotenv(override=True)
 
 sentry_sdk.init(
@@ -96,7 +98,9 @@ if __name__ == "__main__":
     document_view = DocumentViewV1(document_service, auth_controller)
 
     reaction_event_repository = PostgresReactionEventRepository(sessionmaker)
-
+    
+    automation = DocumentIndexing(document_service)
+    
     slack_adapter = SlackAdapter(
         slack_app,
         engine_selector,
