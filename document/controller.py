@@ -90,11 +90,13 @@ class DocumentControllerV1(ABC):
       type: Annotated[str, Form()],
       object_name: Annotated[str, Form()],
       title: Annotated[str, Form()],
+      access_level: Annotated[int, Form()],
     ):
         doc_create = DocumentCreate(
           type=type,
           object_name=object_name,
           title=title,
+          access_level=access_level,
         )
         
         self.logger.info(file.filename)

@@ -11,11 +11,13 @@ class DocumentFilter(TypedDict):
   created_before: Optional[str]
   updated_after: Optional[str] 
   updated_before: Optional[str] 
+  access_level: Optional[int]
   
 class DocumentCreate(BaseModel):
   type: str
   title: str
   object_name: str
+  access_level: int
   
   def validate(self):
     if self.type not in DocumentType._value2member_map_:
@@ -41,3 +43,4 @@ class AWSConfig(BaseModel):
     aws_secret_access_key: str
     aws_public_bucket_name: str
     aws_region: str
+    aws_endpoint_url: str

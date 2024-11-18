@@ -36,7 +36,8 @@ def setup_service(mock_boto_client, setup_repository):
     aws_config = AWSConfig(aws_access_key_id="test_access_key",
                            aws_secret_access_key="test_secret_key", 
                            aws_public_bucket_name="test_bucket", 
-                           aws_region="ap-test-3")
+                           aws_region="ap-test-3",
+                           aws_endpoint_url="aws-endpoint")
     service = DocumentServiceV1(
         aws_config,
         repository=setup_repository
@@ -66,6 +67,7 @@ def setup_documents(setup_repository):
             title="Document 1",
             type=DocumentType.CSV,
             object_name="doc1.csv",
+            access_level=0,
             created_at=datetime.now(),
             updated_at=datetime.now()
         ),
@@ -73,6 +75,7 @@ def setup_documents(setup_repository):
             title="Document 2",
             type=DocumentType.PDF,
             object_name="doc2.pdf",
+            access_level=0,
             created_at=datetime.now(),
             updated_at=datetime.now()
         ),
@@ -95,3 +98,8 @@ def dummy_user_profile():
 def setup_jwt_secret():
     """Set up a mock JWT secret."""
     return "some_arbitrary_secret_here"
+
+@pytest.fixture
+def mock_boto_client():
+    """Fixture to mock the boto3 S3 client"""
+    return MagicMock()

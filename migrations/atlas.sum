@@ -1,4 +1,4 @@
-h1:i/IbXrmsm3c/Br4Nz+TAtTgP3tC9GIUZqLxh+et37wY=
+h1:eEPUST1De5xydHqdEQQ/YjUlHuePRBTbWrHIaulEqYA=
 20240923095223_create_bots.sql h1:b+ptk5RBZ/UlKGp9lfjOmVwsitN804Qsncs4VSdVBbs=
 20240925055750_add_bot_message_adapter_column.sql h1:kC0ahrjuFiHEEqSDaIv531y4QwP5Q1bN19mchJs8Dcs=
 20241010142723_add_slug_field_and_anthropic_enum.sql h1:qQH6hJF3QlCveiUxKVv0YNjxnNnMx3B5rftMwMbatQo=
@@ -7,3 +7,4 @@ h1:i/IbXrmsm3c/Br4Nz+TAtTgP3tC9GIUZqLxh+et37wY=
 20241108065550_add_access_level_to_users.sql h1:PmZWbZeOZrc++kgxYK59RDH7Dzvm6QAmOy/3Z28fNq0=
 20241110193900_add_data_source.sql h1:rUJDvVgnfyssOSoqEfYn4T94CUSNusxiMfa6ctbzWBk=
 20241111020516_create_reaction_events.sql h1:mPdA6ApSj4YBrMJDg7IkrUDG/3c75QmVQXKHJlDVw4A=
+20241115072452_add_access_level_document.sql h1:Wb+lk3FQuSO+yIdCKhyMRR6p2cFhASMHGqBR2GROVos=

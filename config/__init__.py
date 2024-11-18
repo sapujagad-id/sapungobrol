@@ -152,6 +152,10 @@ class AppConfig:
         if not found:
             invalid = True
 
+        self.aws_endpoint_url, found = self.validate_env_var("AWS_ENDPOINT_URL")
+        if not found:
+            invalid = True
+
         if invalid:
             raise ValueError("invalid app config")
 
