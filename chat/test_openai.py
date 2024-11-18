@@ -10,33 +10,33 @@ from typing import List
 
 
 @pytest.fixture
-def retriever():
+def retriever(): # pragma: no cover
     mock_postgres_handler = MagicMock()
     return Retriever(mock_postgres_handler)
 
 
 @pytest.fixture
-def sample_query():
+def sample_query(): # pragma: no cover
     return "what is apache doris"
 
 
 @pytest.fixture
-def sample_access_level():
+def sample_access_level(): # pragma: no cover
     return 1
 
 
 @pytest.fixture
-def sample_history():
+def sample_history(): # pragma: no cover
     return "My name is Molvative Squarepants. Remember my name!"
 
 
 @pytest.fixture
-def sample_query_history():
+def sample_query_history(): # pragma: no cover
     return "Say my name!"
 
 
 @pytest.fixture
-def sample_query_forget_history():
+def sample_query_forget_history(): # pragma: no cover
     return "Do you know my name? Yes or No"
 
 @pytest.fixture(autouse=True)
@@ -45,19 +45,10 @@ def mock_total_access_levels_env_var(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "testkey")
 
 
-class MockCompletionChoice:
+class MockCompletionChoice: # pragma: no cover
     def __init__(self, content: str):
-        self.message = MagicMock(content=content)  # Mocking the `message` attribute
+        self.message = MagicMock(content=content)
 
-
-class MockCompletion:
-    def __init__(self, choices: List[MockCompletionChoice]):
-        self.choices = choices
-        self.id = "mock_id"
-        self.created = 123456789
-        self.model = "mock_model"
-        self.object = "chat.completion"
-        
 class MockEmbeddingResponse:
     class DataItem:
         def __init__(self, embedding):
@@ -113,10 +104,6 @@ def chat(mock_openai_api):
             postgres_port=5432,
         )
         yield selector.select_engine(ModelEngine.OPENAI)
-        
-# @pytest.fixture
-# def chat(retriever):
-#     return ChatOpenAI(retriever)
 
 
 class TestChat:
