@@ -57,7 +57,8 @@ if __name__ == "__main__":
         aws_access_key_id=config.aws_access_key_id,
         aws_secret_access_key=config.aws_secret_access_key,
         aws_public_bucket_name=config.aws_public_bucket_name,
-        aws_region=config.aws_region
+        aws_region=config.aws_region,
+        aws_endpoint_url=config.aws_endpoint_url
     )
 
     configure_logger(config.log_level)
@@ -86,7 +87,13 @@ if __name__ == "__main__":
 
     data_source_view = DataSourceViewV1(auth_controller)
     engine_selector = ChatEngineSelector(
-        openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key
+        openai_api_key=config.openai_api_key,
+        anthropic_api_key=config.anthropic_api_key,
+        postgres_db=config.postgres_db,
+        postgres_user=config.postgres_user,
+        postgres_password=config.postgres_password,
+        postgres_host=config.postgres_host,
+        postgres_port=config.postgres_port,
     )
 
     document_repository = PostgresDocumentRepository(sessionmaker)
@@ -106,6 +113,7 @@ if __name__ == "__main__":
         engine_selector,
         bot_service,
         reaction_event_repository,
+        auth_repository
     )
 
     slack_app.event("message")(slack_adapter.event_message)
@@ -158,6 +166,13 @@ if __name__ == "__main__":
         endpoint=user_view.view_users,
         response_class=HTMLResponse,
         description="Page that displays all users",
+    )
+    
+    app.add_api_route(
+        "/create-document",
+        endpoint=document_view.new_document_view,
+        response_class=HTMLResponse,
+        description="Page that displays Document Creation form",
     )
 
     app.add_api_route(

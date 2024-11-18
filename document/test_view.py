@@ -5,6 +5,10 @@ from datetime import datetime, timedelta
 from jose import jwt
 from uuid import uuid4
 
+from auth.dto import ProfileResponse
+from auth.user import User
+from document.document import DocumentType
+
 from .view import DocumentViewV1  # Update with the correct import for your view class
 
 @pytest.mark.asyncio
@@ -50,3 +54,42 @@ class TestDocumentView:
         assert 'Document 3' in rendered
         assert 'pdf' in rendered
         assert 'doc2.txt' in rendered
+        
+    @pytest.mark.asyncio
+    async def test_show_create_document_form(self, setup_view, setup_jwt_secret, dummy_user_profile):
+        view = setup_view
+
+        # Create a mock request
+        request = Mock(spec=Request)
+
+        # Encode a token using the provided JWT secret from the fixture
+        token = jwt.encode({
+            "sub": "test_sub",
+            "email": "test@broom.id",
+            "exp": datetime.now() + timedelta(hours=3)
+        }, setup_jwt_secret)
+
+        # Set the cookies on the request mock
+        request.cookies = {'token': token}
+        view.auth_controller.user_profile_google = Mock(return_value=ProfileResponse(data=User(
+            id=uuid4(),
+            sub="asdasdadsad",
+            name="asd",
+            email="test@broom.id",
+            email_verified=True,
+            created_at="2024-10-24T00:00:00Z",
+            picture="https://image.com",
+            access_level=7,
+            login_method="Google",
+        )))
+
+        # Call the view method
+        response = await view.new_document_view(request=request)
+
+        # Check that the correct template is used and context is passed
+        assert response.template.name == "new-document.html"
+        assert "document_types" in response.context
+        assert response.context["document_types"] == [x.lower() for x in DocumentType._member_names_]
+        assert "access_levels" in response.context
+        assert 0 in response.context["access_levels"]
+        assert len(response.context["access_levels"]) > 0

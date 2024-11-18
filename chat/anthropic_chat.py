@@ -1,10 +1,11 @@
 from anthropic import Anthropic
 from .engine import ChatEngine
+from rag.retriever.retriever import Retriever
 
 class ChatAnthropic(ChatEngine):
 
-    def __init__(self, api_key: str) -> None:
-        super().__init__()
+    def __init__(self, retriever: Retriever, api_key: str) -> None:
+        super().__init__(retriever)
         self.client = Anthropic(api_key=api_key)
 
     def _get_generate_system(self) -> dict:
