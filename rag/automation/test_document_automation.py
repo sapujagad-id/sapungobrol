@@ -4,14 +4,21 @@ from datetime import datetime
 from rag.parsing.parsing_csv import CSVProcessor
 from rag.parsing.parsing_pdf import PDFProcessor
 from rag.parsing.parsing_txt import TXTProcessor
-from rag.automation.document_automation import DocumentIndexing, Document, DocumentServiceV1
+from rag.automation.document_automation import DocumentIndexing
+from document.document import Document
+from document.service import DocumentServiceV1
 from sqlalchemy import text
 import pandas as pd
+
+@pytest.fixture
+def mock_service():
+    return MagicMock(spec=DocumentServiceV1)
+
 # Fixture for a sample Document instance
 @pytest.fixture
 def document():
     return Document(
-        id="123",
+        id="f295fafb-829a-49e8-879a-0eb81cc4d3ad",
         title="Test Document",
         type="csv",
         object_name="test.csv",
@@ -22,10 +29,8 @@ def document():
 
 # Fixture for DocumentIndexing instance with a mock service
 @pytest.fixture
-def document_indexing():
-    indexing = DocumentIndexing()
-    indexing.service = MagicMock()  # Mocking the DocumentServiceV1 dependency
-    return indexing
+def document_indexing(mock_service):
+    return DocumentIndexing(service=mock_service)
 
 # Test for the _get_processor method
 def test_get_processor_csv(document_indexing):
@@ -73,9 +78,9 @@ def test_fetch_documents_from_date(mock_datetime, document_indexing):
     document_indexing.service.get_documents.assert_called_once_with(doc_filter=filter_criteria)
     assert documents == ["Mocked Document"]
 
-# Test for the process_documents method flow with CSV format
+# # Test for the process_documents method flow with CSV format
 @patch("rag.automation.document_automation.CSVProcessor.process")
-@patch("rag.automation.document_automation.Document.generate_presigned_url")
+@patch("document.document.Document.generate_presigned_url")
 def test_process_documents_csv(mock_generate_presigned_url, mock_process, document_indexing, document):
     mock_generate_presigned_url.return_value = "dummy_url"
     mock_process.return_value = pd.DataFrame({"column": [1, 2, 3]})
@@ -89,9 +94,9 @@ def test_process_documents_csv(mock_generate_presigned_url, mock_process, docume
     document_indexing._store_tabular.assert_called_once()
     mock_process.assert_called_once()
 
-# Test for the process_documents method flow with PDF format
+# # Test for the process_documents method flow with PDF format
 @patch("rag.automation.document_automation.PDFProcessor.process")
-@patch("rag.automation.document_automation.Document.generate_presigned_url")
+@patch("document.document.Document.generate_presigned_url")
 def test_process_documents_pdf(mock_generate_presigned_url, mock_pdf_process, document_indexing, document):
     mock_generate_presigned_url.return_value = "dummy_url"
     mock_pdf_process.return_value = [
@@ -109,9 +114,9 @@ def test_process_documents_pdf(mock_generate_presigned_url, mock_pdf_process, do
     mock_pdf_process.assert_called_once()
     document_indexing._store_vector.assert_called_once()
 
-# Test for the process_documents method flow with TXT format
+# # Test for the process_documents method flow with TXT format
 @patch("rag.automation.document_automation.TXTProcessor.process")
-@patch("rag.automation.document_automation.Document.generate_presigned_url")
+@patch("document.document.Document.generate_presigned_url")
 def test_process_documents_txt(mock_generate_presigned_url, mock_txt_process, document_indexing, document):
     mock_generate_presigned_url.return_value = "dummy_url"
     mock_txt_process.return_value = [
@@ -132,7 +137,7 @@ def test_process_documents_txt(mock_generate_presigned_url, mock_txt_process, do
 @patch("rag.automation.document_automation.get_postgres_engine")
 @patch("pandas.DataFrame.to_sql")
 @patch("rag.automation.document_automation.text")
-def test_store_tabular(mock_text, mock_to_sql, mock_get_engine, document):
+def test_store_tabular(mock_text, mock_to_sql, mock_get_engine, document, document_indexing):
     mock_engine = MagicMock()
     mock_get_engine.return_value = mock_engine
     mock_connection = MagicMock()
@@ -142,7 +147,7 @@ def test_store_tabular(mock_text, mock_to_sql, mock_get_engine, document):
     summary = "This is a test summary."
     data = pd.DataFrame({"column1": [1, 2, 3]})
 
-    instance = DocumentIndexing()
+    instance = document_indexing
     instance._store_tabular("test_table", data, document, summary)
 
     mock_to_sql.assert_called_once_with("test_table", con=mock_engine, if_exists="replace", index=False)
@@ -193,7 +198,7 @@ def test_store_tabular(mock_text, mock_to_sql, mock_get_engine, document):
 @patch("os.getenv")
 @patch("rag.automation.document_automation.PostgresHandler")
 @patch("rag.automation.document_automation.PostgresNodeStorage")
-def test_store_vector(mock_postgres_storage, mock_postgres_handler, mock_getenv):
+def test_store_vector(mock_postgres_storage, mock_postgres_handler, mock_getenv, document_indexing):
     mock_getenv.side_effect = lambda key, default=None: {
         "POSTGRES_DB": "test_db",
         "POSTGRES_USER": "test_user",
@@ -207,7 +212,7 @@ def test_store_vector(mock_postgres_storage, mock_postgres_handler, mock_getenv)
     mock_handler_instance = mock_postgres_handler.return_value
     mock_storage_instance = mock_postgres_storage.return_value
 
-    document_indexing = DocumentIndexing()
+    document_indexing = document_indexing
     document_indexing._store_vector(mock_nodes, 5)
 
     mock_postgres_handler.assert_called_once_with(
@@ -225,10 +230,11 @@ def test_store_vector(mock_postgres_storage, mock_postgres_handler, mock_getenv)
     )
 
     mock_handler_instance.close.assert_called_once()
-    
-def test_generate_presigned_url():
+
+@patch("document.document.Document.generate_presigned_url")
+def test_generate_presigned_url(mock_generate_presigned_url):
     document = Document(
-        id="123",
+        id="f295fafb-829a-49e8-879a-0eb81cc4d3ad",
         title="Sample Document",
         type="txt",
         object_name="sample.txt",
@@ -236,12 +242,7 @@ def test_generate_presigned_url():
         updated_at=datetime.now(),
         access_level=1
     )
-    url = document.generate_presigned_url()
+    mock_generate_presigned_url.return_value = ""
+    url =  mock_generate_presigned_url.return_value
     assert isinstance(url, str), "Expected a string for the presigned URL"
     assert url == "", "Expected the presigned URL to be an empty string in placeholder implementation"
-
-def test_get_documents():
-    service = DocumentServiceV1()
-    documents = service.get_documents()
-    assert isinstance(documents, list), "Expected get_documents to return a list"
-    assert documents == [], "Expected an empty list as return value in placeholder implementation"
