@@ -34,10 +34,10 @@ class TestAppConfig:
         monkeypatch.setenv("AWS_REGION", "ap-test")
         monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test")
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test")
+        monkeypatch.setenv("AWS_ENDPOINT_URL", "test")
         monkeypatch.setenv("SLACK_CLIENT_ID", "123456.789")
         monkeypatch.setenv("SLACK_CLIENT_SECRET", "1a2b3c4d5e6f")
         monkeypatch.setenv("SLACK_SCOPES", "channels:history")
-
 
         config = AppConfig()
 
@@ -98,6 +98,7 @@ class TestAppConfig:
         monkeypatch.setenv("AWS_REGION", "ap-test")
         monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test")
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test")
+        monkeypatch.setenv("AWS_ENDPOINT_URL", "test")
         monkeypatch.setenv("MAXIMUM_ACCESS_LEVEL", "5")
         monkeypatch.setenv("ADMIN_EMAILS", "admin@broom.id,user@broom.id")
 
