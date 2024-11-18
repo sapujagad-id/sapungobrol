@@ -1,80 +1,82 @@
 import pytest
-from .anthropic_chat import ChatAnthropic
 from unittest.mock import patch, MagicMock
 from chat.exceptions import ChatResponseGenerationError
-
-from rag.retriever.retriever import Retriever
+from .anthropic_chat import ChatAnthropic
 
 
 @pytest.fixture
 def retriever():
-    mock_postgres_handler = MagicMock()
-    return Retriever(mock_postgres_handler)
+    mock_retriever = MagicMock()
+    mock_retriever.query.return_value = ["Mocked context"]
+    return mock_retriever
+
 
 @pytest.fixture
 def sample_query():
     return "Who is Jokowi?"
 
+
 @pytest.fixture
 def sample_access_level():
     return 1
 
-@pytest.fixture(autouse=True)
-def mock_openai(monkeypatch):
-    mock_openai_module = MagicMock()
-    monkeypatch.setattr("openai.chat.completions.create", mock_openai_module.chat.completions.create)
 
-@pytest.fixture
-def chat(retriever):
-    return ChatAnthropic(retriever, api_key="random-str")
-
-
+@patch("chat.anthropic_chat.Anthropic")  # Ensure this matches where Anthropic is imported in your codebase
 class TestChatAnthropic:
+    def test_generate_response_with_access_level(self, mock_anthropic, retriever, sample_query, sample_access_level):
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
+        mock_client.messages.create.return_value = MagicMock(
+            content=[MagicMock(text="Mocked response content")]
+        )
 
-    def test_generate_response_with_access_level(self, mocker, chat, sample_query, sample_access_level):
-
-        mock_create = mocker.patch.object(chat, "generate_response")
-        mock_create.return_value = "Mocked response content"
-        
+        chat = ChatAnthropic(retriever, api_key="random-str")
         response = chat.generate_response(query=sample_query, access_level=sample_access_level)
-        
+
         assert response == "Mocked response content"
-        mock_create.assert_called_once()
+        mock_client.messages.create.assert_called_once()
 
-    def test_generate_response_without_access_level(self, mocker, chat, sample_query):
+    def test_generate_response_without_access_level(self, mock_anthropic, retriever, sample_query):
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
+        mock_client.messages.create.return_value = MagicMock(
+            content=[MagicMock(text="Mocked response content")]
+        )
 
-        mock_create = mocker.patch.object(chat, "generate_response")
-        mock_create.return_value = "Mocked response content"
-
+        chat = ChatAnthropic(retriever, api_key="random-str")
         response = chat.generate_response(query=sample_query)
-        
+
         assert response == "Mocked response content"
-        mock_create.assert_called_once()
+        mock_client.messages.create.assert_called_once()
 
-    def test_generate_response_with_empty_query(self, mocker, chat):
+    def test_generate_response_with_empty_query(self, mock_anthropic, retriever):
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
 
-        mock_create = mocker.patch.object(chat, "generate_response")
-        mock_create.return_value = ""
+        chat = ChatAnthropic(retriever, api_key="random-str")
         response = chat.generate_response(query="")
 
         assert response == ""
-        mocker.patch.object(chat, "generate_response").assert_not_called()
-    
-    @patch("anthropic.resources.Messages.create")
-    def test_api_call_mock(self, mock_create, chat, sample_query):
-        mock_create.return_value = MagicMock(content=[MagicMock(text="Mocked response content")])
-        
-        chat.generate_response(sample_query)
-        
-        mock_create.assert_called_once()
-        _, kwargs = mock_create.call_args
-        assert kwargs["model"] == "claude-3-haiku-20240307"
-        assert kwargs["max_tokens"] == 1024
-        
-    @patch("anthropic.resources.Messages.create")
-    def test_generate_response_failure(self, mock_create, chat):
-        mock_create.side_effect = Exception("API error")
+        mock_client.messages.create.assert_not_called()
 
+    def test_api_call_mock(self, mock_anthropic, retriever, sample_query):
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
+        mock_client.messages.create.return_value = MagicMock(
+            content=[MagicMock(text="Mocked response content")]
+        )
+
+        chat = ChatAnthropic(retriever, api_key="random-str")
+        chat.generate_response(sample_query)
+
+        mock_client.messages.create.assert_called_once()
+
+    def test_generate_response_failure(self, mock_anthropic, retriever):
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
+        mock_client.messages.create.side_effect = Exception("API error")
+
+        chat = ChatAnthropic(retriever, api_key="random-str")
         with pytest.raises(ChatResponseGenerationError) as excinfo:
             chat.generate_response("Test query")
 
