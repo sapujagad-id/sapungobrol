@@ -39,6 +39,11 @@ def sample_query_forget_history():
     return "Do you know my name? Yes or No"
 
 
+@pytest.fixture(autouse=True)
+def mock_openai(monkeypatch):
+    mock_openai_module = MagicMock()
+    monkeypatch.setattr("openai.chat.completions.create", mock_openai_module.chat.completions.create)
+
 @pytest.fixture
 def chat(retriever):
     return ChatOpenAI(retriever)

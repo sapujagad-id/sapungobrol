@@ -19,6 +19,11 @@ def sample_query():
 def sample_access_level():
     return 1
 
+@pytest.fixture(autouse=True)
+def mock_openai(monkeypatch):
+    mock_openai_module = MagicMock()
+    monkeypatch.setattr("openai.chat.completions.create", mock_openai_module.chat.completions.create)
+
 @pytest.fixture
 def chat(retriever):
     return ChatAnthropic(retriever, api_key="random-str")
