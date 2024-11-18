@@ -46,7 +46,8 @@ class PostgresHandler:
             CREATE TABLE IF NOT EXISTS {table_name} (
                 id SERIAL PRIMARY KEY,
                 item_id TEXT UNIQUE,
-                embedding VECTOR({self.dimension})
+                embedding VECTOR({self.dimension}),
+                text_content TEXT
             );
             """
             self.cursor.execute(create_table_query)
@@ -59,10 +60,11 @@ class PostgresHandler:
             for vector in vectors:
                 item_id = vector['id']
                 embedding = vector['values']
+                text_content = vector.get('text_content', '')
                 self.cursor.execute(
-                    f"INSERT INTO {table_name} (item_id, embedding) VALUES (%s, %s) "
-                    f"ON CONFLICT (item_id) DO UPDATE SET embedding = EXCLUDED.embedding;",
-                    (item_id, embedding)
+                    f"INSERT INTO {table_name} (item_id, embedding, text_content) VALUES (%s, %s, %s) "
+                    f"ON CONFLICT (item_id) DO UPDATE SET embedding = EXCLUDED.embedding, text_content = EXCLUDED.text_content;",
+                    (item_id, embedding, text_content)
                 )
         self.conn.commit()
 
@@ -71,7 +73,7 @@ class PostgresHandler:
         table_name = f"index_L{access_level}"
         self.cursor.execute(
             f"""
-            SELECT item_id, embedding <-> %s::vector AS distance
+            SELECT item_id, text_content, embedding <-> %s::vector AS distance
             FROM {table_name}
             ORDER BY distance
             LIMIT %s;
@@ -124,6 +126,7 @@ if __name__ == "__main__":  # pragma: no cover
     
     print(f"Top {top_k} most relevant results:")
     for result in query_results:
-        print(result)
+        item_id, text_content, distance = result
+        print(f"Item ID: {item_id}, Distance: {distance}\nContext: {text_content}\n")
     
     postgres_handler.close()

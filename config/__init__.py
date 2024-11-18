@@ -84,13 +84,55 @@ class AppConfig:
         if not found:
             invalid = True
 
-        self.maximum_access_level, found = self.validate_env_var("MAXIMUM_ACCESS_LEVEL")
+        self.total_access_levels, found = self.validate_env_var("TOTAL_ACCESS_LEVELS")
         if not found:
             invalid = True
         else:
-            self.maximum_access_level = int(self.maximum_access_level)
+            self.total_access_levels = int(self.total_access_levels)
 
         self.admin_emails, found = self.parse_env_list("ADMIN_EMAILS")
+        if not found:
+            invalid = True
+        
+        self.postgres_db, found = self.validate_env_var("POSTGRES_DB")
+        if not found:
+            invalid = True
+        
+        self.postgres_user, found = self.validate_env_var("POSTGRES_USER")
+        if not found:
+            invalid = True
+        
+        self.postgres_password, found = self.validate_env_var("POSTGRES_PASSWORD")
+        if not found:
+            invalid = True
+        
+        self.postgres_host, found = self.validate_env_var("POSTGRES_HOST")
+        if not found:
+            invalid = True
+        
+        self.postgres_port, found = self.validate_env_var("POSTGRES_PORT")
+        if not found:
+            self.postgres_port = 5432
+        else:
+            try:
+                self.postgres_port = int(self.postgres_port)
+            except ValueError:
+                logging.error("config error: 'POSTGRES_PORT' must be integer")
+                invalid = True
+
+        self.aws_access_key_id, found = self.validate_env_var("AWS_ACCESS_KEY_ID")
+        if not found:
+            invalid = True
+
+        self.aws_secret_access_key, found = self.validate_env_var("AWS_SECRET_ACCESS_KEY")
+        if not found:
+            invalid = True
+
+        self.aws_public_bucket_name, found = self.validate_env_var("AWS_PUBLIC_BUCKET_NAME")
+        if not found:
+            invalid = True
+
+        self.aws_region, found = self.validate_env_var("AWS_REGION")
         if not found:
             invalid = True
 
