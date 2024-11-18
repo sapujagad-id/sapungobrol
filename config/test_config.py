@@ -39,7 +39,6 @@ class TestAppConfig:
         monkeypatch.setenv("POSTGRES_PASSWORD", "test")
         monkeypatch.setenv("POSTGRES_HOST", "test")
         monkeypatch.setenv("POSTGRES_PORT", "5432")
-        monkeypatch.setenv("AWS_ENDPOINT_URL", "test")
 
         config = AppConfig()
 
