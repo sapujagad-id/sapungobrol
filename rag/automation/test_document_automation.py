@@ -211,8 +211,6 @@ def test_store_vector(mock_postgres_storage, mock_postgres_handler, mock_getenv,
     
     mock_handler_instance = mock_postgres_handler.return_value
     mock_storage_instance = mock_postgres_storage.return_value
-
-    document_indexing = document_indexing
     document_indexing._store_vector(mock_nodes, 5)
 
     mock_postgres_handler.assert_called_once_with(
@@ -233,7 +231,7 @@ def test_store_vector(mock_postgres_storage, mock_postgres_handler, mock_getenv,
 
 @patch("document.document.Document.generate_presigned_url")
 def test_generate_presigned_url(mock_generate_presigned_url):
-    document = Document(
+    _ = Document(
         id="f295fafb-829a-49e8-879a-0eb81cc4d3ad",
         title="Sample Document",
         type="txt",
