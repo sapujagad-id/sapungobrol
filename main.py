@@ -156,6 +156,13 @@ if __name__ == "__main__":
         response_class=HTMLResponse,
         description="Page that displays all users",
     )
+    
+    app.add_api_route(
+        "/create-document",
+        endpoint=document_view.new_document_view,
+        response_class=HTMLResponse,
+        description="Page that displays Document Creation form",
+    )
 
     app.add_api_route(
         "/api/bots",

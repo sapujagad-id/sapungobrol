@@ -7,6 +7,7 @@
 
             {% if user_profile %}
                 <a href="/" class="text-lg font-semibold text-gray-700 hover:text-blue-500">Chatbot Library</a>
+                <a href="/document" class="text-lg font-semibold text-gray-700 hover:text-blue-500">Documents</a>
                 {% if user_profile.email in admin_emails %}
                     <a href="/users" class="text-lg font-semibold text-gray-700 hover:text-blue-500">Users</a>
                 {% endif %}
