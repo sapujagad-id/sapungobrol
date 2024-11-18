@@ -49,13 +49,13 @@ class MockCompletionChoice: # pragma: no cover
     def __init__(self, content: str):
         self.message = MagicMock(content=content)
 
-class MockEmbeddingResponse:
+class MockEmbeddingResponse: # pragma: no cover
     class DataItem:
         def __init__(self, embedding):
-            self.embedding = embedding
+            self.embedding = embedding # pragma: no cover
 
     def __init__(self):
-        self.data = [self.DataItem([0.1, 0.2, 0.3])]
+        self.data = [self.DataItem([0.1, 0.2, 0.3])] # pragma: no cover
         
 class MockCompletion:
     def __init__(self, choices: List[MockCompletionChoice]):
