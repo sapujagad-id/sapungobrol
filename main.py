@@ -70,8 +70,6 @@ if __name__ == "__main__":
         slack_scopes=config.slack_scopes
     )
     
-
-
     configure_logger(config.log_level)
 
     sessionmaker = config_db(config.database_url)
@@ -137,7 +135,7 @@ if __name__ == "__main__":
         auth_repository
     )
 
-    slack_view = SlackViewV1(auth_controller, config.slack_client_id, config.slack_scopes, config.admin_emails)
+    slack_view = SlackViewV1(auth_controller, slack_config, config.admin_emails)
 
     slack_app.event("message")(slack_adapter.event_message)
     slack_app.event("reaction_added")(slack_adapter.reaction_added)
