@@ -1,4 +1,5 @@
 import sqlalchemy
+import sentry_sdk
 import threading
 import asyncio
 import json
@@ -16,6 +17,7 @@ from chat import ChatEngineSelector, ChatEngine
 from chat.exceptions import ChatResponseGenerationError
 from .reaction_event import ReactionEventCreate
 from .reaction_event_repository import ReactionEventRepository
+
 
 class UnableToRespondToInteraction(Exception):
     pass
@@ -56,10 +58,12 @@ class SlackAdapter:
     async def handle_events(self, req: Request):  # pragma: no cover
         return await self.handler.handle(req)
 
-    async def oauth_redirect(self, req: Request): # pragma: no cover
+    async def oauth_redirect(self, req: Request):  # pragma: no cover
         return await self.handler.handle(req)
 
+    @sentry_sdk.trace
     async def handle_interactions(self, req: Request):
+        transaction = sentry_sdk.get_current_scope().transaction
         data = await req.form()
 
         payload_str = data.get("payload")
@@ -69,6 +73,9 @@ class SlackAdapter:
         if len(actions) == 1:
             action_id = actions[0]["action_id"]
 
+            if transaction is not None:  # pragma: no cover
+                transaction.set_tag("action_id", action_id)
+
             self.logger().bind(action_id=action_id).info("handling interaction")
             if action_id == "ask_question":
                 channel_id = payload["channel"]["id"]
@@ -77,6 +84,10 @@ class SlackAdapter:
                     "selected_option"
                 ]["value"]
                 question = payload["state"]["values"]["question"]["question"]["value"]
+
+                if transaction is not None:  # pragma: no cover
+                    transaction.set_tag("slug", slug)
+                    transaction.set_tag("question", question)
 
                 try:
                     await self.ask_v2(
@@ -188,24 +199,44 @@ class SlackAdapter:
         self.reaction_event_repository.create_reaction_event(reaction_event_create)
 
     def send_generated_response(
-        self, channel: str, ts: str, engine: ChatEngine, question: str, access_level: int
+        self,
+        channel: str,
+        ts: str,
+        engine: ChatEngine,
+        question: str,
+        access_level: int,
     ):
-        try:
+        transaction = sentry_sdk.get_current_scope().transaction
+        if transaction is not None:  # pragma: no cover
+            trace_id = transaction.trace_id
+        else:
+            trace_id = ""
+
+        with self.logger().contextualize(trace_id=trace_id):
             self.logger().info("generating response")
 
-            chatbot_response = engine.generate_response(query=question, access_level=access_level)
+            with sentry_sdk.start_transaction(
+                trace_id=trace_id,
+                op="send_generated_response",
+                name=f"{__name__}.{self.send_generated_response.__qualname__}",
+            ):
+                try:
+                    chatbot_response = engine.generate_response(
+                        query=question, access_level=access_level
+                    )
+                    self.logger().info("sending generated response")
+                    self.app.client.chat_update(
+                        channel=channel, ts=ts, text=chatbot_response
+                    )
 
-            self.logger().info("sending generated response")
-
-            self.app.client.chat_update(channel=channel, ts=ts, text=chatbot_response)
-
-        except ChatResponseGenerationError as e:  # pragma: no cover
-            self.logger().error(e)
-            self.app.client.chat_update(
-                channel=channel,
-                ts=ts,
-                text="Something went wrong when trying to generate your response.",
-            )
+                except ChatResponseGenerationError as e:  # pragma: no cover
+                    sentry_sdk.capture_exception(e)
+                    self.logger().error(e)
+                    self.app.client.chat_update(
+                        channel=channel,
+                        ts=ts,
+                        text="Something went wrong when trying to generate your response.",
+                    )
 
     def ask_form(self, _: Request):
         return {
@@ -257,6 +288,7 @@ class SlackAdapter:
             ]
         }
 
+    @sentry_sdk.trace
     async def ask_v2(self, channel_id: str, user_id: str, slug: str, question: str):
         self.logger().info("answering question")
 
@@ -271,7 +303,7 @@ class SlackAdapter:
             user_info = self.app.client.users_info(user=user_id)
             email = user_info["user"]["profile"]["email"]
             user = self.auth_respository.find_user_by_email(email)
-            
+
             if not user:
                 access_level = 1
             else:
@@ -290,6 +322,7 @@ class SlackAdapter:
                     },
                 },
             )
+
             return await self.process_chatbot_request(
                 chatbot, question, channel_id, response["ts"], access_level
             )
@@ -337,8 +370,15 @@ class SlackAdapter:
         except SlackApiError as e:
             raise HTTPException(status_code=400, detail=f"Slack API Error: {e}")
 
+    @sentry_sdk.trace
     async def process_chatbot_request(
-        self, chatbot, question, channel_id, thread_ts, access_level=1, history=None,
+        self,
+        chatbot,
+        question,
+        channel_id,
+        thread_ts,
+        access_level=1,
+        history=None,
     ):
         try:
             self.logger().info("Processing query using chatbot")
@@ -363,7 +403,7 @@ class SlackAdapter:
                     "ts": loading_message["ts"],
                     "engine": bot_engine,
                     "question": question,
-                    "access_level": access_level
+                    "access_level": access_level,
                 },
             )
 
