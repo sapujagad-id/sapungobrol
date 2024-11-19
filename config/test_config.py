@@ -206,6 +206,9 @@ class TestAppConfig:
     
     def test_configure_default_postgres_port(self, monkeypatch):
         monkeypatch.setenv("PORT", "")
+        monkeypatch.setenv("SLACK_CLIENT_ID", "123456.789")
+        monkeypatch.setenv("SLACK_CLIENT_SECRET", "1a2b3c4d5e6f")
+        monkeypatch.setenv("SLACK_SCOPES", "channels:history")
         monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")
         monkeypatch.setenv("TOTAL_ACCESS_LEVELS", "5")
