@@ -40,6 +40,9 @@ class TestAppConfig:
         monkeypatch.setenv("POSTGRES_HOST", "test")
         monkeypatch.setenv("POSTGRES_PORT", "5432")
         monkeypatch.setenv("AWS_ENDPOINT_URL", "test")
+        monkeypatch.setenv("SLACK_CLIENT_ID", "123456.789")
+        monkeypatch.setenv("SLACK_CLIENT_SECRET", "1a2b3c4d5e6f")
+        monkeypatch.setenv("SLACK_SCOPES", "channels:history")
 
         config = AppConfig()
 
@@ -57,6 +60,24 @@ class TestAppConfig:
         with pytest.raises(ValueError, match="invalid app config"):
             AppConfig()
 
+    def test_config_empty_slack_client_id(self, monkeypatch):
+        monkeypatch.setenv("SLACK_CLIENT_ID", "")
+
+        with pytest.raises(ValueError, match="invalid app config"):
+            AppConfig()
+            
+    def test_config_empty_slack_client_secret(self, monkeypatch):
+        monkeypatch.setenv("SLACK_CLIENT_SECRET", "")
+
+        with pytest.raises(ValueError, match="invalid app config"):
+            AppConfig()
+
+    def test_config_empty_slack_scopes(self, monkeypatch):
+        monkeypatch.setenv("SLACK_SCOPES", "")
+
+        with pytest.raises(ValueError, match="invalid app config"):
+            AppConfig()
+            
     def test_config_empty_total_access_levels(self, monkeypatch):
         monkeypatch.setenv("TOTAL_ACCESS_LEVELS", "")
 
@@ -73,6 +94,9 @@ class TestAppConfig:
     def test_config(self, monkeypatch):
         monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")
+        monkeypatch.setenv("SLACK_CLIENT_ID", "123456.789")
+        monkeypatch.setenv("SLACK_CLIENT_SECRET", "1a2b3c4d5e6f")
+        monkeypatch.setenv("SLACK_SCOPES", "channels:history")
         monkeypatch.setenv("TOTAL_ACCESS_LEVELS", "5")
         monkeypatch.setenv("AWS_PUBLIC_BUCKET_NAME", "test")
         monkeypatch.setenv("AWS_REGION", "ap-test")
@@ -182,6 +206,9 @@ class TestAppConfig:
     
     def test_configure_default_postgres_port(self, monkeypatch):
         monkeypatch.setenv("PORT", "")
+        monkeypatch.setenv("SLACK_CLIENT_ID", "123456.789")
+        monkeypatch.setenv("SLACK_CLIENT_SECRET", "1a2b3c4d5e6f")
+        monkeypatch.setenv("SLACK_SCOPES", "channels:history")
         monkeypatch.setenv("OPENAI_API_KEY", "test-openai-api-key")
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-api-key")
         monkeypatch.setenv("TOTAL_ACCESS_LEVELS", "5")

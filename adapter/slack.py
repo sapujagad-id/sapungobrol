@@ -17,7 +17,6 @@ from chat.exceptions import ChatResponseGenerationError
 from .reaction_event import ReactionEventCreate
 from .reaction_event_repository import ReactionEventRepository
 
-
 class UnableToRespondToInteraction(Exception):
     pass
 
@@ -55,6 +54,9 @@ class SlackAdapter:
     # Function to listen for events on Slack. No need to test this since this is purely dependent on
     # Bolt
     async def handle_events(self, req: Request):  # pragma: no cover
+        return await self.handler.handle(req)
+
+    async def oauth_redirect(self, req: Request): # pragma: no cover
         return await self.handler.handle(req)
 
     async def handle_interactions(self, req: Request):
