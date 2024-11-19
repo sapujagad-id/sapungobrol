@@ -27,6 +27,7 @@ from web.logging import RequestLoggingMiddleware
 import uvicorn
 import sentry_sdk
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+from sentry_sdk.integrations.threading import ThreadingIntegration
 import os
 
 from document.controller import DocumentControllerV1
@@ -39,6 +40,7 @@ sentry_sdk.init(
     dsn=os.getenv("SENTRY_DSN"),
     traces_sample_rate=1.0,
     environment=os.getenv("ENVIRONMENT", "production"),
+    integrations=[ThreadingIntegration(propagate_scope=True)],
     _experiments={
         "continuous_profiling_auto_start": True,
     },
@@ -59,7 +61,7 @@ if __name__ == "__main__":
         aws_secret_access_key=config.aws_secret_access_key,
         aws_public_bucket_name=config.aws_public_bucket_name,
         aws_region=config.aws_region,
-        aws_endpoint_url=config.aws_endpoint_url
+        aws_endpoint_url=config.aws_endpoint_url,
     )
 
     slack_config = SlackConfig(
@@ -91,11 +93,17 @@ if __name__ == "__main__":
     )
 
     auth_repository = PostgresAuthRepository(sessionmaker)
-    
-    auth_service = AuthServiceV1(auth_repository, google_credentials, config.base_url, config.jwt_secret_key, config.admin_emails)
-    
+
+    auth_service = AuthServiceV1(
+        auth_repository,
+        google_credentials,
+        config.base_url,
+        config.jwt_secret_key,
+        config.admin_emails,
+    )
+
     auth_controller = AuthControllerV1(auth_service)
- 
+
     user_view = UserViewV1(auth_controller, auth_service, config.admin_emails)
 
     bot_repository = PostgresBotRepository(sessionmaker)
@@ -104,7 +112,9 @@ if __name__ == "__main__":
 
     bot_controller = BotControllerV1(bot_service)
 
-    bot_view = BotViewV1(bot_controller, bot_service, auth_controller, config.admin_emails)
+    bot_view = BotViewV1(
+        bot_controller, bot_service, auth_controller, config.admin_emails
+    )
 
     data_source_view = DataSourceViewV1(auth_controller)
     engine_selector = ChatEngineSelector(
@@ -295,7 +305,7 @@ if __name__ == "__main__":
 
     app.add_api_route(
         "/api/user/get-all-user-basic-info",
-        endpoint=auth_controller.get_all_users_basic_info, 
+        endpoint=auth_controller.get_all_users_basic_info,
         methods=["GET"],
     )
 
