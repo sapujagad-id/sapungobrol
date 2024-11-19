@@ -10,12 +10,12 @@ from loguru import logger
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 from slack_sdk.errors import SlackApiError
+from auth.repository import AuthRepository
 from bot.service import BotService
 from chat import ChatEngineSelector, ChatEngine
 from chat.exceptions import ChatResponseGenerationError
 from .reaction_event import ReactionEventCreate
 from .reaction_event_repository import ReactionEventRepository
-
 
 class UnableToRespondToInteraction(Exception):
     pass
@@ -38,6 +38,7 @@ class SlackAdapter:
         engine_selector: ChatEngineSelector,
         bot_service: BotService,
         reaction_event_repository: ReactionEventRepository,
+        auth_respository: AuthRepository,
     ) -> None:
         self.app = app
         self.engine_selector = engine_selector
@@ -45,6 +46,7 @@ class SlackAdapter:
         self.reaction_event_repository = reaction_event_repository
         self.handler = SlackRequestHandler(self.app)
         self.app_user_id = self.app.client.auth_test()["user_id"]
+        self.auth_respository = auth_respository
 
     def logger(self):
         return logger.bind(service="SlackAdapter")
@@ -52,6 +54,9 @@ class SlackAdapter:
     # Function to listen for events on Slack. No need to test this since this is purely dependent on
     # Bolt
     async def handle_events(self, req: Request):  # pragma: no cover
+        return await self.handler.handle(req)
+
+    async def oauth_redirect(self, req: Request): # pragma: no cover
         return await self.handler.handle(req)
 
     async def handle_interactions(self, req: Request):
@@ -66,7 +71,6 @@ class SlackAdapter:
 
             self.logger().bind(action_id=action_id).info("handling interaction")
             if action_id == "ask_question":
-
                 channel_id = payload["channel"]["id"]
                 user_id = payload["user"]["id"]
                 slug = payload["state"]["values"]["bots"]["select_chatbot"][
@@ -184,12 +188,12 @@ class SlackAdapter:
         self.reaction_event_repository.create_reaction_event(reaction_event_create)
 
     def send_generated_response(
-        self, channel: str, ts: str, engine: ChatEngine, question: str
+        self, channel: str, ts: str, engine: ChatEngine, question: str, access_level: int
     ):
         try:
             self.logger().info("generating response")
 
-            chatbot_response = engine.generate_response(query=question)
+            chatbot_response = engine.generate_response(query=question, access_level=access_level)
 
             self.logger().info("sending generated response")
 
@@ -264,6 +268,15 @@ class SlackAdapter:
         try:
             chatbot = self.bot_service.get_chatbot_by_slug(slug=slug)
 
+            user_info = self.app.client.users_info(user=user_id)
+            email = user_info["user"]["profile"]["email"]
+            user = self.auth_respository.find_user_by_email(email)
+            
+            if not user:
+                access_level = 1
+            else:
+                access_level = user.access_level
+
             if chatbot is None:
                 raise MissingChatbot
 
@@ -278,7 +291,7 @@ class SlackAdapter:
                 },
             )
             return await self.process_chatbot_request(
-                chatbot, question, channel_id, response["ts"]
+                chatbot, question, channel_id, response["ts"], access_level
             )
 
         except SlackApiError as e:
@@ -325,7 +338,7 @@ class SlackAdapter:
             raise HTTPException(status_code=400, detail=f"Slack API Error: {e}")
 
     async def process_chatbot_request(
-        self, chatbot, question, channel_id, thread_ts, history=None
+        self, chatbot, question, channel_id, thread_ts, access_level=1, history=None,
     ):
         try:
             self.logger().info("Processing query using chatbot")
@@ -350,6 +363,7 @@ class SlackAdapter:
                     "ts": loading_message["ts"],
                     "engine": bot_engine,
                     "question": question,
+                    "access_level": access_level
                 },
             )
 

@@ -3,8 +3,10 @@ from fastapi import FastAPI, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slack_bolt import App
+from slack_bolt.oauth.oauth_settings import OAuthSettings
 
 from adapter import SlackAdapter, PostgresReactionEventRepository
+from adapter.view import SlackViewV1
 from auth.controller import AuthControllerV1
 from auth.repository import PostgresAuthRepository
 from auth.service import AuthServiceV1
@@ -17,6 +19,7 @@ from data_source.view import DataSourceViewV1
 from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
 
+from adapter.dto import SlackConfig
 from document.dto import AWSConfig
 from document.view import DocumentViewV1
 from web.logging import RequestLoggingMiddleware
@@ -55,15 +58,38 @@ if __name__ == "__main__":
         aws_access_key_id=config.aws_access_key_id,
         aws_secret_access_key=config.aws_secret_access_key,
         aws_public_bucket_name=config.aws_public_bucket_name,
-        aws_region=config.aws_region
+        aws_region=config.aws_region,
+        aws_endpoint_url=config.aws_endpoint_url
     )
+
+    slack_config = SlackConfig(
+        slack_bot_token=config.slack_bot_token,
+        slack_signing_secret=config.slack_signing_secret,
+        slack_client_id=config.slack_client_id,
+        slack_client_secret=config.slack_client_secret,
+        slack_scopes=config.slack_scopes
+    )
+    
+
 
     configure_logger(config.log_level)
 
     sessionmaker = config_db(config.database_url)
 
+    oauth_settings = OAuthSettings(
+        client_id=config.slack_client_id,
+        client_secret=config.slack_client_secret,
+        scopes=config.slack_scopes,
+        redirect_uri=None,
+        install_path="/slack/install",
+        redirect_uri_path="/api/slack/oauth_redirect",
+        state_validation_enabled=False
+    )
+
     slack_app = App(
-        token=config.slack_bot_token, signing_secret=config.slack_signing_secret
+        token=config.slack_bot_token, 
+        signing_secret=config.slack_signing_secret,
+        oauth_settings=oauth_settings,
     )
 
     auth_repository = PostgresAuthRepository(sessionmaker)
@@ -84,7 +110,13 @@ if __name__ == "__main__":
 
     data_source_view = DataSourceViewV1(auth_controller)
     engine_selector = ChatEngineSelector(
-        openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key
+        openai_api_key=config.openai_api_key,
+        anthropic_api_key=config.anthropic_api_key,
+        postgres_db=config.postgres_db,
+        postgres_user=config.postgres_user,
+        postgres_password=config.postgres_password,
+        postgres_host=config.postgres_host,
+        postgres_port=config.postgres_port,
     )
 
     document_repository = PostgresDocumentRepository(sessionmaker)
@@ -102,7 +134,10 @@ if __name__ == "__main__":
         engine_selector,
         bot_service,
         reaction_event_repository,
+        auth_repository
     )
+
+    slack_view = SlackViewV1(auth_controller, config.slack_client_id, config.slack_scopes, config.admin_emails)
 
     slack_app.event("message")(slack_adapter.event_message)
     slack_app.event("reaction_added")(slack_adapter.reaction_added)
@@ -154,6 +189,13 @@ if __name__ == "__main__":
         endpoint=user_view.view_users,
         response_class=HTMLResponse,
         description="Page that displays all users",
+    )
+    
+    app.add_api_route(
+        "/create-document",
+        endpoint=document_view.new_document_view,
+        response_class=HTMLResponse,
+        description="Page that displays Document Creation form",
     )
 
     app.add_api_route(
@@ -218,6 +260,15 @@ if __name__ == "__main__":
     app.add_api_route(
         "/api/slack/events", endpoint=slack_adapter.handle_events, methods=["POST"]
     )
+
+    app.add_api_route(
+        "/slack/install", endpoint=slack_view.install, methods=["GET"]
+    )
+
+    app.add_api_route(
+        "/api/slack/oauth_redirect", endpoint=slack_adapter.oauth_redirect, methods=["GET", "POST"]
+    )
+
     app.add_api_route(
         "/api/slack/interactivity",
         endpoint=slack_adapter.handle_interactions,
