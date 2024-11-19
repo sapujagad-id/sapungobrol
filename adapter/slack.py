@@ -63,7 +63,6 @@ class SlackAdapter:
 
     @sentry_sdk.trace
     async def handle_interactions(self, req: Request):
-        transaction = sentry_sdk.get_current_scope().transaction
         data = await req.form()
 
         payload_str = data.get("payload")
@@ -73,8 +72,7 @@ class SlackAdapter:
         if len(actions) == 1:
             action_id = actions[0]["action_id"]
 
-            if transaction is not None:  # pragma: no cover
-                transaction.set_tag("action_id", action_id)
+            sentry_sdk.get_current_scope().set_tag("action_id", action_id)
 
             self.logger().bind(action_id=action_id).info("handling interaction")
             if action_id == "ask_question":
@@ -85,9 +83,8 @@ class SlackAdapter:
                 ]["value"]
                 question = payload["state"]["values"]["question"]["question"]["value"]
 
-                if transaction is not None:  # pragma: no cover
-                    transaction.set_tag("slug", slug)
-                    transaction.set_tag("question", question)
+                sentry_sdk.get_current_scope().set_tag("slug", slug)
+                sentry_sdk.get_current_scope().set_tag("question", question)
 
                 try:
                     await self.ask_v2(
