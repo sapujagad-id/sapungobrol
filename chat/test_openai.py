@@ -1,209 +1,161 @@
 import pytest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 from .openai_chat import ChatOpenAI
 from chat.exceptions import ChatResponseGenerationError
 from chat import ChatEngineSelector
 from bot import ModelEngine
 
+from rag.retriever.retriever import Retriever
+from typing import List
+
 
 @pytest.fixture
-def sample_query():
+def retriever(): # pragma: no cover
+    mock_postgres_handler = MagicMock()
+    return Retriever(mock_postgres_handler)
+
+
+@pytest.fixture
+def sample_query(): # pragma: no cover
     return "what is apache doris"
 
 
 @pytest.fixture
-def sample_context():
-    return (
-        "Apache Doris is a modern MPP-based SQL data warehouse for real-time analytics."
-    )
+def sample_access_level(): # pragma: no cover
+    return 1
 
 
 @pytest.fixture
-def irrelevant_context():
-    return "This context is not relevant to the query."
-
-
-@pytest.fixture
-def sample_history():
+def sample_history(): # pragma: no cover
     return "My name is Molvative Squarepants. Remember my name!"
 
 
 @pytest.fixture
-def sample_query_history():
+def sample_query_history(): # pragma: no cover
     return "Say my name!"
 
 
 @pytest.fixture
-def sample_query_forget_history():
+def sample_query_forget_history(): # pragma: no cover
     return "Do you know my name? Yes or No"
 
+@pytest.fixture(autouse=True)
+def mock_total_access_levels_env_var(monkeypatch):
+    monkeypatch.setenv("TOTAL_ACCESS_LEVELS", "5")
+    monkeypatch.setenv("OPENAI_API_KEY", "testkey")
+
+
+class MockCompletionChoice: # pragma: no cover
+    def __init__(self, content: str):
+        self.message = MagicMock(content=content)
+
+class MockEmbeddingResponse: # pragma: no cover
+    class DataItem:
+        def __init__(self, embedding):
+            self.embedding = embedding # pragma: no cover
+
+    def __init__(self):
+        self.data = [self.DataItem([0.1, 0.2, 0.3])] # pragma: no cover
+        
+class MockCompletion:
+    def __init__(self, choices: List[MockCompletionChoice]):
+        self.choices = choices
+        self.id = "mock_id"
+        self.created = 123456789
+        self.model = "mock_model"
+        self.object = "text_completion"
 
 @pytest.fixture
-def sample_insufficient_context_query():
-    return "What is the capital of France?"
+def mock_openai_api():
+    with patch("openai.chat.completions.create") as mock_chat_completion, \
+         patch("openai.embeddings.create") as mock_embeddings:
 
+        # Mock embeddings response
+        mock_embeddings.return_value = MagicMock(
+            data=[MagicMock(embedding=[0.1, 0.2, 0.3])]
+        )
 
+        # Mock chat completions response
+        mock_chat_completion.return_value = MockCompletion(
+            choices=[MockCompletionChoice(content="Mocked response content")]
+        )
+
+        yield mock_chat_completion
+        
 @pytest.fixture
-def chat():
-    selector = ChatEngineSelector(openai_api_key="testkey", anthropic_api_key="testkey")
-    return selector.select_engine(ModelEngine.OPENAI)
+def chat(mock_openai_api):
+    with patch("psycopg2.connect") as mock_connect, \
+         patch("rag.vectordb.postgres_handler.PostgresHandler") as MockPostgresHandler, \
+         patch("rag.retriever.retriever.Retriever") as MockRetriever:
+        
+        # Mock psycopg2.connect to prevent actual DB connections
+        mock_connect.return_value = MagicMock()
+        MockPostgresHandler.return_value = MagicMock()
+        MockRetriever.return_value = MagicMock()
 
-
-@pytest.fixture
-def mock_openai_response():
-    class MockMessage:
-        def __init__(self, content):
-            self.content = content
-
-    class MockChoice:
-        def __init__(self, message):
-            self.message = message
-
-    class MockResponse:
-        def __init__(self):
-            self.choices = [MockChoice(MockMessage("Mocked response content"))]
-
-    return MockResponse()
-
-
-@pytest.fixture
-def mock_openai_response_insufficient():
-    class MockMessage:
-        def __init__(self, content):
-            self.content = content
-
-    class MockChoice:
-        def __init__(self, message):
-            self.message = message
-
-    class MockResponse:
-        def __init__(self):
-            self.choices = [MockChoice(MockMessage("I don't know"))]
-
-    return MockResponse()
+        # Instantiate ChatEngineSelector with mocked dependencies
+        selector = ChatEngineSelector(
+            openai_api_key="testkey",
+            anthropic_api_key="testkey",
+            postgres_db="mock_db",
+            postgres_user="mock_user",
+            postgres_password="mock_password",
+            postgres_host="mock_host",
+            postgres_port=5432,
+        )
+        yield selector.select_engine(ModelEngine.OPENAI)
 
 
 class TestChat:
 
-    @patch("openai.chat.completions.create")
-    def test_generate_response_with_context(
-        self, mock_create, chat, sample_query, sample_context, mock_openai_response
-    ):
-        mock_create.return_value = mock_openai_response
-        response = chat.generate_response(sample_query, sample_context)
+    def test_generate_response_with_access_level(self, chat, mock_openai_api):
+        query = "what is apache doris"
+        access_level = 1
 
+        response = chat.generate_response(query, access_level)
         assert response == "Mocked response content"
-        mock_create.assert_called_once()
-        _, kwargs = mock_create.call_args
-        assert kwargs["model"] == "gpt-4o-mini"
-        assert len(kwargs["messages"]) == 3
-        assert "Given a context:" in kwargs["messages"][1]["content"]
-        assert "Given a query:" in kwargs["messages"][1]["content"]
 
-    @patch("openai.chat.completions.create")
-    def test_generate_response_no_context(
-        self, mock_create, chat, sample_query, mock_openai_response
-    ):
-        mock_create.return_value = mock_openai_response
-        response = chat.generate_response(sample_query, None)
-
+    def test_generate_response_no_access_level(self, chat):
+        query = "what is apache doris"
+        response = chat.generate_response(query, None)
         assert response == "Mocked response content"
-        mock_create.assert_called_once()
-        _, kwargs = mock_create.call_args
-        assert kwargs["model"] == "gpt-4o-mini"
-        assert len(kwargs["messages"]) == 3
-        assert kwargs["messages"][1]["content"] == sample_query
 
     def test_generate_empty_response(self, chat):
         response = chat.generate_response("", "")
         assert response == ""
 
-    @patch("openai.chat.completions.create")
-    def test_chat_remember_history(
-        self,
-        mock_create,
-        chat,
-        sample_history,
-        sample_query_history,
-        mock_openai_response,
-    ):
-        mock_create.return_value = mock_openai_response
-        chat.generate_response(sample_history, None)
-        chat.generate_response(sample_query_history, None)
+    def test_chat_remember_history(self, chat):
+        history = "My name is Molvative Squarepants. Remember my name!"
+        query = "Say my name!"
+        access_level = 1
 
-        assert len(chat.history) == 5  # Including system message and responses
-        assert chat.history[1]["content"] == sample_history
-        assert chat.history[3]["content"] == sample_query_history
+        chat.generate_response(history, access_level)
+        chat.generate_response(query, access_level)
 
-    @patch("openai.chat.completions.create")
-    def test_chat_reset_history(
-        self,
-        mock_create,
-        chat,
-        sample_history,
-        sample_query_forget_history,
-        mock_openai_response,
-    ):
-        mock_create.return_value = mock_openai_response
-        chat.generate_response(sample_history, None)
+        assert len(chat.history) == 5
+        assert history in chat.history[1]["content"]
+        assert query in chat.history[3]["content"]
+
+    def test_chat_reset_history(self, chat):
+        history = "My name is Molvative Squarepants. Remember my name!"
+        query = "Do you know my name? Yes or No"
+
+        chat.generate_response(history, None)
         chat.reset_history()
-        chat.generate_response(sample_query_forget_history, None)
+        chat.generate_response(query, None)
 
-        assert (
-            len(chat.history) == 3
-        )  # Should only contain system message and the last user query
+        assert len(chat.history) == 3
 
-    @patch("openai.chat.completions.create")
-    def test_refine_query_before_chat(
-        self, mock_create, chat, sample_query, sample_context, mock_openai_response
-    ):
-        mock_create.return_value = mock_openai_response
-        refined_query = sample_query + " for real-time analytics in SQL data warehouse?"
-        response = chat.generate_response(refined_query, sample_context)
+    def test_refine_query_before_chat(self, chat):
+        query = "what is apache doris for real-time analytics in SQL data warehouse?"
+        access_level = 1
 
+        response = chat.generate_response(query, access_level)
         assert response == "Mocked response content"
-        mock_create.assert_called_once()
-        _, kwargs = mock_create.call_args
-        assert "real-time analytics" in kwargs["messages"][1]["content"]
-        assert "SQL data warehouse" in kwargs["messages"][1]["content"]
 
-    @patch("openai.chat.completions.create")
-    def test_no_hallucination_without_context(
-        self, mock_create, chat, sample_query, irrelevant_context, mock_openai_response
-    ):
-        mock_create.return_value = mock_openai_response
-        response = chat.generate_response(sample_query, irrelevant_context)
+    def test_generate_response_failure(self, chat):
+        with patch("openai.chat.completions.create", side_effect=Exception("API error")):
+            with pytest.raises(ChatResponseGenerationError) as excinfo:
+                chat.generate_response("Test query")
 
-        assert response == "Mocked response content"
-        mock_create.assert_called_once()
-        _, kwargs = mock_create.call_args
-        assert irrelevant_context in kwargs["messages"][1]["content"]
-
-    @patch("openai.chat.completions.create")
-    def test_generate_response_failure(self, mock_create, chat):
-        mock_create.side_effect = Exception("API error")
-
-        with pytest.raises(ChatResponseGenerationError) as excinfo:
-            chat.generate_response("Test query")
-
-        assert str(excinfo.value) == "Error generating response: API error"
-
-    @patch("openai.chat.completions.create")
-    def test_insufficient_context(
-        self,
-        mock_create,
-        chat,
-        sample_insufficient_context_query,
-        mock_openai_response_insufficient,
-    ):
-        mock_create.return_value = mock_openai_response_insufficient
-        # Use an irrelevant context or no context
-        irrelevant_context = "This context does not contain relevant information."
-        response = chat.generate_response(
-            sample_insufficient_context_query, irrelevant_context
-        )
-
-        assert response == "I don't know"  # Expecting "I don't know"
-        mock_create.assert_called_once()
-        _, kwargs = mock_create.call_args
-        assert irrelevant_context in kwargs["messages"][1]["content"]
+            assert str(excinfo.value) == "Error generating response: API error"

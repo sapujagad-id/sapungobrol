@@ -1,5 +1,5 @@
 import pytest
-
+from unittest.mock import MagicMock, patch
 
 from bot import ModelEngine
 from . import ChatEngineSelector
@@ -9,17 +9,52 @@ from .anthropic_chat import ChatAnthropic
 
 class TestChatEngineSelector:
     @pytest.fixture(scope="session")
-    def api_key(self) -> str:
+    def sample_string(self) -> str:
         return "Random-str"
+    @pytest.fixture(scope="session")
+    def sample_int(self) -> int:
+        return 1
 
-    def test_select_openai_engine(self, api_key):
-        engine_selector = ChatEngineSelector(openai_api_key=api_key, anthropic_api_key=api_key)
+    @patch("chat.PostgresHandler")
+    def test_select_openai_engine(self, mock_postgres_handler, sample_string, sample_int):
+        mock_postgres_handler_instance = MagicMock()
+        mock_postgres_handler.return_value = mock_postgres_handler_instance
+
+        engine_selector = ChatEngineSelector(
+            openai_api_key=sample_string,
+            anthropic_api_key=sample_string,
+            postgres_db=sample_string,
+            postgres_user=sample_string,
+            postgres_password=sample_string,
+            postgres_host=sample_string,
+            postgres_port=sample_int
+        )
+        
+        mock_retriever_instance = MagicMock()
+        engine_selector.retriever = mock_retriever_instance
+
         engine = engine_selector.select_engine(ModelEngine.OPENAI)
 
         assert isinstance(engine, ChatOpenAI)
     
-    def test_select_anthropic_engine(self, api_key):
-        engine_selector = ChatEngineSelector(openai_api_key=api_key, anthropic_api_key=api_key)
+    @patch("chat.PostgresHandler")
+    def test_select_anthropic_engine(self, mock_postgres_handler, sample_string, sample_int):
+        mock_postgres_handler_instance = MagicMock()
+        mock_postgres_handler.return_value = mock_postgres_handler_instance
+
+        engine_selector = ChatEngineSelector(
+            openai_api_key=sample_string,
+            anthropic_api_key=sample_string,
+            postgres_db=sample_string,
+            postgres_user=sample_string,
+            postgres_password=sample_string,
+            postgres_host=sample_string,
+            postgres_port=sample_int
+        )
+        
+        mock_retriever_instance = MagicMock()
+        engine_selector.retriever = mock_retriever_instance
+
         engine = engine_selector.select_engine(ModelEngine.ANTHROPIC)
 
         assert isinstance(engine, ChatAnthropic)

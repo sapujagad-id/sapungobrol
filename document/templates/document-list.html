@@ -29,17 +29,19 @@
                         <th class="px-4 py-2 text-left">Updated At</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for document in documents %}
-                    <tr class="border-t">
-                        <td class="px-4 py-2">{{ document.title }}</td>
-                        <td class="px-4 py-2">{{ document.type }}</td>
-                        <td class="px-4 py-2">{{ document.object_name }}</td>
-                        <td class="px-4 py-2">{{ document.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                        <td class="px-4 py-2">{{ document.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
+                {% if documents %}
+                    <tbody>
+                        {% for document in documents %}
+                            <tr class="border-t">
+                                <td class="px-4 py-2">{{ document.title }}</td>
+                                <td class="px-4 py-2">{{ document.type }}</td>
+                                <td class="px-4 py-2">{{ document.object_name }}</td>
+                                <td class="px-4 py-2">{{ document.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td class="px-4 py-2">{{ document.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                {% endif %}
             </table>
         </div>
         <div class="mt-4 flex justify-center">

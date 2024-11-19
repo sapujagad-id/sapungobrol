@@ -103,7 +103,7 @@ def test_postgres_handler_query(mock_psycopg2_connect):
 
     # Verify query was executed with the correct SQL for the access level table
     expected_query = """
-            SELECT item_id, embedding <-> %s::vector AS distance
+            SELECT item_id, text_content, embedding <-> %s::vector AS distance
             FROM index_L3
             ORDER BY distance
             LIMIT %s;
@@ -146,9 +146,9 @@ def test_upsert_vectors(mock_psycopg2_connect):
 
     insert_calls = [
         call(
-            f"INSERT INTO index_L{lvl} (item_id, embedding) VALUES (%s, %s) "
-            f"ON CONFLICT (item_id) DO UPDATE SET embedding = EXCLUDED.embedding;",
-            (vector["id"], vector["values"])
+            f"INSERT INTO index_L{lvl} (item_id, embedding, text_content) VALUES (%s, %s, %s) "
+            f"ON CONFLICT (item_id) DO UPDATE SET embedding = EXCLUDED.embedding, text_content = EXCLUDED.text_content;",
+            (vector["id"], vector["values"], '')
         )
         for lvl in range(level, handler.total_access_levels + 1)
         for vector in vectors

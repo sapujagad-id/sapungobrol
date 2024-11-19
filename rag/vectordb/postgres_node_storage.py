@@ -24,7 +24,11 @@ class PostgresNodeStorage:
         vectors = []
         for i, node in enumerate(nodes):
             vector = self._embed_node(node)
-            vectors.append({"id": str(i), "values": vector})
+            vectors.append({
+                "id": str(i), 
+                "values": vector, 
+                "text_content": node
+            })
             
         if not vectors:
             raise ValueError("No vectors to store.")

@@ -110,7 +110,13 @@ if __name__ == "__main__":
 
     data_source_view = DataSourceViewV1(auth_controller)
     engine_selector = ChatEngineSelector(
-        openai_api_key=config.openai_api_key, anthropic_api_key=config.anthropic_api_key
+        openai_api_key=config.openai_api_key,
+        anthropic_api_key=config.anthropic_api_key,
+        postgres_db=config.postgres_db,
+        postgres_user=config.postgres_user,
+        postgres_password=config.postgres_password,
+        postgres_host=config.postgres_host,
+        postgres_port=config.postgres_port,
     )
 
     document_repository = PostgresDocumentRepository(sessionmaker)
@@ -128,6 +134,7 @@ if __name__ == "__main__":
         engine_selector,
         bot_service,
         reaction_event_repository,
+        auth_repository
     )
 
     slack_view = SlackViewV1(auth_controller, config.slack_client_id, config.slack_scopes, config.admin_emails)
@@ -182,6 +189,13 @@ if __name__ == "__main__":
         endpoint=user_view.view_users,
         response_class=HTMLResponse,
         description="Page that displays all users",
+    )
+    
+    app.add_api_route(
+        "/create-document",
+        endpoint=document_view.new_document_view,
+        response_class=HTMLResponse,
+        description="Page that displays Document Creation form",
     )
 
     app.add_api_route(
