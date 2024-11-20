@@ -106,7 +106,7 @@ if __name__ == "__main__":
 
     reaction_event_repository = PostgresReactionEventRepository(sessionmaker)
     
-    automation = DocumentIndexing(document_service)
+    automation = DocumentIndexing(aws_config, document_service)
     
     slack_adapter = SlackAdapter(
         slack_app,
@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
     app.mount("/assets", StaticFiles(directory="public"), name="assets")
     app.mount("/static", StaticFiles(directory="public"), name="static")
-
+    
     app.add_api_route(
         "/",
         endpoint=bot_view.show_list_chatbots,
@@ -290,4 +290,12 @@ if __name__ == "__main__":
         methods=["GET"],
     )
 
+    app.add_api_route(
+        "/index",
+        endpoint=automation.process_documents,
+        response_class=HTMLResponse,
+        description="Page that displays existing chatbots",
+    )
+
+    #automation.process_documents()
     uvicorn.run(app, host="0.0.0.0", port=config.port, access_log=False)
