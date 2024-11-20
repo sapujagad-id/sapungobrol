@@ -14,7 +14,7 @@ services:
       - sapungobrol-stg
   
   sapungobrol-db-stg:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
     container_name: sapungobrol-db-stg
     restart: unless-stopped
     environment:
