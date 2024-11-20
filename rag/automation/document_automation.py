@@ -6,21 +6,35 @@ from rag.vectordb.postgres_handler import PostgresHandler
 from rag.vectordb.postgres_node_storage import PostgresNodeStorage
 from document.document import Document
 from document.service import DocumentServiceV1
+from document.utils import generate_presigned_url
+from document.dto import AWSConfig
+import boto3
 from sqlalchemy import text
 from datetime import datetime
 import pandas as pd
+import requests
 import os
     
 class DocumentIndexing:
-    def __init__(self, service:DocumentServiceV1):
+    def __init__(self, aws_config: AWSConfig, service:DocumentServiceV1):
+
         self.service = service
+        self.aws_config = aws_config
+        self.s3_client = boto3.client(
+            's3',
+            aws_access_key_id=self.aws_config.aws_access_key_id,
+            aws_secret_access_key=self.aws_config.aws_secret_access_key,
+            region_name=self.aws_config.aws_region,
+            endpoint_url=self.aws_config.aws_endpoint_url
+        )
 
     def fetch_documents(self, start_date: datetime = None) -> list:
         doc_filter = {
-            "created_after": start_date.isoformat(),
+            "created_after": start_date.isoformat() if start_date else None,
             "created_before": datetime.now().isoformat()
         }
-        return self.service.get_documents(doc_filter=doc_filter)
+        doc_filter = {key: value for key, value in doc_filter.items() if value is not None}
+        return self.service.get_documents(filter=doc_filter)
 
     def _get_processor(self, document_type: str, document_url: str):
         """Returns the appropriate processor based on document type."""
@@ -47,13 +61,23 @@ class DocumentIndexing:
         })
         return node
 
-    def process_documents(self):
+    def process_documents(self, start_date: datetime = None):
         """Main method to process documents based on their type."""
-        documents = self.fetch_documents()
+        documents = self.fetch_documents(start_date)
         
         for document in documents:
-            document_url = document.generate_presigned_url()
-            processor = self._get_processor(document.type, document_url)
+
+            document_url = generate_presigned_url(document, self.s3_client, self.aws_config.aws_public_bucket_name)
+
+            # Ambil dokumen url
+            response = requests.get(document_url)
+            response.raise_for_status()
+
+            document_path = f"temp.{document.type}"
+            with open(document_path, "wb") as file:
+                file.write(response.content)
+
+            processor = self._get_processor(document.type, document_path)
             
             if document.type == 'csv':
                 summary = processor.process()
@@ -63,6 +87,9 @@ class DocumentIndexing:
             else:
                 nodes = processor.process()
                 nodes = [self._update_metadata(node, document) for node in nodes]
+
+                print(len(nodes))
+
                 self._store_vector(nodes, document.access_level)
 
     def _store_tabular(self, table_name: str, data: pd.DataFrame, document: Document, summary: str):
