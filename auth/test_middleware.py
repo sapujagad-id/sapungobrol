@@ -1,46 +1,36 @@
-import pytest
-from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, JSONResponse
-from unittest.mock import Mock
-from auth.conftest import setup_controller, setup_jwt_secret
-from auth.middleware import login_required
-import bot
-import bot.conftest
-from bot.view import BotViewV1
+def test_public_route_access(client):
+    response = client.get("/public")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Public"}
 
 
-@pytest.fixture()
-def setup_bot_view(setup_service):
-    """Setup the BotViewV1 with mocked controller and service."""
-    view = BotViewV1(bot.conftest.setup_service, bot.conftest.setup_controller, setup_controller)
-    
-    return view
+def test_private_route_access_no_token(client):
+    response = client.get("/private")
+    assert response.status_code == 302
+    assert response.headers["location"] == "/login"
 
-class TestLoginRequired:
-    
-    @pytest.mark.asyncio
-    async def test_login_required_valid_token(self, setup_bot_view, valid_token):
-        request = Mock(spec=Request)
-        request.cookies = {"token": valid_token}
-        response = await setup_bot_view.show_list_chatbots(request=request)
 
-        assert response
+def test_private_route_access_valid_token(client, valid_token):
+    client.cookies.set("token", valid_token)
+    response = client.get("/private")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Private"}
 
-    @pytest.mark.asyncio
-    async def test_login_required_no_token(self, setup_bot_view):
-        request = Mock(spec=Request)
-        request.cookies = {}
 
-        response = await setup_bot_view.show_list_chatbots(request=request)
+def test_private_route_access_no_token(client):
+    response = client.get("/private", follow_redirects=False)  # Disable redirect following
+    assert response.status_code == 307
+    assert response.headers["location"] == "/login"
 
-        assert isinstance(response, RedirectResponse)
-        assert response.status_code == 302
 
-    @pytest.mark.asyncio
-    async def test_login_required_invalid_token(self, invalid_token, setup_bot_view):
-        request = Mock(spec=Request)
-        request.cookies = {"token": invalid_token}
+def test_private_route_access_invalid_token(client, invalid_token):
+    client.cookies.set("token", invalid_token)
+    response = client.get("/private", follow_redirects=False)  # Disable redirect following
+    assert response.status_code == 307
+    assert response.headers["location"] == "/login"
 
-        response = await setup_bot_view.show_list_chatbots(request=request)
-        assert isinstance(response, RedirectResponse)
-        assert response.status_code == 302
+
+def test_dynamic_route_access_no_token(client):
+    response = client.get("/dynamic/123", follow_redirects=False)  # Disable redirect following
+    assert response.status_code == 307
+    assert response.headers["location"] == "/login"
