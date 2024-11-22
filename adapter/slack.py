@@ -10,6 +10,7 @@ from fastapi import Request, Response, HTTPException
 from loguru import logger
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
+from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from auth.repository import AuthRepository
 from bot.service import BotService
@@ -17,11 +18,11 @@ from chat import ChatEngineSelector, ChatEngine
 from chat.exceptions import ChatResponseGenerationError
 from .reaction_event import ReactionEventCreate
 from .reaction_event_repository import ReactionEventRepository
-
+from .slack_dto import WorkspaceData, SlackConfig
+from .slack_repository import WorkspaceDataRepository
 
 class UnableToRespondToInteraction(Exception):
     pass
-
 
 class EmptyQuestion(Exception):
     message = "Your question can't be empty"
@@ -40,15 +41,18 @@ class SlackAdapter:
         engine_selector: ChatEngineSelector,
         bot_service: BotService,
         reaction_event_repository: ReactionEventRepository,
+        workspace_data_repository: WorkspaceDataRepository,
         auth_respository: AuthRepository,
+        slack_config: SlackConfig
     ) -> None:
         self.app = app
         self.engine_selector = engine_selector
         self.bot_service = bot_service
         self.reaction_event_repository = reaction_event_repository
+        self.workspace_data_repository = workspace_data_repository
         self.handler = SlackRequestHandler(self.app)
-        self.app_user_id = self.app.client.auth_test()["user_id"]
         self.auth_respository = auth_respository
+        self.slack_config = slack_config
 
     def logger(self):
         return logger.bind(service="SlackAdapter")
@@ -58,8 +62,24 @@ class SlackAdapter:
     async def handle_events(self, req: Request):  # pragma: no cover
         return await self.handler.handle(req)
 
-    async def oauth_redirect(self, req: Request):  # pragma: no cover
-        return await self.handler.handle(req)
+    async def oauth_redirect(self, req:Request):
+        code = req.query_params.get("code")
+
+        response = self.app.client.oauth_v2_access(
+            client_id=self.slack_config.slack_client_id,
+            client_secret=self.slack_config.slack_client_secret,
+            code=code
+        )
+
+        team_id = response["team"]["id"]
+        access_token = response["access_token"]
+        workspace_data = WorkspaceData(
+            team_id=team_id,
+            access_token=access_token
+        )
+
+        self.workspace_data_repository.create_workspace_data(workspace_data)
+        return "Auth complete!"
 
     @sentry_sdk.trace
     async def handle_interactions(self, req: Request):
@@ -78,6 +98,8 @@ class SlackAdapter:
             if action_id == "ask_question":
                 channel_id = payload["channel"]["id"]
                 user_id = payload["user"]["id"]
+                team_id = payload["team"]["id"]
+                client = self.create_webclient_based_on_team_id(team_id)
                 slug = payload["state"]["values"]["bots"]["select_chatbot"][
                     "selected_option"
                 ]["value"]
@@ -92,6 +114,7 @@ class SlackAdapter:
                         user_id=user_id,
                         slug=slug,
                         question=question,
+                        client=client
                     )
                 except (EmptyQuestion, MissingChatbot) as e:
                     raise HTTPException(status_code=400, detail=e.message)
@@ -146,20 +169,22 @@ class SlackAdapter:
 
         return Response(status_code=200)
 
-    def reaction_added(self, event: Dict[str, any]):
+    def reaction_added(self, event, context):
         reaction = event["reaction"]
+        team_id = context["team_id"]
+        client = self.create_webclient_based_on_team_id(team_id)
 
         # Handle negative reactions
         if reaction == "-1":
-            self.negative_reaction(event=event)
+            self.negative_reaction(event, client)
 
         return Response(status_code=200)
 
-    def negative_reaction(self, event: Dict[str, any]):
+    def negative_reaction(self, event: Dict[str, any], client:WebClient):
         self.logger().info("handle negative reaction")
 
         # Fetch message data
-        res = self.app.client.conversations_history(
+        res = client.conversations_history(
             channel=event["item"]["channel"],
             oldest=event["item"]["ts"],
             inclusive=True,
@@ -202,6 +227,7 @@ class SlackAdapter:
         engine: ChatEngine,
         question: str,
         access_level: int,
+        client:WebClient
     ):
         transaction = sentry_sdk.get_current_scope().transaction
         if transaction is not None:  # pragma: no cover
@@ -222,14 +248,14 @@ class SlackAdapter:
                         query=question, access_level=access_level
                     )
                     self.logger().info("sending generated response")
-                    self.app.client.chat_update(
+                    client.chat_update(
                         channel=channel, ts=ts, text=chatbot_response
                     )
 
                 except ChatResponseGenerationError as e:  # pragma: no cover
                     sentry_sdk.capture_exception(e)
                     self.logger().error(e)
-                    self.app.client.chat_update(
+                    client.chat_update(
                         channel=channel,
                         ts=ts,
                         text="Something went wrong when trying to generate your response.",
@@ -286,7 +312,7 @@ class SlackAdapter:
         }
 
     @sentry_sdk.trace
-    async def ask_v2(self, channel_id: str, user_id: str, slug: str, question: str):
+    async def ask_v2(self, channel_id: str, user_id: str, slug: str, question: str, client:WebClient):
         self.logger().info("answering question")
 
         if question is None or len(question.strip()) < 1:
@@ -297,7 +323,7 @@ class SlackAdapter:
         try:
             chatbot = self.bot_service.get_chatbot_by_slug(slug=slug)
 
-            user_info = self.app.client.users_info(user=user_id)
+            user_info = client.users_info(user=user_id)
             email = user_info["user"]["profile"]["email"]
             user = self.auth_respository.find_user_by_email(email)
 
@@ -309,7 +335,7 @@ class SlackAdapter:
             if chatbot is None:
                 raise MissingChatbot
 
-            response = self.app.client.chat_postMessage(
+            response = client.chat_postMessage(
                 channel=channel_id,
                 text=question,
                 metadata={
@@ -321,7 +347,7 @@ class SlackAdapter:
             )
 
             return await self.process_chatbot_request(
-                chatbot, question, channel_id, response["ts"], access_level
+                chatbot, question, channel_id, response["ts"], client=client, access_level=access_level
             )
 
         except SlackApiError as e:
@@ -333,6 +359,7 @@ class SlackAdapter:
         channel_id = data.get("channel_id")
         user_id = data.get("user_id")
         parameter = data.get("text", "")
+        team_id = data.get("team_id")
 
         parts = parameter.split(" ", 1)
         if len(parts) == 2:
@@ -346,11 +373,21 @@ class SlackAdapter:
 
         try:
             chatbot = self.bot_service.get_chatbot_by_slug(slug=bot_slug)
+            client = self.create_webclient_based_on_team_id(team_id)
+
+            user_info = client.users_info(user=user_id)
+            email = user_info["user"]["profile"]["email"]
+            user = self.auth_respository.find_user_by_email(email)
+
+            if not user:
+                access_level = 1
+            else:
+                access_level = user.access_level
 
             if chatbot is None:
-                return {"text": self.MISSING_CHATBOT_ERROR}
-
-            response = self.app.client.chat_postMessage(
+                raise MissingChatbot
+            
+            response = client.chat_postMessage(
                 channel=channel_id,
                 text=question,
                 metadata={
@@ -361,7 +398,7 @@ class SlackAdapter:
                 },
             )
             return await self.process_chatbot_request(
-                chatbot, question, channel_id, response["ts"]
+                chatbot, question, channel_id, response["ts"], client=client, access_level=access_level
             )
 
         except SlackApiError as e:
@@ -374,12 +411,13 @@ class SlackAdapter:
         question,
         channel_id,
         thread_ts,
+        client:WebClient,
         access_level=1,
         history=None,
     ):
         try:
             self.logger().info("Processing query using chatbot")
-            loading_message = self.app.client.chat_postMessage(
+            loading_message = client.chat_postMessage(
                 channel=channel_id,
                 text=":hourglass_flowing_sand: Processing your request, please wait...",
                 thread_ts=thread_ts,
@@ -401,6 +439,7 @@ class SlackAdapter:
                     "engine": bot_engine,
                     "question": question,
                     "access_level": access_level,
+                    "client": client
                 },
             )
 
@@ -414,7 +453,7 @@ class SlackAdapter:
         except SlackApiError as e:
             if "thread_ts" in locals():
                 try:
-                    self.app.client.chat_delete(channel=channel_id, ts=thread_ts)
+                    client.chat_delete(channel=channel_id, ts=thread_ts)
                 except SlackApiError as delete_error:
                     raise HTTPException(
                         status_code=400, detail=f"Slack API Error: {delete_error}"
@@ -424,8 +463,8 @@ class SlackAdapter:
 
     async def list_bots(self, request: Request):
         data = await request.form()
-
         channel_id = data.get("channel_id")
+        team_id = data.get("team_id")
 
         bot_responses = self.bot_service.get_chatbots(0, 10)
 
@@ -438,7 +477,8 @@ class SlackAdapter:
         )
 
         try:
-            self.app.client.chat_postMessage(channel=channel_id, text=response_text)
+            client = self.create_webclient_based_on_team_id(team_id)
+            client.chat_postMessage(channel=channel_id, text=response_text)
             return Response(status_code=200)
         except SlackApiError as e:
             raise HTTPException(status_code=400, detail=f"Slack API Error : {e}")
@@ -448,23 +488,26 @@ class SlackAdapter:
             self.event_message_replied(event)
 
     def event_message_replied(self, event):
-        parent_message = self.app.client.conversations_history(
+        team_id = event["team"]
+        client = self.create_webclient_based_on_team_id(team_id)
+
+        parent_message = client.conversations_history(
             channel=event["channel"],
             inclusive=True,
             oldest=event["thread_ts"],
             limit=1,
             include_all_metadata=True,
         )
-
         parent_user = parent_message["messages"][0]["user"]
+        user_id = client.auth_test()["user_id"]
 
         if (
-            parent_user == self.app_user_id
+            parent_user == user_id
             and parent_message["messages"][0].get("metadata") != None
         ):
-            self.bot_replied(event, parent_message)
+            self.bot_replied(event, parent_message, client)
 
-    def bot_replied(self, event, parent_message):
+    def bot_replied(self, event, parent_message, client:WebClient):
         bot_slug = parent_message["messages"][0]["metadata"]["event_payload"][
             "bot_slug"
         ]
@@ -473,18 +516,28 @@ class SlackAdapter:
         channel_id = event["channel"]
         chatbot = self.bot_service.get_chatbot_by_slug(slug=bot_slug)
 
-        if chatbot is None:
-            return {"text": self.MISSING_CHATBOT_ERROR}
+        user_id = event["user"]
+        user_info = client.users_info(user=user_id)
+        email = user_info["user"]["profile"]["email"]
+        user = self.auth_respository.find_user_by_email(email)
 
-        history = self.get_chat_history(event)
+        if not user:
+            access_level = 1
+        else:
+            access_level = user.access_level
+
+        if chatbot is None:
+            raise MissingChatbot
+
+        history = self.get_chat_history(event, client)
         return asyncio.run(
             self.process_chatbot_request(
-                chatbot, question, channel_id, thread_ts, history
+                chatbot, question, channel_id, thread_ts, client=client, access_level=access_level, history=history
             )
         )
 
-    def get_chat_history(self, event):
-        all_messages = self.app.client.conversations_replies(
+    def get_chat_history(self, event, client:WebClient):
+        all_messages = client.conversations_replies(
             channel=event["channel"],
             inclusive=True,
             ts=event["thread_ts"],
@@ -516,3 +569,8 @@ class SlackAdapter:
         if "text" in message:
             role = "assistant" if "bot_id" in message else "user"
             result.append({"role": role, "content": message["text"]})
+
+    def create_webclient_based_on_team_id(self, team_id:str) -> WebClient:
+        access_token = self.workspace_data_repository.get_workspace_data_by_team_id(team_id=team_id).access_token
+        return WebClient(token=access_token)
+

@@ -6,6 +6,7 @@ from slack_bolt import App
 from slack_bolt.oauth.oauth_settings import OAuthSettings
 
 from adapter import SlackAdapter, PostgresReactionEventRepository
+from adapter.slack_repository import PostgresWorkspaceDataRepository, CustomInstallationStore
 from adapter.view import SlackViewV1
 from auth.controller import AuthControllerV1
 from auth.repository import PostgresAuthRepository
@@ -19,7 +20,7 @@ from data_source.view import DataSourceViewV1
 from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
 
-from adapter.dto import SlackConfig
+from adapter.slack_dto import SlackConfig
 from document.dto import AWSConfig
 from document.view import DocumentViewV1
 from web.logging import RequestLoggingMiddleware
@@ -76,22 +77,6 @@ if __name__ == "__main__":
 
     sessionmaker = config_db(config.database_url)
 
-    oauth_settings = OAuthSettings(
-        client_id=config.slack_client_id,
-        client_secret=config.slack_client_secret,
-        scopes=config.slack_scopes,
-        redirect_uri=None,
-        install_path="/slack/install",
-        redirect_uri_path="/api/slack/oauth_redirect",
-        state_validation_enabled=False
-    )
-
-    slack_app = App(
-        token=config.slack_bot_token, 
-        signing_secret=config.slack_signing_secret,
-        oauth_settings=oauth_settings,
-    )
-
     auth_repository = PostgresAuthRepository(sessionmaker)
 
     auth_service = AuthServiceV1(
@@ -137,18 +122,40 @@ if __name__ == "__main__":
 
     reaction_event_repository = PostgresReactionEventRepository(sessionmaker)
 
+    workspace_data_repository = PostgresWorkspaceDataRepository(sessionmaker)
+
+    custom_instalation_store = CustomInstallationStore(workspace_data_repository)
+
+    oauth_settings = OAuthSettings(
+        client_id=config.slack_client_id,
+        client_secret=config.slack_client_secret,
+        scopes=config.slack_scopes,
+        redirect_uri=None,
+        install_path="/slack/install",
+        redirect_uri_path="/api/slack/oauth_redirect",
+        installation_store=custom_instalation_store,
+        state_validation_enabled=False
+    )
+
+    slack_app = App(
+        signing_secret=config.slack_signing_secret,
+        oauth_settings=oauth_settings,
+    )
+
     slack_adapter = SlackAdapter(
         slack_app,
         engine_selector,
         bot_service,
         reaction_event_repository,
-        auth_repository
+        workspace_data_repository,
+        auth_repository,
+        slack_config
     )
-
-    slack_view = SlackViewV1(auth_controller, slack_config, config.admin_emails)
 
     slack_app.event("message")(slack_adapter.event_message)
     slack_app.event("reaction_added")(slack_adapter.reaction_added)
+
+    slack_view = SlackViewV1(auth_controller, slack_config, config.admin_emails)
 
     app = FastAPI()
     app.add_middleware(RequestLoggingMiddleware)
@@ -274,7 +281,7 @@ if __name__ == "__main__":
     )
 
     app.add_api_route(
-        "/api/slack/oauth_redirect", endpoint=slack_adapter.oauth_redirect, methods=["GET", "POST"]
+        "/api/slack/oauth_redirect", endpoint=slack_adapter.oauth_redirect, methods=["GET", "POST"], response_model=None 
     )
 
     app.add_api_route(

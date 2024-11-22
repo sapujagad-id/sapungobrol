@@ -10,7 +10,7 @@ from starlette.status import HTTP_403_FORBIDDEN
 from auth.controller import AuthController
 
 from auth.middleware import login_required
-from .dto import SlackConfig
+from .slack_dto import SlackConfig
 
 class SlackView(ABC):
     @abstractmethod

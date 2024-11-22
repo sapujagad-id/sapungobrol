@@ -6,3 +6,7 @@ class SlackConfig(BaseModel):
     slack_client_id: str
     slack_client_secret: str
     slack_scopes: list[str]
+
+class WorkspaceData(BaseModel):
+    team_id: str
+    access_token: str
