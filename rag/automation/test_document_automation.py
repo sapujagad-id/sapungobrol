@@ -167,100 +167,100 @@ def test_process_documents_txt(mock_requests_get, mock_generate_presigned_url, m
     mock_txt_process.assert_called_once()
     document_indexing._store_vector.assert_called_once()
 
-# @patch("rag.automation.document_automation.get_postgres_engine")
-# @patch("pandas.DataFrame.to_sql")
-# @patch("rag.automation.document_automation.text")
-# def test_store_tabular(mock_text, mock_to_sql, mock_get_engine, document, document_indexing):
-#     mock_engine = MagicMock()
-#     mock_get_engine.return_value = mock_engine
-#     mock_connection = MagicMock()
-#     mock_engine.connect.return_value.__enter__.return_value = mock_connection
-#     mock_text.return_value = "MOCKED_QUERY"
+@patch("rag.automation.document_automation.get_postgres_engine")
+@patch("pandas.DataFrame.to_sql")
+@patch("rag.automation.document_automation.text")
+def test_store_tabular(mock_text, mock_to_sql, mock_get_engine, document, document_indexing):
+    mock_engine = MagicMock()
+    mock_get_engine.return_value = mock_engine
+    mock_connection = MagicMock()
+    mock_engine.connect.return_value.__enter__.return_value = mock_connection
+    mock_text.return_value = "MOCKED_QUERY"
 
-#     summary = "This is a test summary."
-#     data = pd.DataFrame({"column1": [1, 2, 3]})
+    summary = "This is a test summary."
+    data = pd.DataFrame({"column1": [1, 2, 3]})
 
-#     instance = document_indexing
-#     instance._store_tabular("test_table", data, document, summary)
+    instance = document_indexing
+    instance._store_tabular("test_table", data, document, summary)
 
-#     mock_to_sql.assert_called_once_with("test_table", con=mock_engine, if_exists="replace", index=False)
-#     assert "access_level" in data.columns
-#     assert all(data["access_level"] == document.access_level)
+    mock_to_sql.assert_called_once_with("test_table", con=mock_engine, if_exists="replace", index=False)
+    assert "access_level" in data.columns
+    assert all(data["access_level"] == document.access_level)
     
-#     mock_text.assert_any_call(
-#         "CREATE TABLE IF NOT EXISTS metadata_table (\n"
-#         "    id SERIAL PRIMARY KEY,\n"
-#         "    document_id VARCHAR NOT NULL,\n"
-#         "    title VARCHAR,\n"
-#         "    type VARCHAR,\n"
-#         "    object_name VARCHAR,\n"
-#         "    created_at TIMESTAMP,\n"
-#         "    updated_at TIMESTAMP,\n"
-#         "    access_level INTEGER,\n"
-#         "    summary TEXT\n"
-#         ");"
-#     )
-#     mock_connection.execute.assert_any_call("MOCKED_QUERY")
+    mock_text.assert_any_call(
+        "CREATE TABLE IF NOT EXISTS metadata_table (\n"
+        "    id SERIAL PRIMARY KEY,\n"
+        "    document_id VARCHAR NOT NULL,\n"
+        "    title VARCHAR,\n"
+        "    type VARCHAR,\n"
+        "    object_name VARCHAR,\n"
+        "    created_at TIMESTAMP,\n"
+        "    updated_at TIMESTAMP,\n"
+        "    access_level INTEGER,\n"
+        "    summary TEXT\n"
+        ");"
+    )
+    mock_connection.execute.assert_any_call("MOCKED_QUERY")
 
-#     mock_text.assert_any_call(
-#         "INSERT INTO metadata_table (document_id, title, type, object_name, created_at, updated_at, access_level, summary)\n"
-#         "VALUES (:document_id, :title, :type, :object_name, :created_at, :updated_at, :access_level, :summary)\n"
-#         "ON CONFLICT (document_id) DO UPDATE\n"
-#         "SET title = EXCLUDED.title,\n"
-#         "    type = EXCLUDED.type,\n"
-#         "    object_name = EXCLUDED.object_name,\n"
-#         "    created_at = EXCLUDED.created_at,\n"
-#         "    updated_at = EXCLUDED.updated_at,\n"
-#         "    access_level = EXCLUDED.access_level,\n"
-#         "    summary = EXCLUDED.summary;"
-#     )
-#     mock_connection.execute.assert_any_call(
-#         "MOCKED_QUERY",
-#         {
-#             "document_id": document.id,
-#             "title": document.title,
-#             "type": document.type,
-#             "object_name": document.object_name,
-#             "created_at": document.created_at,
-#             "updated_at": document.updated_at,
-#             "access_level": document.access_level,
-#             "summary": summary
-#         }
-#     )
+    mock_text.assert_any_call(
+        "INSERT INTO metadata_table (document_id, title, type, object_name, created_at, updated_at, access_level, summary)\n"
+        "VALUES (:document_id, :title, :type, :object_name, :created_at, :updated_at, :access_level, :summary)\n"
+        "ON CONFLICT (document_id) DO UPDATE\n"
+        "SET title = EXCLUDED.title,\n"
+        "    type = EXCLUDED.type,\n"
+        "    object_name = EXCLUDED.object_name,\n"
+        "    created_at = EXCLUDED.created_at,\n"
+        "    updated_at = EXCLUDED.updated_at,\n"
+        "    access_level = EXCLUDED.access_level,\n"
+        "    summary = EXCLUDED.summary;"
+    )
+    mock_connection.execute.assert_any_call(
+        "MOCKED_QUERY",
+        {
+            "document_id": document.id,
+            "title": document.title,
+            "type": document.type,
+            "object_name": document.object_name,
+            "created_at": document.created_at,
+            "updated_at": document.updated_at,
+            "access_level": document.access_level,
+            "summary": summary
+        }
+    )
 
-# @patch("os.getenv")
-# @patch("rag.automation.document_automation.PostgresHandler")
-# @patch("rag.automation.document_automation.PostgresNodeStorage")
-# def test_store_vector(mock_postgres_storage, mock_postgres_handler, mock_getenv, document_indexing):
-#     mock_getenv.side_effect = lambda key, default=None: {
-#         "POSTGRES_DB": "test_db",
-#         "POSTGRES_USER": "test_user",
-#         "POSTGRES_PASSWORD": "test_password",
-#         "POSTGRES_HOST": "localhost",
-#         "POSTGRES_PORT": "5432"
-#     }.get(key, default)
+@patch("os.getenv")
+@patch("rag.automation.document_automation.PostgresHandler")
+@patch("rag.automation.document_automation.PostgresNodeStorage")
+def test_store_vector(mock_postgres_storage, mock_postgres_handler, mock_getenv, document_indexing):
+    mock_getenv.side_effect = lambda key, default=None: {
+        "POSTGRES_DB": "test_db",
+        "POSTGRES_USER": "test_user",
+        "POSTGRES_PASSWORD": "test_password",
+        "POSTGRES_HOST": "localhost",
+        "POSTGRES_PORT": "5432"
+    }.get(key, default)
 
-#     mock_nodes = [MagicMock(text="node text 1"), MagicMock(text="node text 2")]
+    mock_nodes = [MagicMock(text="node text 1"), MagicMock(text="node text 2")]
     
-#     mock_handler_instance = mock_postgres_handler.return_value
-#     mock_storage_instance = mock_postgres_storage.return_value
-#     document_indexing._store_vector(mock_nodes, 5)
+    mock_handler_instance = mock_postgres_handler.return_value
+    mock_storage_instance = mock_postgres_storage.return_value
+    document_indexing._store_vector(mock_nodes, 5)
 
-#     mock_postgres_handler.assert_called_once_with(
-#         db_name="test_db",
-#         user="test_user",
-#         password="test_password",
-#         host="localhost",
-#         port=5432,
-#         dimension=1536
-#     )
-#     mock_postgres_storage.assert_called_once_with(mock_handler_instance)
+    mock_postgres_handler.assert_called_once_with(
+        db_name="test_db",
+        user="test_user",
+        password="test_password",
+        host="localhost",
+        port=5432,
+        dimension=1536
+    )
+    mock_postgres_storage.assert_called_once_with(mock_handler_instance)
 
-#     mock_storage_instance.store_nodes.assert_called_once_with(
-#         ["node text 1", "node text 2"], 5
-#     )
+    mock_storage_instance.store_nodes.assert_called_once_with(
+        ["node text 1", "node text 2"], 5
+    )
 
-#     mock_handler_instance.close.assert_called_once()
+    mock_handler_instance.close.assert_called_once()
 
 @patch("document.document.Document.generate_presigned_url")
 def test_generate_presigned_url(mock_generate_presigned_url):
