@@ -728,7 +728,7 @@ class TestSlackAdapter:
     @pytest.mark.asyncio
     async def test_ask_method(self, mock_slack_adapter, mock_request):
         components = mock_slack_adapter
-        slack_adapter, mock_client, mock_chatbot, mock_request = await self.setup_ask_method_test(
+        slack_adapter, mock_client, _, mock_request = await self.setup_ask_method_test(
             components, mock_request, "12 How are you?", success=True
         )
 
@@ -744,7 +744,7 @@ class TestSlackAdapter:
     @pytest.mark.asyncio
     async def test_ask_method_slack_api_error(self, mock_slack_adapter, mock_request):
         components = mock_slack_adapter
-        slack_adapter, mock_client, mock_chatbot, mock_request = await self.setup_ask_method_test(
+        slack_adapter, mock_client, _, mock_request = await self.setup_ask_method_test(
             components, mock_request, "12 How are you?", success=False
         )
 
@@ -770,13 +770,16 @@ class TestSlackAdapter:
         res = await slack_adapter.ask(mock_request)
         assert res["text"] == "Missing parameter in the request."
 
-    @pytest.mark.asyncio
-    async def test_success_integration_ask_chat(self, mock_slack_adapter, mock_request):
+
+    async def perform_ask_chat_test(
+        self, mock_slack_adapter, mock_request, find_user_by_email_return_value, query_text
+    ):
         components = mock_slack_adapter
         mock_chatbot = components["mock_chatbot"]
         slack_adapter = components["slack_adapter"]
         mock_client = components["mock_client"]
-        self.setup_user_in_auth_repository(slack_adapter)
+
+        slack_adapter.auth_respository.find_user_by_email.return_value = find_user_by_email_return_value
 
         mock_client.users_info.return_value = {
             "user": {
@@ -786,15 +789,24 @@ class TestSlackAdapter:
         mock_client.chat_postMessage.return_value = {"ts": "1234567890.123456"}
         mock_chatbot.generate_response = MagicMock(return_value = "Chatbot Response: Hello!")
 
-        mock_request = await self.common_mock_request(mock_request, "12 How is the weather?")
+        mock_request = await self.common_mock_request(mock_request, query_text)
 
         await slack_adapter.ask(mock_request)
-
         time.sleep(1)
+
+        return components, mock_request, mock_chatbot, mock_client
+
+    @pytest.mark.asyncio
+    async def test_success_integration_ask_chat(self, mock_slack_adapter, mock_request):
+        user_model = self.mock_user_model()
+        _, mock_request, mock_chatbot, mock_client = await self.perform_ask_chat_test(
+            mock_slack_adapter, mock_request, user_model, "12 How is the weather?"
+        )
 
         mock_chatbot.generate_response.assert_called_once_with(
             query='<@U12345678> asked: \n\n"How is the weather?" ', access_level=1
         )
+
         assert mock_client.chat_postMessage.call_count == 2
         mock_client.chat_postMessage.assert_any_call(
             channel="C12345678",
@@ -805,31 +817,16 @@ class TestSlackAdapter:
             channel="C12345678", ts="1234567890.123456", text="Chatbot Response: Hello!"
         )
 
+
     @pytest.mark.asyncio
     async def test_success_integration_ask_chat_no_access_level(
         self, mock_slack_adapter, mock_request
     ):
-        components = mock_slack_adapter
-        mock_chatbot = components["mock_chatbot"]
-        slack_adapter = components["slack_adapter"]
-        mock_client = components["mock_client"]
+        _, mock_request, mock_chatbot, mock_client = await self.perform_ask_chat_test(
+            mock_slack_adapter, mock_request, None, "12 How is the weather?"
+        )
 
-        slack_adapter.auth_respository.find_user_by_email.return_value = None
-
-        mock_client.users_info.return_value = {
-            "user": {
-                "profile": {"display_name": "Test User", "email": "user@broom.id"}
-            }
-        }
-        mock_client.chat_postMessage.return_value = {"ts": "1234567890.123456"}
-        mock_chatbot.generate_response = MagicMock(return_value = "Chatbot Response: Hello!")
-
-        mock_request = await self.common_mock_request(mock_request, "12 How is the weather?")
-
-        await slack_adapter.ask(mock_request)
-
-        time.sleep(1)
-
+        # Assertions
         mock_chatbot.generate_response.assert_called_once_with(
             query='<@U12345678> asked: \n\n"How is the weather?" ', access_level=1
         )
@@ -1070,12 +1067,20 @@ class TestSlackAdapter:
             event, parent_messages, mock_client
         )
 
-    def test_bot_replied(self, mock_slack_adapter):
+    def setup_bot_replied_test(
+        self,
+        mock_slack_adapter,
+        user_in_auth_repository=True,
+    ):
         components = mock_slack_adapter
         slack_adapter = components["slack_adapter"]
         mock_chatbot = components["mock_chatbot"]
         mock_client = components["mock_client"]
-        self.setup_user_in_auth_repository(slack_adapter)
+
+        if user_in_auth_repository:
+            self.setup_user_in_auth_repository(slack_adapter)
+        else:
+            slack_adapter.auth_respository.find_user_by_email.return_value = None
 
         event = {
             "thread_ts": "1355517523.000005",
@@ -1083,7 +1088,6 @@ class TestSlackAdapter:
             "text": "How are you?",
             "user": "UV123456",
         }
-
         parent_messages = {
             "messages": [
                 {
@@ -1096,19 +1100,26 @@ class TestSlackAdapter:
         mock_client.users_info.return_value = {
             "user": {"profile": {"email": "user@example.com"}}
         }
-
         slack_adapter.bot_service.get_chatbot_by_slug.return_value = mock_chatbot
-
-        slack_adapter.process_chatbot_request = AsyncMock(
-            return_value={"status_code": 200}
-        )
-
+        slack_adapter.process_chatbot_request = AsyncMock(return_value={"status_code": 200})
         slack_adapter.get_chat_history = MagicMock(
             return_value=[
                 {"role": "user", "content": "How are you ?"},
                 {"role": "assistant", "content": "Fine"},
             ]
         )
+
+        return components, event, parent_messages, slack_adapter, mock_chatbot, mock_client
+
+    def test_bot_replied(self, mock_slack_adapter):
+        (
+            _,
+            event,
+            parent_messages,
+            slack_adapter,
+            mock_chatbot,
+            mock_client,
+        ) = self.setup_bot_replied_test(mock_slack_adapter, user_in_auth_repository=True)
 
         response = slack_adapter.bot_replied(event, parent_messages, mock_client)
 
@@ -1130,45 +1141,14 @@ class TestSlackAdapter:
         assert response == {"status_code": 200}
 
     def test_bot_replied_no_access_level(self, mock_slack_adapter):
-        components = mock_slack_adapter
-        slack_adapter = components["slack_adapter"]
-        mock_chatbot = components["mock_chatbot"]
-        mock_client = components["mock_client"]
-
-        slack_adapter.auth_respository.find_user_by_email.return_value = None
-
-        event = {
-            "thread_ts": "1355517523.000005",
-            "channel": "C123ABC456",
-            "text": "How are you?",
-            "user": "UV123456",
-        }
-
-        parent_messages = {
-            "messages": [
-                {
-                    "text": '<@U07N64EUJ8Y> asked:\n\n"hello"',
-                    "metadata": {"event_payload": {"bot_slug": "test-bot"}},
-                }
-            ]
-        }
-
-        mock_client.users_info.return_value = {
-            "user": {"profile": {"email": "user@example.com"}}
-        }
-
-        slack_adapter.bot_service.get_chatbot_by_slug.return_value = mock_chatbot
-
-        slack_adapter.process_chatbot_request = AsyncMock(
-            return_value={"status_code": 200}
-        )
-
-        slack_adapter.get_chat_history = MagicMock(
-            return_value=[
-                {"role": "user", "content": "How are you ?"},
-                {"role": "assistant", "content": "Fine"},
-            ]
-        )
+        (
+            components,
+            event,
+            parent_messages,
+            slack_adapter,
+            mock_chatbot,
+            mock_client,
+        ) = self.setup_bot_replied_test(mock_slack_adapter, user_in_auth_repository=False)
 
         response = slack_adapter.bot_replied(event, parent_messages, mock_client)
 
