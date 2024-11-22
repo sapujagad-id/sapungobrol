@@ -1,3 +1,10 @@
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from jose import jwt
+from auth.middleware import AuthMiddleware
+
+
 def test_public_route_access(client):
     response = client.get("/public")
     assert response.status_code == 200
