@@ -1,4 +1,4 @@
-h1:hrMZlMP4NZuHukODAKXItxHQtf4OemArywm4gaNG+mk=
+h1:BOQkPAcczy3xo3YXbRzjLggAiyljIuC7UChgW5bz968=
 20240923095223_create_bots.sql h1:Ear9+yBMXjCdhVcdeq4JL36UIcsMaU6hOlTO2hBzVgs=
 20240925055750_add_bot_message_adapter_column.sql h1:FUEyu5LvMCO0HC+6Gb4H05D3o6sYkj/HdqNTafh5BuE=
 20241010142723_add_slug_field_and_anthropic_enum.sql h1:dT2Cwrb+jMARukbnr9kjrQntr+UnIYT7/7cYkrDhthE=
@@ -8,4 +8,4 @@ h1:hrMZlMP4NZuHukODAKXItxHQtf4OemArywm4gaNG+mk=
 20241110193900_add_data_source.sql h1:UL1AQswdk+Wtr/BROQ5EfacY5tKmyEq9Rnd0u6+mLWk=
 20241111020516_create_reaction_events.sql h1:OSRa56HQ7uELcjbGcj26Ojh/LUh7t7j7nImkjqU0qsg=
 20241115072452_add_access_level_document.sql h1:v9c/9ij3YAwt/4hkUDYSC84NcqwAZ6EvA80MPSdDQNA=
-20241122163908_access_level_defaults.sql h1:soq1VkA2Q8H6plDxk5Tz62qSQpuhocjaM9uY1aK1TT8=
+20241122171021_default_access_level.sql h1:HkuDE+GIguCX9bB4VKX+2OWBKa1Snr1EqoJmWLpAiok=
