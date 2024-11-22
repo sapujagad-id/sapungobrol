@@ -33,7 +33,6 @@ class MissingChatbot(Exception):
 
 
 class SlackAdapter:
-    MISSING_CHATBOT_ERROR = "Whoops. Can't find the chatbot you're looking for."
 
     def __init__(
         self,
@@ -570,7 +569,10 @@ class SlackAdapter:
             role = "assistant" if "bot_id" in message else "user"
             result.append({"role": role, "content": message["text"]})
 
-    def create_webclient_based_on_team_id(self, team_id:str) -> WebClient:
-        access_token = self.workspace_data_repository.get_workspace_data_by_team_id(team_id=team_id).access_token
+    def create_webclient_based_on_team_id(self, team_id: str) -> WebClient:
+        workspace_data = self.workspace_data_repository.get_workspace_data_by_team_id(team_id=team_id)
+        if workspace_data is None:
+            raise ValueError(f"No workspace data found for team_id {team_id}")
+        access_token = workspace_data.access_token
         return WebClient(token=access_token)
 
