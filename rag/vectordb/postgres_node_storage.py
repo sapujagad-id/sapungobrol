@@ -44,7 +44,7 @@ if __name__ == "__main__":  # pragma: no cover
     POSTGRES_PORT = int(os.getenv("POSTGRES_PORT", 5432))
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     ACCESS_LEVEL = 3
-    DOCUMENT_PATH = "C:/Users/arkan/Downloads/University/ppl/sapungobrol/data/ppl_faq (1).txt"
+    DOCUMENT_PATH = "C:/Users/arkan/Downloads/University/ppl/sapungobrol/data/image-based-pdf-sample.pdf"
     
     if not POSTGRES_DB or not POSTGRES_USER or not POSTGRES_PASSWORD or not OPENAI_API_KEY:
         raise EnvironmentError("PostgreSQL and OpenAI credentials must be set.")
@@ -60,9 +60,11 @@ if __name__ == "__main__":  # pragma: no cover
         dimension=1536
     )
 
-    processor = TXTProcessor(DOCUMENT_PATH)
+    processor = PDFProcessor(DOCUMENT_PATH)
     nodes = processor.process()
-
+    
+    print(nodes)
+    
     postgres_storage = PostgresNodeStorage(postgres_handler)
     postgres_storage.store_nodes([node.text for node in nodes], ACCESS_LEVEL)
 
