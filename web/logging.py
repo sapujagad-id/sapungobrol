@@ -1,3 +1,4 @@
+import sentry_sdk
 import time
 import traceback
 
@@ -17,8 +18,11 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-
-        request_id: str = str(uuid4())
+        transaction = sentry_sdk.get_current_scope().transaction
+        if transaction is not None:  # pragma: no cover
+            request_id = transaction.trace_id
+        else:
+            request_id: str = str(uuid4())
 
         with logger.contextualize(trace_id=request_id):
             logging_dict = {"trace_id": request_id}
