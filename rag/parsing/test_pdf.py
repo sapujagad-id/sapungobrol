@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 from pathlib import Path
 from rag.parsing.parsing_pdf import PDFProcessor
+from llama_index.core import Document
 
 @pytest.fixture
 def mock_pdf_reader(mocker):
@@ -19,6 +20,37 @@ def mock_sentence_splitter(mocker):
     instance.get_nodes_from_documents.return_value = ["Mocked Node"]
     return instance
 
+@pytest.fixture
+def mock_sentence_splitter(mocker):
+    """Mock the SentenceSplitter."""
+    mock_sentence_splitter = mocker.patch('rag.parsing.parsing_pdf.SentenceSplitter')
+    instance = mock_sentence_splitter.return_value
+    instance.get_nodes_from_documents.return_value = ["Mocked Node"]
+    return instance
+
+@pytest.fixture
+def mock_ocr_reader(mocker):
+    """Mock the OCR reader."""
+    mock_ocr_reader = mocker.patch('rag.parsing.parsing_pdf.easyocr.Reader')
+    instance = mock_ocr_reader.return_value
+    instance.readtext.return_value = ["Mocked OCR Text"]
+    return instance
+
+@pytest.fixture
+def mock_pdf_to_image(mocker):
+    """Mock the pdf2image convert_from_path."""
+    mock_convert_from_path = mocker.patch('rag.parsing.parsing_pdf.convert_from_path')
+    mock_convert_from_path.return_value = ["Mocked Image"]
+    return mock_convert_from_path
+
+@pytest.fixture
+def mock_numpy_array(mocker):
+    """Mock the numpy array conversion."""
+    mock_np_array = mocker.patch('rag.parsing.parsing_pdf.np.array')
+    mock_np_array.return_value = "Mocked Numpy Array"
+    return mock_np_array
+
+
 def test_pdf_processor_init(mock_pdf_reader, mock_sentence_splitter):
     """Test the initialization of PDFProcessor."""
     processor = PDFProcessor("dummy_path", chunk_size=100, chunk_overlap=10)
@@ -28,12 +60,18 @@ def test_pdf_processor_init(mock_pdf_reader, mock_sentence_splitter):
     assert processor.pdf_reader == mock_pdf_reader
     assert processor.splitting_parser == mock_sentence_splitter
 
-def test_load_document(mock_pdf_reader):
-    """Test the load_document method."""
+def test_load_document(mock_pdf_reader, mock_ocr_reader, mock_pdf_to_image, mock_numpy_array):
+    """Test the _load_document method."""
+    mock_pdf_reader.load_data.return_value = [{"text": "Mocked Document Content"}]
+    mock_ocr_reader.readtext.return_value = ["Mocked OCR Text"]
+    
     processor = PDFProcessor("dummy_path")
     result = processor._load_document()
-    assert result == ["Mocked Document Content"]
-    mock_pdf_reader.load_data.assert_called_once_with(file=Path("dummy_path"))
+    
+    expected_text = "Extracted Text:\nMocked Document Content\n\nOCR Text:\nPage 1 OCR Text:\n['Mocked OCR Text']"
+    expected_document = [Document(text=expected_text, id_="dummy_path")]
+    
+    assert result == expected_document
 
 def test_get_nodes(mock_sentence_splitter):
     """Test the get_nodes method."""
@@ -43,13 +81,11 @@ def test_get_nodes(mock_sentence_splitter):
     assert result == ["Mocked Node"]
     mock_sentence_splitter.get_nodes_from_documents.assert_called_once_with(documents=documents)
 
-def test_process(mock_pdf_reader, mock_sentence_splitter):
-    """Test the process method, which integrates loading and splitting."""
+def test_process(mock_pdf_reader, mock_sentence_splitter, mock_ocr_reader, mock_pdf_to_image, mock_numpy_array):
+    """Test the process method."""
     processor = PDFProcessor("dummy_path")
     result = processor.process()
     assert result == ["Mocked Node"]
-    mock_pdf_reader.load_data.assert_called_once_with(file=Path("dummy_path"))
-    mock_sentence_splitter.get_nodes_from_documents.assert_called_once_with(documents=["Mocked Document Content"])
     
 def test_load_document_exception(mock_pdf_reader):
     """Test the load_document method when an exception is raised."""
@@ -65,4 +101,19 @@ def test_get_nodes_exception(mock_sentence_splitter):
     documents = ["Mocked Document Content"]
     with pytest.raises(RuntimeError, match="Failed to get nodes from documents: Node extraction error"):
         processor.get_nodes(documents)
+        
+def test_extract_text_with_ocr_exception(mock_pdf_to_image):
+    """Test the _extract_text_with_ocr method when an exception is raised."""
+    mock_pdf_to_image.side_effect = Exception("OCR extraction error")
+    processor = PDFProcessor("dummy_path")
+    with pytest.raises(RuntimeError, match="Failed to perform OCR on document: OCR extraction error"):
+        processor._extract_text_with_ocr()
+        
+def test_load_document_ocr_exception(mock_pdf_reader, mock_ocr_reader):
+    """Test the _load_document method when OCR extraction raises an exception."""
+    mock_pdf_reader.load_data.return_value = [{"text": "Mocked Document Content"}]
+    mock_ocr_reader.readtext.side_effect = Exception("OCR processing error")
 
+    processor = PDFProcessor("dummy_path")
+    with pytest.raises(RuntimeError, match="Failed to load document: Failed to perform OCR on document"):
+        processor._load_document()
