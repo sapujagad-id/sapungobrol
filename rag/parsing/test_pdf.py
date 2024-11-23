@@ -101,4 +101,19 @@ def test_get_nodes_exception(mock_sentence_splitter):
     documents = ["Mocked Document Content"]
     with pytest.raises(RuntimeError, match="Failed to get nodes from documents: Node extraction error"):
         processor.get_nodes(documents)
+        
+def test_extract_text_with_ocr_exception(mock_pdf_to_image):
+    """Test the _extract_text_with_ocr method when an exception is raised."""
+    mock_pdf_to_image.side_effect = Exception("OCR extraction error")
+    processor = PDFProcessor("dummy_path")
+    with pytest.raises(RuntimeError, match="Failed to perform OCR on document: OCR extraction error"):
+        processor._extract_text_with_ocr()
+        
+def test_load_document_ocr_exception(mock_pdf_reader, mock_ocr_reader):
+    """Test the _load_document method when OCR extraction raises an exception."""
+    mock_pdf_reader.load_data.return_value = [{"text": "Mocked Document Content"}]
+    mock_ocr_reader.readtext.side_effect = Exception("OCR processing error")
 
+    processor = PDFProcessor("dummy_path")
+    with pytest.raises(RuntimeError, match="Failed to load document: Failed to perform OCR on document"):
+        processor._load_document()
