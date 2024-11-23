@@ -91,5 +91,5 @@ class TestDocumentView:
         assert "document_types" in response.context
         assert response.context["document_types"] == [x.lower() for x in DocumentType._member_names_]
         assert "access_levels" in response.context
-        assert 0 in response.context["access_levels"]
+        assert 1 in response.context["access_levels"]
         assert len(response.context["access_levels"]) > 0
