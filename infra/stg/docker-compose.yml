@@ -33,7 +33,7 @@ services:
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/log:/var/log:ro
-      - ${PWD}/config/promtail-config.yml:/etc/promtail-config.yml:ro
+      - ./promtail-config.yml:/etc/promtail-config.yml:ro
     command: -config.file=/etc/promtail-config.yml
     ports:
       - "5140:5140"
@@ -103,7 +103,7 @@ services:
       USERNAME: ${VMAUTH_USERNAME}
       PASSWORD: ${VMAUTH_PASSWORD}
     volumes:
-      - ./config/vmauth-config.yml:/etc/vmauth/vmauth-config.yml:ro
+      - ./vmauth-config.yml:/etc/vmauth/vmauth-config.yml:ro
     command: -auth.config=/etc/vmauth/vmauth-config.yml
     networks:
       - public-web
