@@ -1,0 +1,136 @@
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: sapungobrol-app
+    restart: unless-stopped
+    volumes: 
+      - .env:/app/.env:ro
+    ports: 
+      - 8000:8000
+    networks:
+      - sapunet
+    depends_on:
+      db:
+        condition: service_healthy
+      ngrok:
+        condition: service_started
+
+  ngrok:
+    image: ngrok/ngrok:3.16.0-alpine
+    container_name: sapungobrol-ngrok
+    restart: unless-stopped
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    command:
+      - http
+      - http://host.docker.internal:8000
+    ports:
+      - 4040:4040
+    networks:
+      - sapunet
+
+  db:
+    image: pgvector/pgvector:0.8.0-pg16
+    container_name: sapungobrol-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - db:/var/lib/postgresql/data
+    networks:
+      - sapunet
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      retries: 4
+      start_period: 5s
+      timeout: 5s
+
+  ### all containers below are not necessary for development
+  ### feel free to comment out    
+
+  promtail:
+    image: grafana/promtail:3.0.1
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/log:/var/log:ro
+      - ${PWD}/config/promtail-config.yml:/etc/promtail-config.yml:ro
+    command: -config.file=/etc/promtail-config.yml
+    ports:
+      - "5140:5140"
+    networks:
+      - sapunet
+
+  .victorialogs:
+    image: docker.io/victoriametrics/victoria-logs:v1.0.0-victorialogs
+    command:
+      - -storageDataPath=/vlogs
+      - -loggerFormat=json
+      - -syslog.listenAddr.tcp=0.0.0.0:8094
+      - -journald.streamFields=_HOSTNAME,_SYSTEMD_UNIT,_PID
+      - -journald.ignoreFields=MESSAGE_ID,INVOCATION_ID,USER_INVOCATION_ID,
+      - -journald.ignoreFields=_BOOT_ID,_MACHINE_ID,_SYSTEMD_INVOCATION_ID,_STREAM_ID,_UID
+    deploy:
+      replicas: 0
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9428/health"]
+      interval: 1s
+      timeout: 1s
+      retries: 10
+    networks:
+      - sapunet
+
+  victorialogs:
+    extends: .victorialogs
+    # ports:
+    #   - '9428:9428'
+    volumes:
+      - victorialogs:/vlogs
+    deploy:
+      replicas: 1
+    networks:
+      - sapunet
+
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:latest
+    ports:
+      - '8428:8428'
+    command:
+      - -storageDataPath=/vmsingle
+      - -loggerFormat=json
+    volumes:
+      - victoriametrics:/vmsingle
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8428/health"]
+      interval: 1s
+      timeout: 1s
+      retries: 10
+    networks:
+      - sapunet
+
+  vmauth:
+    image: docker.io/victoriametrics/vmauth:v1.106.1
+    restart: on-failure
+    environment:
+      USERNAME: ${VMAUTH_USERNAME}
+      PASSWORD: ${VMAUTH_PASSWORD}
+    volumes:
+      - ./config/vmauth-config.yml:/etc/vmauth/vmauth-config.yml:ro
+    command: -auth.config=/etc/vmauth/vmauth-config.yml
+    networks:
+      - sapunet
+    ports:
+      - "9428:8427"
+
+
+volumes:
+  db:
+  victorialogs:
+  victoriametrics:
+
+networks:
+  sapunet:
