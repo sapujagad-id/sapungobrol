@@ -74,9 +74,9 @@ services:
 
   victoriametrics:
     image: victoriametrics/victoria-metrics:latest
-    labels:
-      caddy: sapungobrol.nairlangga.com
-      caddy.reverse_proxy: "{{upstreams 8428}}"
+    # labels:
+    #   caddy: sapungobrol.nairlangga.com
+    #   caddy.reverse_proxy: "{{upstreams 8428}}"
     ports:
       - '8428:8428'
     command:
@@ -96,9 +96,9 @@ services:
   vmauth:
     image: docker.io/victoriametrics/vmauth:v1.106.1
     restart: on-failure
-    labels:
-      caddy: sapungobrol.nairlangga.com
-      caddy.reverse_proxy: "{{upstreams 9428}}"
+    # labels:
+    #   caddy: sapungobrol.nairlangga.com
+    #   caddy.reverse_proxy: "{{upstreams 9428}}"
     environment:
       USERNAME: ${VMAUTH_USERNAME}
       PASSWORD: ${VMAUTH_PASSWORD}
