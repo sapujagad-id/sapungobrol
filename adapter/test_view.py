@@ -5,7 +5,7 @@ from jose import jwt
 from datetime import datetime, timedelta, timezone
 
 from .view import SlackViewV1
-from .dto import SlackConfig
+from .slack_dto import SlackConfig
 from auth.controller import AuthControllerV1
 from auth.repository import PostgresAuthRepository
 from auth.service import AuthServiceV1
