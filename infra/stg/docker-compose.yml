@@ -34,6 +34,7 @@ services:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/log:/var/log:ro
       - ./promtail-config.yml:/etc/promtail-config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
     command: -config.file=/etc/promtail-config.yml
     ports:
       - "5140:5140"
@@ -63,8 +64,6 @@ services:
 
   sapungobrol-victorialogs:
     extends: .victorialogs
-    # ports:
-    #   - '9428:9428'
     volumes:
       - victorialogs:/vlogs
     deploy:
@@ -74,9 +73,6 @@ services:
 
   sapungobrol-victoriametrics:
     image: victoriametrics/victoria-metrics:latest
-    # labels:
-    #   caddy: sapungobrol.nairlangga.com
-    #   caddy.reverse_proxy: "{{upstreams 8428}}"
     ports:
       - '8428:8428'
     command:
