@@ -55,3 +55,10 @@ CREATE TABLE reaction_events (
     message TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE TABLE workspace_data (
+    id UUID PRIMARY KEY,            
+    team_id VARCHAR(255) NOT NULL,  
+    access_token VARCHAR(255) NOT NULL,
+    installed_at  TIMESTAMPTZ DEFAULT NOW()
+);
