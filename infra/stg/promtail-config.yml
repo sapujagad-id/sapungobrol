@@ -39,3 +39,7 @@ scrape_configs:
         labels:
           job: containerlogs
           __path__: /var/lib/docker/containers/*/*log
+    relabel_configs:
+      - source_labels: [container_name]
+        regex: ^(sapungobrol)$
+        action: keep
