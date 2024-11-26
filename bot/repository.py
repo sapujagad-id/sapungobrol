@@ -4,15 +4,22 @@ from loguru import logger
 
 from datetime import datetime
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
-from sqlalchemy import Column, Enum, Uuid, String, Text, DateTime, func
+from sqlalchemy import Column, Enum, Uuid, String, Text, DateTime, func, ForeignKey
 
 from bot.helper import relative_time
 
-from adapter.reaction_event_repository import ReactionEventModel, ThreadModel
+from adapter.reaction_event_repository import ReactionEventModel
 from .bot import BotUpdate, MessageAdapter, ModelEngine, BotResponse, BotCreate
+
 
 Base = declarative_base()
 
+class ThreadModel(Base):
+    __tablename__ = "threads"
+
+    id = Column(Uuid, primary_key=True)
+    bot_id = Column(Uuid, ForeignKey("bots.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class BotModel(Base):
     """
@@ -117,20 +124,55 @@ class PostgresBotRepository(BotRepository):
                 
     def get_dashboard_data(self, bot_id: UUID):
         with self.create_session() as session:
-            # Fetch the last 5 threads
-            last_threads = (
-                session.query(ReactionEventModel.message, func.count(ReactionEventModel.id).label("negative_count"))
-                .filter(ReactionEventModel.bot_id == bot_id, ReactionEventModel.reaction == 'NEGATIVE')
-                .group_by(ReactionEventModel.message)
-                .order_by(ReactionEventModel.created_at.desc())
-                .limit(5)
-                .all()
-            )
-            
-            # Total cumulative threads for the bot
-            cumulative_threads = session.query(func.count(ThreadModel.id)).filter(ThreadModel.bot_id == bot_id).scalar()
+            try:
+                # Fetch the last 5 threads
+                last_threads_subquery = (
+                    session.query(
+                        ReactionEventModel.message,
+                        ReactionEventModel.reaction,
+                        ReactionEventModel.created_at,
+                        func.row_number()
+                        .over(
+                            partition_by=ReactionEventModel.message,
+                            order_by=ReactionEventModel.created_at.desc()
+                        )
+                        .label("row_num"),
+                    )
+                    .filter(
+                        ReactionEventModel.bot_id == bot_id,
+                        ReactionEventModel.reaction == "NEGATIVE",
+                    )
+                    .subquery()
+                )
 
-            return {
-                "last_threads": [{"thread": t[0], "negative_count": t[1]} for t in last_threads],
-                "cumulative_threads": cumulative_threads
-            }
+                last_threads = (
+                    session.query(
+                        last_threads_subquery.c.message,
+                        func.count(last_threads_subquery.c.message).label(
+                            "negative_count"
+                        ),
+                    )
+                    .filter(last_threads_subquery.c.row_num == 1)  # Only the latest row for each message
+                    .group_by(last_threads_subquery.c.message)
+                    .limit(5)
+                    .all()
+                )
+
+                # Total cumulative threads for the bot
+                cumulative_threads = (
+                    session.query(func.count(ThreadModel.id))
+                    .filter(ThreadModel.bot_id == bot_id)
+                    .scalar()
+                )
+
+                return {
+                    "last_threads": [
+                        {"thread": t[0], "negative_count": t[1]} for t in last_threads
+                    ],
+                    "cumulative_threads": cumulative_threads or 0,  # Ensure it's valid
+                }
+            except Exception as e:
+                self.logger.error(
+                    f"Error in get_dashboard_data for bot_id: {bot_id}. Error: {str(e)}"
+                )
+                raise

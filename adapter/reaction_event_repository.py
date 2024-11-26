@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 from datetime import datetime
 from loguru import logger
-from sqlalchemy import Column, Uuid, Enum, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Uuid, Enum, String, Text, DateTime
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from uuid import uuid4
 
@@ -9,14 +9,6 @@ from bot.bot import MessageAdapter
 from .reaction_event import ReactionEventCreate, Reaction
 
 Base = declarative_base()
-
-
-class ThreadModel(Base):
-    __tablename__ = "threads"
-
-    id = Column(Uuid, primary_key=True)
-    bot_id = Column(Uuid, ForeignKey("bots.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
 
 class ReactionEventModel(Base):
     __tablename__ = "reaction_events"
