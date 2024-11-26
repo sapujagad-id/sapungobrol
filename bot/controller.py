@@ -3,6 +3,7 @@ from fastapi import HTTPException
 
 from .bot import BotCreate, BotNotFound, BotUpdate, NameIsRequired, SlugIsExist, SlugIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
 from .service import BotService
+from loguru import logger
 
 
 class BotController(ABC):
@@ -29,6 +30,7 @@ class BotControllerV1(BotController):
     def __init__(self, service: BotService) -> None:
         super().__init__()
         self.service = service
+        self.logger = logger.bind(service="BotControllerV1")
 
     def fetch_chatbots(self, skip = 0, limit:int = 10):
         return self.service.get_chatbots(skip, limit)
@@ -90,6 +92,10 @@ class BotControllerV1(BotController):
     
     def get_dashboard_data(self, bot_id: str):
         try:
-            return self.service.get_dashboard_data(bot_id)
-        except Exception:
+            data = self.service.get_dashboard_data(bot_id)
+            if not data:  # Check if data is None or empty
+                raise HTTPException(status_code=404, detail=f"No data found for bot_id: {bot_id}")
+            return data
+        except Exception as e:
+            self.logger.error(f"Failed to fetch dashboard data for bot_id: {bot_id}. Error: {str(e)}")
             raise HTTPException(status_code=500, detail="Failed to fetch dashboard data")
