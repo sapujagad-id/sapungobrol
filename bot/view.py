@@ -89,6 +89,16 @@ class BotViewV1(BotView):
                 "data_source":["docs1","docs2","docs3"]
             }
         )
+        
+    @login_required()
+    def show_dashboard(self, request: Request):
+        user_profile = self.auth_controller.user_profile_google(request)
+        bots = self.controller.fetch_chatbots()
+        return self.templates.TemplateResponse(
+            request=request,
+            name="dashboard.html",
+            context={"bots": bots, "user_profile": user_profile.get("data")}
+        )
     
     def show_login(self, request: Request):
         return self.templates.TemplateResponse(
