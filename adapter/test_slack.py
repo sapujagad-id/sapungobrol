@@ -32,7 +32,15 @@ class TestSlackAdapter:
             mock_engine_selector.select_engine.return_value = ChatOpenAI(mock_retriever)
             mock_chatbot = mock_engine_selector.select_engine()
             mock_bot_service = MagicMock(spec=BotService)
+            
             mock_reaction_event_repository = MagicMock(spec=ReactionEventRepository)
+            mock_session = MagicMock()  # Simulates the session object
+            mock_create_session = MagicMock(
+                __enter__=MagicMock(return_value=mock_session),  # Mock entering the context
+                __exit__=MagicMock(return_value=None),  # Mock exiting the context
+            )
+            mock_reaction_event_repository.create_session = MagicMock(return_value=mock_create_session)
+                
             mock_auth_repository = MagicMock(spec=AuthRepository)
             mock_workspace_data_repository = MagicMock(spec=WorkspaceDataRepository)
             mock_slack_config = SlackConfig(
