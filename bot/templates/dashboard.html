@@ -19,7 +19,9 @@
             <label for="bot-select" class="block text-gray-700 text-sm font-bold mb-2">Select Bot:</label>
             <select id="bot-select" class="shadow border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
                 {% for bot in bots %}
-                    <option value="{{ bot.id }}">{{ bot.name }}</option>
+                    <option value="{{ bot.id }}" {% if bot.id == selected_bot_id %}selected{% endif %}>
+                        {{ bot.name }}
+                    </option>
                 {% endfor %}
             </select>
         </div>
@@ -40,31 +42,30 @@
         const botSelect = document.getElementById('bot-select');
         const chartCanvas = document.getElementById('dashboard-chart').getContext('2d');
         const cumulativeThreadsEl = document.getElementById('cumulative-threads');
-
+    
         let chart;
-
+    
         async function fetchDashboardData(botId) {
             const res = await fetch(`/api/dashboard/${botId}`);
             const data = await res.json();
-
             return data;
         }
-
+    
         async function updateDashboard() {
             const botId = botSelect.value;
-
+    
             // Fetch Data
             const data = await fetchDashboardData(botId);
-
+    
             // Update Cumulative Threads
             cumulativeThreadsEl.textContent = data.cumulative_threads;
-
+    
             // Update Chart
             const labels = data.last_threads.map(t => t.thread);
             const negativeCounts = data.last_threads.map(t => t.negative_count);
-
+    
             if (chart) chart.destroy();
-
+    
             chart = new Chart(chartCanvas, {
                 type: 'bar',
                 data: {
@@ -87,11 +88,12 @@
                 }
             });
         }
-
-        botSelect.addEventListener('change', updateDashboard);
-
-        // Initialize
+    
+        // Initialize the dashboard for the preselected bot ID
         updateDashboard();
+    
+        // Add event listener for dropdown changes
+        botSelect.addEventListener('change', updateDashboard);
     </script>
 </body>
 </html>
