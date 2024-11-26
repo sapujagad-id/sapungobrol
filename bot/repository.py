@@ -4,10 +4,11 @@ from loguru import logger
 
 from datetime import datetime
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
-from sqlalchemy import Column, Enum, Uuid, String, Text, DateTime
+from sqlalchemy import Column, Enum, Uuid, String, Text, DateTime, func
 
 from bot.helper import relative_time
 
+from adapter.reaction_event_repository import ReactionEventModel, ThreadModel
 from .bot import BotUpdate, MessageAdapter, ModelEngine, BotResponse, BotCreate
 
 Base = declarative_base()
@@ -113,3 +114,23 @@ class PostgresBotRepository(BotRepository):
                 session.delete(bot)
 
                 session.commit()
+                
+    def get_dashboard_data(self, bot_id: UUID):
+        with self.create_session() as session:
+            # Fetch the last 5 threads
+            last_threads = (
+                session.query(ReactionEventModel.message, func.count(ReactionEventModel.id).label("negative_count"))
+                .filter(ReactionEventModel.bot_id == bot_id, ReactionEventModel.reaction == 'NEGATIVE')
+                .group_by(ReactionEventModel.message)
+                .order_by(ReactionEventModel.created_at.desc())
+                .limit(5)
+                .all()
+            )
+            
+            # Total cumulative threads for the bot
+            cumulative_threads = session.query(func.count(ThreadModel.id)).filter(ThreadModel.bot_id == bot_id).scalar()
+
+            return {
+                "last_threads": [{"thread": t[0], "negative_count": t[1]} for t in last_threads],
+                "cumulative_threads": cumulative_threads
+            }
