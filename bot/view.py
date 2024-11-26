@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 from fastapi import Request
+from fastapi.exceptions import HTTPException
 from fastapi.templating import Jinja2Templates
 from jinja2 import Environment
 import jinja2
@@ -98,6 +99,26 @@ class BotViewV1(BotView):
             request=request,
             name="dashboard.html",
             context={"bots": bots, "user_profile": user_profile.get("data")}
+        )
+        
+    @login_required()
+    def show_dashboard_with_id(self, request: Request, bot_id: str):
+        user_profile = self.auth_controller.user_profile_google(request)
+        bots = self.controller.fetch_chatbots()
+
+        # Validate if bot_id exists
+        selected_bot = next((bot for bot in bots if bot.id == bot_id), None)
+        if not selected_bot:
+            raise HTTPException(status_code=404, detail="Bot not found")
+
+        return self.templates.TemplateResponse(
+            request=request,
+            name="dashboard.html",
+            context={
+                "bots": bots,
+                "user_profile": user_profile.get("data"),
+                "selected_bot_id": bot_id,  # Pass selected bot ID to the template
+            }
         )
     
     def show_login(self, request: Request):
