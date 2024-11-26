@@ -336,5 +336,20 @@ if __name__ == "__main__":
         response_class=RedirectResponse,
         methods=["GET"],
     )
+    
+    app.add_api_route(
+        "/dashboard",
+        endpoint=bot_view.show_dashboard,
+        response_class=HTMLResponse,
+        description="Dashboard Page"
+    )
+
+    
+    app.add_api_route(
+        "/api/dashboard/{bot_id}",
+        endpoint=bot_controller.get_dashboard_data,
+        methods=["GET"],
+        name="Dashboard Data for Bot"
+    )
 
     uvicorn.run(app, host="0.0.0.0", port=config.port, access_log=False)

@@ -3,6 +3,7 @@ from loguru import logger
 
 from .repository import BotRepository
 from .bot import BotResponse, BotCreate, BotUpdate, SlugIsExist, BotNotFound
+from uuid import UUID
 
 
 class BotService(ABC):
@@ -81,3 +82,6 @@ class BotServiceV1(BotService):
     def get_chatbot_by_slug(self, slug):
         bot = self.repository.find_bot_by_slug(slug)
         return bot if bot else None
+    
+    def get_dashboard_data(self, bot_id: UUID):
+        return self.repository.get_dashboard_data(bot_id)
