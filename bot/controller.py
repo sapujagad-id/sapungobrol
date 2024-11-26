@@ -87,3 +87,9 @@ class BotControllerV1(BotController):
     def check_slug_exist(self, slug: str):
         exists = self.service.is_slug_exist(slug)
         return {"detail": exists}
+    
+    def get_dashboard_data(self, bot_id: str):
+        try:
+            return self.service.get_dashboard_data(bot_id)
+        except Exception:
+            raise HTTPException(status_code=500, detail="Failed to fetch dashboard data")
