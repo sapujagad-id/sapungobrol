@@ -39,7 +39,7 @@ class UserViewV1(UserView):
                 name="view-users.html",
                 context={
                     "users": users,
-                    "admin_emails": self.admin_emails,
+                    "is_admin": request.cookies.get("is_admin"),
                     "user_profile": user_profile.get("data")
             },
         )

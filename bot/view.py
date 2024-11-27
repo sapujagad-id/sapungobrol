@@ -53,7 +53,7 @@ class BotViewV1(BotView):
             request=request, 
             name="list.html", 
             context={"bots": bots,
-                    "admin_emails": self.admin_emails,
+                    "is_admin": request.cookies.get("is_admin"),
                      "user_profile": user_profile.get("data")
                      },
         )
@@ -68,7 +68,7 @@ class BotViewV1(BotView):
             context =   {   
                             "model_engines": [e.value for e in ModelEngine],
                             "bot":bot,
-                            "admin_emails": self.admin_emails,
+                            "is_admin": request.cookies.get("is_admin"),
                             "message_adapters": [e.value for e in MessageAdapter],
                             "user_profile": user_profile.get("data"),
                             "data_source":["docs1","docs2","docs3"]
@@ -84,7 +84,7 @@ class BotViewV1(BotView):
             context={   
                 "model_engines": [e.value for e in ModelEngine],
                 "message_adapters": [e.value for e in MessageAdapter],
-                "admin_emails": self.admin_emails,
+                "is_admin": request.cookies.get("is_admin"),
                 "user_profile": user_profile.get("data"),
                 "data_source":["docs1","docs2","docs3"]
             }

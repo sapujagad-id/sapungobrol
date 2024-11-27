@@ -46,7 +46,7 @@ class SlackViewV1(SlackView):
             name="slack-install.html",
             context={
                 "oauth_url": oauth_url,
-                "admin_emails": self.admin_emails,
+                "is_admin": request.cookies.get("is_admin"),
                 "user_profile": user_profile.get("data")
             }
         )

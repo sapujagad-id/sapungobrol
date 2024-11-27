@@ -44,6 +44,7 @@ class AuthControllerV1(AuthController):
     response = RedirectResponse("/")
     try:
       response.delete_cookie("token")
+      response.delete_cookie("is_admin")
     except:
       pass
     return response
