@@ -32,18 +32,17 @@ class BotView(ABC):
     
 # note: authentication not impl yet
 class BotViewV1(BotView):    
-    def __init__(self, controller: BotController, service: BotService, auth_controller: AuthController, admin_emails=list[str]) -> None:
+    def __init__(self, controller: BotController, service: BotService, auth_controller: AuthController) -> None:
         super().__init__()
         self.templates = Jinja2Templates(
             env=Environment(
-                loader=jinja2.FileSystemLoader('bot/templates'),
+                loader=jinja2.FileSystemLoader(['bot/templates', 'components/templates']),
                 autoescape=True,
             )
         )
         self.controller = controller
         self.service = service
         self.auth_controller = auth_controller
-        self.admin_emails = admin_emails
     
     @login_required()
     def show_list_chatbots(self, request: Request):

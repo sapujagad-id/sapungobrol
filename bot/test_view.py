@@ -17,7 +17,7 @@ class TestBotViews:
         'bots': setup_bots
         }
         env = jinja2.Environment(
-        loader = jinja2.FileSystemLoader('bot/templates'),
+        loader = jinja2.FileSystemLoader(['bot/templates', 'components/templates']),
         autoescape = True,
         )
         rendered = env.get_template('list.html').render(context)
@@ -41,7 +41,7 @@ class TestBotViews:
         'bots': []
         }
         env = jinja2.Environment(
-        loader = jinja2.FileSystemLoader('bot/templates'),
+        loader = jinja2.FileSystemLoader(['bot/templates', 'components/templates']),
         autoescape = True,
         )
         rendered = env.get_template('list.html').render(context)
@@ -70,7 +70,7 @@ class TestBotViews:
 
         # Setup Jinja2 environment and load the template
         env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader('bot/templates'),
+            loader=jinja2.FileSystemLoader(['bot/templates', 'components/templates']),
             autoescape=True,
         )
         rendered = env.get_template('create-chatbot.html').render(context)
@@ -89,7 +89,7 @@ class TestBotViews:
         }
 
         env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader('bot/templates'),
+            loader=jinja2.FileSystemLoader(['bot/templates', 'components/templates']),
             autoescape=True,
         )
         rendered = env.get_template('create-chatbot.html').render(context)
@@ -122,7 +122,7 @@ class TestBotViews:
         }
 
         env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader('bot/templates'),
+            loader=jinja2.FileSystemLoader(['bot/templates', 'components/templates']),
             autoescape=True,
         )
         rendered = env.get_template('edit-chatbot.html').render(context)

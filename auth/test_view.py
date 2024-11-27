@@ -10,7 +10,7 @@ class TestUserView:
 
     @pytest.mark.asyncio
     async def test_view_users_success(self, setup_controller, setup_service, setup_jwt_secret):
-        user_view = UserViewV1(controller=setup_controller, service=setup_service, admin_emails=["admin@broom.id", ])
+        user_view = UserViewV1(controller=setup_controller, service=setup_service)
 
         request = Mock(spec=Request)
 

@@ -22,7 +22,7 @@ class SlackViewV1(SlackView):
         super().__init__()
         self.templates = Jinja2Templates(
             env=Environment(
-                loader=jinja2.FileSystemLoader(["adapter/templates", "bot/templates"]),
+                loader=jinja2.FileSystemLoader(["adapter/templates", "components/templates"]),
                 autoescape=True,
             )
         )
