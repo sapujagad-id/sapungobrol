@@ -26,11 +26,11 @@ class ReactionEventModel(Base):
 
 class ReactionEventRepository(ABC):
     @abstractmethod
-    def create_reaction_event(self, event_create: ReactionEventCreate):
+    def create_reaction_event(self, event_create: ReactionEventCreate): # pragma: no cover
         pass
 
     @abstractmethod
-    def delete_reaction_event(reaction: Reaction, source_adapter_message_id: str, source_adapter_user_id: str):
+    def delete_reaction_event(self, reaction: Reaction, source_adapter_message_id: str, source_adapter_user_id: str): # pragma: no cover
         pass
 
 
