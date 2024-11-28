@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, mock_open
 from datetime import datetime
 from rag.parsing.parsing_csv import CSVProcessor
 from rag.parsing.parsing_pdf import PDFProcessor
@@ -9,6 +9,7 @@ from document.document import Document
 from document.service import DocumentServiceV1
 from sqlalchemy import text
 import pandas as pd
+import os
 
 @pytest.fixture
 def mock_service():
@@ -277,3 +278,27 @@ def test_generate_presigned_url(mock_generate_presigned_url):
     url =  mock_generate_presigned_url.return_value
     assert isinstance(url, str), "Expected a string for the presigned URL"
     assert url == "", "Expected the presigned URL to be an empty string in placeholder implementation"
+
+@patch("rag.automation.document_automation.requests.get")
+@patch("builtins.open", new_callable=mock_open)
+def test_request_url(mock_open, mock_requests_get, document_indexing):
+    # Mock the response of requests.get
+    mock_response = MagicMock()
+    mock_response.content = b"mocked content"
+    mock_response.status_code = 200
+    mock_requests_get.return_value = mock_response
+
+    # Call the _request_url method
+    file_path = document_indexing._request_url("pdf", "https://dummy_url")
+
+    # Verify requests.get was called with the correct URL
+    mock_requests_get.assert_called_once_with("https://dummy_url")
+
+    # Verify open was called with the constructed file name
+    mock_open.assert_called_once_with("temp.pdf", "wb")
+
+    # Verify file.write was called with the correct content
+    mock_open().write.assert_called_once_with(b"mocked content")
+
+    # Ensure the returned path is correct
+    assert file_path == "temp.pdf"
