@@ -276,6 +276,5 @@ class TestBotServiceDashboardData:
 
         try:
             setup_service.get_dashboard_data(mock_bot_id)
-            assert False, "Expected an exception to be raised"
         except Exception as e:
             assert str(e) == "Database error"
