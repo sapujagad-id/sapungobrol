@@ -8,6 +8,7 @@ from .bot import BotCreate, BotNotFound, BotUpdate, NameIsRequired, SlugIsExist,
 from .service import BotService, BotServiceV1
 from .repository import BotModel, PostgresBotRepository
 from .controller import BotControllerV1
+from unittest.mock import MagicMock
 
 class TestBotServiceGetBotById:
     def test_find_bot_by_id_success(self, setup_service: BotService):
@@ -231,3 +232,50 @@ class TestBotServiceDelete:
     def test_delete_chatbot_not_found(self, setup_service: BotService):
         with pytest.raises(BotNotFound):
             setup_service.delete_chatbot(uuid4())
+            
+class TestBotServiceDashboardData:
+    def test_get_dashboard_data_success(self, setup_service):
+        mock_bot_id = uuid4()
+
+        mock_dashboard_data = {
+            "last_threads": [
+                {"thread": "message1", "negative_count": 3},
+                {"thread": "message2", "negative_count": 5},
+            ],
+            "cumulative_threads": 10,
+        }
+
+        setup_service.repository.get_dashboard_data = MagicMock(return_value=mock_dashboard_data)
+
+        result = setup_service.get_dashboard_data(mock_bot_id)
+
+        assert "last_threads" in result
+        assert "cumulative_threads" in result
+        assert len(result["last_threads"]) == 2
+        assert result["cumulative_threads"] == 10
+
+    def test_get_dashboard_data_no_threads(self, setup_service):
+        mock_bot_id = uuid4()
+
+        mock_dashboard_data = {
+            "last_threads": [],
+            "cumulative_threads": 0,
+        }
+
+        setup_service.repository.get_dashboard_data = MagicMock(return_value=mock_dashboard_data)
+
+        result = setup_service.get_dashboard_data(mock_bot_id)
+
+        assert result["last_threads"] == []
+        assert result["cumulative_threads"] == 0
+
+    def test_get_dashboard_data_error_handling(self, mocker, setup_service):
+        mock_bot_id = uuid4()
+
+        mocker.patch.object(setup_service.repository, 'get_dashboard_data', side_effect=Exception("Database error"))
+
+        try:
+            setup_service.get_dashboard_data(mock_bot_id)
+            assert False, "Expected an exception to be raised"
+        except Exception as e:
+            assert str(e) == "Database error"
