@@ -201,22 +201,18 @@ class TestBotViews:
     async def test_show_create_chatbot(self, setup_view, setup_service, dummy_user_profile, setup_jwt_secret):
         view = setup_view
 
-        # Mock the user_profile_google method
         view.auth_controller.user_profile_google = Mock(return_value=dummy_user_profile)
 
-        # Create a mock request
         request = Mock(spec=Request)
         token = jwt.encode({
             "sub": "test_sub",
             "email": "test@broom.id",
             "exp": datetime.now() + timedelta(hours=3)
-        }, setup_jwt_secret)  # Use the fixture's JWT secret
+        }, setup_jwt_secret) 
         request.cookies = {'token': token}
 
-        # Call the show_edit_chatbot method
         response = await view.show_create_chatbots(request=request, testing=True)
 
-        # Assertions
         assert response.template.name == "create-chatbot.html"
         assert response.context["user_profile"].get('email') == dummy_user_profile.get("data")["email"]
 
@@ -225,7 +221,6 @@ class TestBotViews:
         view = setup_view
         bot_id = str(uuid4())
 
-        # Mock the service's get_chatbot_by_id method
         setup_service.get_chatbot_by_id = Mock(return_value={
             'id': bot_id,
             'name': 'Test Bot',
@@ -234,22 +229,18 @@ class TestBotViews:
             'adapter': 'Slack',
         })
 
-        # Mock the user_profile_google method
         view.auth_controller.user_profile_google = Mock(return_value=dummy_user_profile)
 
-        # Create a mock request
         request = Mock(spec=Request)
         token = jwt.encode({
             "sub": "test_sub",
             "email": "test@broom.id",
             "exp": datetime.now() + timedelta(hours=3)
-        }, setup_jwt_secret)  # Use the fixture's JWT secret
+        }, setup_jwt_secret)
         request.cookies = {'token': token}
 
-        # Call the show_edit_chatbot method
         response = await view.show_edit_chatbot(bot_id, request=request, testing=True)
 
-        # Assertions
         assert response.template.name == "edit-chatbot.html"
         assert "bot" in response.context
         assert response.context["bot"]["name"] == 'Test Bot'
@@ -259,13 +250,10 @@ class TestBotViews:
     def test_show_login(self, setup_view):
         view = setup_view
 
-        # Create a mock request
         request = Mock(spec=Request)
 
-        # Call the view method
         response = view.show_login(request)
 
-        # Check that the correct template is used and context is passed
         assert response.template.name == "login.html"
 
         rendered = response.body.decode()  
@@ -275,7 +263,6 @@ class TestBotViews:
     async def test_show_dashboard(self, setup_view, dummy_user_profile, setup_jwt_secret):
         view = setup_view
 
-        # Mock dependencies
         view.controller.fetch_chatbots = Mock(return_value=[
             {"id": uuid4(), "name": "Bot A", "model": "OpenAI", "adapter": "Slack"},
             {"id": uuid4(), "name": "Bot B", "model": "GPT-3", "adapter": "Discord"},
@@ -284,10 +271,8 @@ class TestBotViews:
 
         view = setup_view
 
-        # Create a mock request
         request = Mock(spec=Request)
 
-        # Encode a token using the provided JWT secret from the fixture
         token = jwt.encode({
             "sub": "test_sub",
             "email": "test@broom.id",
@@ -296,10 +281,8 @@ class TestBotViews:
 
         request.cookies = {'token': token}
         
-        # Call the method
         response = await view.show_dashboard(request, testing=True)
 
-        # Assertions
         assert response.template.name == "dashboard.html"
         assert "bots" in response.context
         assert len(response.context["bots"]) == 2
@@ -310,14 +293,12 @@ class TestBotViews:
         view = setup_view
         bot_id = str(uuid4())
 
-        # Mocking fetch_chatbots to return objects with attributes
         view.controller.fetch_chatbots = Mock(return_value=[
             Mock(id=bot_id, name="Bot A", model="OpenAI", adapter="Slack"),
             Mock(id=str(uuid4()), name="Bot B", model="GPT-3", adapter="Discord"),
         ])
         view.auth_controller.user_profile_google = Mock(return_value=dummy_user_profile)
 
-        # Mocking the request
         request = Mock()
         request.cookies = {
             "token": jwt.encode({
@@ -327,10 +308,8 @@ class TestBotViews:
             }, setup_jwt_secret)
         }
 
-        # Call the method
         response = await view.show_dashboard_with_id(request, bot_id, testing=True)
 
-        # Assertions
         assert response.template.name == "dashboard.html"
         assert response.context["selected_bot_id"] == bot_id
         assert "bots" in response.context
@@ -340,14 +319,12 @@ class TestBotViews:
         view = setup_view
         bot_id = str(uuid4())
 
-        # Mocking fetch_chatbots to return objects with attributes
         view.controller.fetch_chatbots = Mock(return_value=[
             Mock(id=str(uuid4()), name="Bot A", model="OpenAI", adapter="Slack"),
             Mock(id=str(uuid4()), name="Bot B", model="GPT-3", adapter="Discord"),
         ])
         view.auth_controller.user_profile_google = Mock(return_value=dummy_user_profile)
 
-        # Mocking the request
         request = Mock()
         request.cookies = {
             "token": jwt.encode({
@@ -357,11 +334,9 @@ class TestBotViews:
             }, setup_jwt_secret)
         }
 
-        # Call the method and expect an exception
         with pytest.raises(HTTPException) as exc:
             await view.show_dashboard_with_id(request, bot_id, testing=True)
 
-        # Assertions
         assert exc.value.status_code == 404
         assert exc.value.detail == "Bot not found"
         
