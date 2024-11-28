@@ -5,13 +5,133 @@ from uuid import uuid4
 import jinja2
 import pytest
 from fastapi import Request
+from fastapi.exceptions import HTTPException
 
 from bot.bot import MessageAdapter, ModelEngine
 from bot.helper import relative_time
 from jose import jwt
 
+@pytest.fixture
+def setup_auth_controller():
+    mock_auth_controller = Mock()
+    mock_auth_controller.user_profile_google = Mock(return_value={
+        "data": {
+            "email": "test@broom.id",
+            "name": "Test User",
+            "created_at": "2024-10-24T00:00:00Z",
+        }
+    })
+    return mock_auth_controller
 
+
+@pytest.fixture
+def setup_view(setup_service, setup_auth_controller):
+    from bot.controller import BotControllerV1
+    from bot.view import BotViewV1
+
+    controller = BotControllerV1(service=setup_service)
+    return BotViewV1(
+        controller=controller,
+        service=setup_service,
+        auth_controller=setup_auth_controller,
+        admin_emails=["admin@domain.com"],
+    )
+        
 class TestBotViews:
+    @pytest.mark.asyncio
+    async def test_show_dashboard(self, setup_view, dummy_user_profile, setup_jwt_secret):
+        view = setup_view
+
+        # Mock dependencies
+        view.controller.fetch_chatbots = Mock(return_value=[
+            {"id": uuid4(), "name": "Bot A", "model": "OpenAI", "adapter": "Slack"},
+            {"id": uuid4(), "name": "Bot B", "model": "GPT-3", "adapter": "Discord"},
+        ])
+        view.auth_controller.user_profile_google = Mock(return_value=dummy_user_profile)
+
+        view = setup_view
+
+        # Create a mock request
+        request = Mock(spec=Request)
+
+        # Encode a token using the provided JWT secret from the fixture
+        token = jwt.encode({
+            "sub": "test_sub",
+            "email": "test@broom.id",
+            "exp": datetime.now() + timedelta(hours=3)
+        }, setup_jwt_secret)  
+
+        request.cookies = {'token': token}
+        
+        # Call the method
+        response = await view.show_dashboard(request, testing=True)
+
+        # Assertions
+        assert response.template.name == "dashboard.html"
+        assert "bots" in response.context
+        assert len(response.context["bots"]) == 2
+        assert "user_profile" in response.context
+
+    @pytest.mark.asyncio
+    async def test_show_dashboard_with_id_success(self, setup_view, dummy_user_profile, setup_jwt_secret):
+        view = setup_view
+        bot_id = str(uuid4())
+
+        # Mocking fetch_chatbots to return objects with attributes
+        view.controller.fetch_chatbots = Mock(return_value=[
+            Mock(id=bot_id, name="Bot A", model="OpenAI", adapter="Slack"),
+            Mock(id=str(uuid4()), name="Bot B", model="GPT-3", adapter="Discord"),
+        ])
+        view.auth_controller.user_profile_google = Mock(return_value=dummy_user_profile)
+
+        # Mocking the request
+        request = Mock()
+        request.cookies = {
+            "token": jwt.encode({
+                "sub": "test_sub",
+                "email": "test@broom.id",
+                "exp": datetime.now() + timedelta(hours=3)
+            }, setup_jwt_secret)
+        }
+
+        # Call the method
+        response = await view.show_dashboard_with_id(request, bot_id, testing=True)
+
+        # Assertions
+        assert response.template.name == "dashboard.html"
+        assert response.context["selected_bot_id"] == bot_id
+        assert "bots" in response.context
+
+    @pytest.mark.asyncio
+    async def test_show_dashboard_with_id_not_found(self, setup_view, dummy_user_profile, setup_jwt_secret):
+        view = setup_view
+        bot_id = str(uuid4())
+
+        # Mocking fetch_chatbots to return objects with attributes
+        view.controller.fetch_chatbots = Mock(return_value=[
+            Mock(id=str(uuid4()), name="Bot A", model="OpenAI", adapter="Slack"),
+            Mock(id=str(uuid4()), name="Bot B", model="GPT-3", adapter="Discord"),
+        ])
+        view.auth_controller.user_profile_google = Mock(return_value=dummy_user_profile)
+
+        # Mocking the request
+        request = Mock()
+        request.cookies = {
+            "token": jwt.encode({
+                "sub": "test_sub",
+                "email": "test@broom.id",
+                "exp": datetime.now() + timedelta(hours=3)
+            }, setup_jwt_secret)
+        }
+
+        # Call the method and expect an exception
+        with pytest.raises(HTTPException) as exc:
+            await view.show_dashboard_with_id(request, bot_id, testing=True)
+
+        # Assertions
+        assert exc.value.status_code == 404
+        assert exc.value.detail == "Bot not found"
+        
     def test_show_list_chatbots(self, setup_bots):
         context = {
         'bots': setup_bots
