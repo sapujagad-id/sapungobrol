@@ -9,7 +9,8 @@ from sqlalchemy import Column, Enum, Uuid, String, Text, DateTime, func, Foreign
 from bot.helper import relative_time
 
 from adapter.reaction_event_repository import ReactionEventModel
-from .bot import BotUpdate, MessageAdapter, ModelEngine, BotResponse, BotCreate
+from common.shared_types import MessageAdapter
+from .bot import BotUpdate, ModelEngine, BotResponse, BotCreate
 
 
 Base = declarative_base()

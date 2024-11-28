@@ -14,7 +14,7 @@ from .slack_dto import SlackConfig
 
 class SlackView(ABC):
     @abstractmethod
-    def install(self, request: Request):
+    def install(self, request: Request): # pragma: no cover
         pass
 
 class SlackViewV1(SlackView):    

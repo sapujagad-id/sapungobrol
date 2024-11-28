@@ -10,7 +10,8 @@ from slack_sdk.web import WebClient
 from datetime import datetime
 from uuid import uuid4
 from auth.repository import AuthRepository, UserModel
-from bot.bot import BotResponse, MessageAdapter, ModelEngine
+from common.shared_types import MessageAdapter
+from bot.bot import BotResponse, ModelEngine
 from bot.service import BotService
 from bot.helper import relative_time
 from chat import ChatEngineSelector, ChatOpenAI
@@ -413,12 +414,12 @@ class TestSlackAdapter:
 
         context = {"team_id": "T1234567"}
 
-        slack_adapter.negative_reaction = MagicMock()
+        slack_adapter.handle_rating_reaction = MagicMock()
         res = slack_adapter.reaction_added(negative_reaction, context)
 
         assert res.status_code == 200
 
-        slack_adapter.negative_reaction.assert_called_once_with(negative_reaction, mock_client)
+        slack_adapter.handle_rating_reaction.assert_called_once_with(negative_reaction, mock_client)
 
     @pytest.mark.asyncio
     async def test_negative_reaction(
@@ -444,7 +445,7 @@ class TestSlackAdapter:
             updated_at_relative=relative_time(datetime.now()),
         )
 
-        slack_adapter.negative_reaction(event=negative_reaction, client=mock_client)
+        slack_adapter.handle_rating_reaction(event=negative_reaction, client=mock_client)
 
         mock_client.conversations_history.assert_called_once()
         mock_bot_service.get_chatbot_by_slug.assert_called_once()
@@ -464,7 +465,7 @@ class TestSlackAdapter:
 
         mock_client.conversations_history.return_value = conversations_history
 
-        slack_adapter.negative_reaction(event=negative_reaction, client=mock_client)
+        slack_adapter.handle_rating_reaction(event=negative_reaction, client=mock_client)
 
         mock_client.conversations_history.assert_called_once()
         slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
@@ -483,7 +484,7 @@ class TestSlackAdapter:
 
         mock_client.conversations_history.return_value = conversations_history
 
-        slack_adapter.negative_reaction(event=negative_reaction, client=mock_client)
+        slack_adapter.handle_rating_reaction(event=negative_reaction, client=mock_client)
 
         mock_client.conversations_history.assert_called_once()
         slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
@@ -502,7 +503,7 @@ class TestSlackAdapter:
 
         mock_client.conversations_history.return_value = conversations_history
 
-        slack_adapter.negative_reaction(event=negative_reaction, client=mock_client)
+        slack_adapter.handle_rating_reaction(event=negative_reaction, client=mock_client)
 
         mock_client.conversations_history.assert_called_once()
         slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
@@ -521,7 +522,7 @@ class TestSlackAdapter:
 
         mock_bot_service.get_chatbot_by_slug.return_value = None
 
-        slack_adapter.negative_reaction(event=negative_reaction, client=mock_client)
+        slack_adapter.handle_rating_reaction(event=negative_reaction, client=mock_client)
 
         mock_client.conversations_history.assert_called_once()
         slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
@@ -550,7 +551,7 @@ class TestSlackAdapter:
             updated_at_relative=relative_time(datetime.now()),
         )
 
-        slack_adapter.positive_reaction(event=positive_reaction, client=mock_client)
+        slack_adapter.handle_rating_reaction(event=positive_reaction, client=mock_client)
 
         mock_client.conversations_history.assert_called_once()
         mock_bot_service.get_chatbot_by_slug.assert_called_once()
@@ -571,7 +572,7 @@ class TestSlackAdapter:
 
         mock_client.conversations_history.return_value = conversations_history
 
-        slack_adapter.positive_reaction(event=positive_reaction, client=mock_client)
+        slack_adapter.handle_rating_reaction(event=positive_reaction, client=mock_client)
 
         mock_client.conversations_history.assert_called_once()
         slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
@@ -591,7 +592,7 @@ class TestSlackAdapter:
 
         mock_client.conversations_history.return_value = conversations_history
 
-        slack_adapter.positive_reaction(event=positive_reaction, client=mock_client)
+        slack_adapter.handle_rating_reaction(event=positive_reaction, client=mock_client)
 
         mock_client.conversations_history.assert_called_once()
         slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
@@ -611,7 +612,7 @@ class TestSlackAdapter:
 
         mock_client.conversations_history.return_value = conversations_history
 
-        slack_adapter.positive_reaction(event=positive_reaction, client=mock_client)
+        slack_adapter.handle_rating_reaction(event=positive_reaction, client=mock_client)
 
         mock_client.conversations_history.assert_called_once()
         slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
@@ -631,7 +632,7 @@ class TestSlackAdapter:
 
         mock_bot_service.get_chatbot_by_slug.return_value = None
 
-        slack_adapter.positive_reaction(event=positive_reaction, client=mock_client)
+        slack_adapter.handle_rating_reaction(event=positive_reaction, client=mock_client)
 
         mock_client.conversations_history.assert_called_once()
         slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()

@@ -7,7 +7,8 @@ import pytest
 from fastapi import Request
 from fastapi.exceptions import HTTPException
 
-from bot.bot import MessageAdapter, ModelEngine
+from common.shared_types import MessageAdapter
+from bot.bot import ModelEngine
 from bot.helper import relative_time
 from jose import jwt
 

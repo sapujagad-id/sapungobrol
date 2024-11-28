@@ -10,7 +10,8 @@ from auth.controller import AuthController
 from auth.middleware import login_required
 from bot.service import BotService
 
-from .bot import MessageAdapter, ModelEngine
+from common.shared_types import MessageAdapter
+from .bot import ModelEngine
 from bot.controller import BotController
 
 
