@@ -4,7 +4,7 @@ from loguru import logger
 
 from datetime import datetime
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
-from sqlalchemy import Column, Enum, Uuid, String, Text, DateTime, func, ForeignKey
+from sqlalchemy import Column, Enum, Uuid, String, Text, DateTime, func, ForeignKey, case
 
 from bot.helper import relative_time
 
@@ -43,27 +43,31 @@ class BotModel(Base):
 
 class BotRepository(ABC):
     @abstractmethod
-    def find_bots(self, skip: int, limit: int) -> list[BotResponse]:
+    def find_bots(self, skip: int, limit: int) -> list[BotResponse]: # pragma: no cover
         pass
 
     @abstractmethod
-    def find_bot_by_id(self, bot_id: str) -> BotModel:
+    def find_bot_by_id(self, bot_id: str) -> BotModel: # pragma: no cover
         pass
 
     @abstractmethod
-    def create_bot(self, bot_create: BotCreate):
+    def create_bot(self, bot_create: BotCreate): # pragma: no cover
         pass
 
     @abstractmethod
-    def update_bot(self, bot, bot_update: BotUpdate):
+    def update_bot(self, bot, bot_update: BotUpdate): # pragma: no cover
         pass
     
     @abstractmethod
-    def delete_bot(self, bot):
+    def delete_bot(self, bot): # pragma: no cover
         pass
 
     @abstractmethod
-    def find_bot_by_slug(self, slug):
+    def find_bot_by_slug(self, slug): # pragma: no cover
+        pass
+    
+    @abstractmethod
+    def get_dashboard_data(self, bot_id: UUID): # pragma: no cover
         pass
 
 
@@ -125,7 +129,7 @@ class PostgresBotRepository(BotRepository):
     def get_dashboard_data(self, bot_id: UUID):
         with self.create_session() as session:
             try:
-                # Fetch the last 5 threads
+                # Fetch the last 5 threads with counts of positive and negative reactions
                 last_threads_subquery = (
                     session.query(
                         ReactionEventModel.message,
@@ -138,19 +142,25 @@ class PostgresBotRepository(BotRepository):
                         )
                         .label("row_num"),
                     )
-                    .filter(
-                        ReactionEventModel.bot_id == bot_id,
-                        ReactionEventModel.reaction == "NEGATIVE",
-                    )
+                    .filter(ReactionEventModel.bot_id == bot_id)
                     .subquery()
                 )
 
                 last_threads = (
                     session.query(
                         last_threads_subquery.c.message,
-                        func.count(last_threads_subquery.c.message).label(
-                            "negative_count"
-                        ),
+                        func.count(
+                            case(
+                                (last_threads_subquery.c.reaction == "NEGATIVE", 1),
+                                else_=None
+                            )
+                        ).label("negative_count"),
+                        func.count(
+                            case(
+                                (last_threads_subquery.c.reaction == "POSITIVE", 1),
+                                else_=None
+                            )
+                        ).label("positive_count"),
                     )
                     .filter(last_threads_subquery.c.row_num == 1)  # Only the latest row for each message
                     .group_by(last_threads_subquery.c.message)
@@ -167,7 +177,12 @@ class PostgresBotRepository(BotRepository):
 
                 return {
                     "last_threads": [
-                        {"thread": t[0], "negative_count": t[1]} for t in last_threads
+                        {
+                            "thread": t[0],
+                            "negative_count": t[1],
+                            "positive_count": t[2],
+                        }
+                        for t in last_threads
                     ],
                     "cumulative_threads": cumulative_threads or 0,  # Ensure it's valid
                 }
@@ -176,3 +191,4 @@ class PostgresBotRepository(BotRepository):
                     f"Error in get_dashboard_data for bot_id: {bot_id}. Error: {str(e)}"
                 )
                 raise
+

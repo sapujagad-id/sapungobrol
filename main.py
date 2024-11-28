@@ -5,7 +5,8 @@ from fastapi.staticfiles import StaticFiles
 from slack_bolt import App
 from slack_bolt.oauth.oauth_settings import OAuthSettings
 
-from adapter import SlackAdapter, PostgresReactionEventRepository
+from adapter.slack import SlackAdapter
+from adapter.reaction_event_repository import PostgresReactionEventRepository
 from adapter.slack_repository import PostgresWorkspaceDataRepository, CustomInstallationStore
 from adapter.view import SlackViewV1
 from auth.controller import AuthControllerV1

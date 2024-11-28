@@ -8,19 +8,19 @@ from loguru import logger
 
 class BotController(ABC):
     @abstractmethod
-    def fetch_chatbots(self, skip: int, limit: int):
+    def fetch_chatbots(self, skip: int, limit: int): # pragma: no cover
         pass
 
     @abstractmethod
-    def create_chatbot(self, request: BotCreate):
+    def create_chatbot(self, request: BotCreate): # pragma: no cover
         pass
 
     @abstractmethod
-    def update_chatbot(self, bot_id, request: BotUpdate):
+    def update_chatbot(self, bot_id, request: BotUpdate): # pragma: no cover
         pass
     
     @abstractmethod
-    def delete_chatbot(self, bot_id):
+    def delete_chatbot(self, bot_id): # pragma: no cover
         pass
 
 

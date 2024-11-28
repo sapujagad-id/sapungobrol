@@ -175,7 +175,6 @@ class SlackAdapter:
         team_id = context["team_id"]
         client = self.create_webclient_based_on_team_id(team_id)
 
-        # Handle negative reactions
         if reaction == "-1":
             self.negative_reaction(event, client)
         elif reaction == "+1":

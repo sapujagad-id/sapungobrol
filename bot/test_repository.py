@@ -89,8 +89,8 @@ class TestBotRepository:
         setup_repository.create_session.return_value.__enter__.return_value = mock_session
 
         mock_last_threads = [
-            ("message1", 3),
-            ("message2", 5),
+            ("message1", 3, 1),
+            ("message2", 5, 3),
         ]
 
         mock_cumulative_threads = 10

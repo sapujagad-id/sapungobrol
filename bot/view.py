@@ -16,19 +16,19 @@ from bot.controller import BotController
 
 class BotView(ABC):
     @abstractmethod
-    def show_list_chatbots(self, request: Request):
+    def show_list_chatbots(self, request: Request): # pragma: no cover
         pass
       
     @abstractmethod
-    def show_create_chatbots(self, request:Request):
+    def show_create_chatbots(self, request:Request): # pragma: no cover
         pass
     
     @abstractmethod
-    def show_edit_chatbot(self, id: str, request:Request):
+    def show_edit_chatbot(self, id: str, request:Request): # pragma: no cover
         pass
     
     @abstractmethod
-    def show_login(self, request: Request):
+    def show_login(self, request: Request): # pragma: no cover
         pass
     
 # note: authentication not impl yet
