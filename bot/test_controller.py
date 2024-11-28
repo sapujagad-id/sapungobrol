@@ -426,7 +426,7 @@ class TestBotControllerGetDashboardData:
             setup_controller.get_dashboard_data(bot_id)
         
         assert exc.value.status_code == 500
-        assert exc.value.detail == f"Failed to fetch dashboard data"
+        assert exc.value.detail == "Failed to fetch dashboard data"
 
     def test_get_dashboard_data_general_exception(self, setup_controller, mocker):
         bot_id = "some-bot-id"
