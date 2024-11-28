@@ -178,6 +178,8 @@ class SlackAdapter:
         # Handle negative reactions
         if reaction == "-1":
             self.negative_reaction(event, client)
+        elif reaction == "+1":
+            self.positive_reaction(event, client)
 
         return Response(status_code=200)
 
@@ -220,6 +222,9 @@ class SlackAdapter:
         )
 
         self.reaction_event_repository.create_reaction_event(reaction_event_create)
+    
+    def positive_reaction(self, event: Dict[str, any], client:WebClient):
+        pass
 
     def send_generated_response(
         self,
