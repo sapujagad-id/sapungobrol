@@ -224,7 +224,44 @@ class SlackAdapter:
         self.reaction_event_repository.create_reaction_event(reaction_event_create)
     
     def positive_reaction(self, event: Dict[str, any], client:WebClient):
-        pass
+        self.logger().info("handle positive reaction")
+
+        # Fetch message data
+        res = client.conversations_history(
+            channel=event["item"]["channel"],
+            oldest=event["item"]["ts"],
+            inclusive=True,
+            include_all_metadata=True,
+            limit=1,
+        )
+        message = res["messages"][0]
+
+        # Check if message is start of conversation
+        if message["thread_ts"] is None or message["ts"] != message["thread_ts"]:
+            return
+
+        # Get bot slug and find bot to get bot id
+        metadata = message["metadata"]
+        if metadata is None:
+            return
+
+        metadata_event = metadata["event_type"]
+        if metadata_event != "chat-data":
+            return
+
+        bot_slug = metadata["event_payload"]["bot_slug"]
+        bot = self.bot_service.get_chatbot_by_slug(bot_slug)
+        if bot is None:
+            return
+
+        # Create reaction event
+        reaction_event_create = ReactionEventCreate.from_slack_reaction(
+            bot_id=bot.id,
+            message=message["text"],
+            event=event,
+        )
+
+        self.reaction_event_repository.create_reaction_event(reaction_event_create)
 
     def send_generated_response(
         self,
