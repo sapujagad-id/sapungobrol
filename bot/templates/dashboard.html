@@ -63,6 +63,7 @@
             // Update Chart
             const labels = data.last_threads.map(t => t.thread);
             const negativeCounts = data.last_threads.map(t => t.negative_count);
+            const positiveCounts = data.last_threads.map(t => t.positive_count);
     
             if (chart) chart.destroy();
     
@@ -70,13 +71,22 @@
                 type: 'bar',
                 data: {
                     labels,
-                    datasets: [{
-                        label: 'Negative Reactions',
-                        data: negativeCounts,
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
-                    }]
+                    datasets: [
+                        {
+                            label: 'Negative Reactions',
+                            data: negativeCounts,
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Positive Reactions',
+                            data: positiveCounts,
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
