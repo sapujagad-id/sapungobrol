@@ -36,6 +36,16 @@ class DocumentIndexing:
         doc_filter = {key: value for key, value in doc_filter.items() if value is not None}
         return self.service.get_documents(filter=doc_filter)
 
+    def _request_url(self, document_type, document_url):
+        response = requests.get(document_url)
+        response.raise_for_status()
+
+        document_path = f"temp.{document_type}"
+        with open(document_path, "wb") as file:
+            file.write(response.content)
+        
+        return document_path
+    
     def _get_processor(self, document_type: str, document_url: str):
         """Returns the appropriate processor based on document type."""
         processors = {
@@ -69,13 +79,9 @@ class DocumentIndexing:
 
             document_url = generate_presigned_url(document, self.s3_client, self.aws_config.aws_public_bucket_name)
 
+            document_type = document.type
             # Ambil dokumen url
-            response = requests.get(document_url)
-            response.raise_for_status()
-
-            document_path = f"temp.{document.type}"
-            with open(document_path, "wb") as file:
-                file.write(response.content)
+            document_path = self._request_url(document_type, document_url)
 
             processor = self._get_processor(document.type, document_path)
             
