@@ -4,6 +4,8 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, UUID4
 from typing import Optional
 
+from common.shared_types import MessageAdapter
+
 
 class NameIsRequired(Exception):
     pass
@@ -30,10 +32,6 @@ class SlugIsExist(Exception):
 class ModelEngine(str, enum.Enum):
     OPENAI = "OpenAI"
     ANTHROPIC = "Anthropic"
-
-
-class MessageAdapter(str, enum.Enum):
-    SLACK = "Slack"
 
 
 class Bot(BaseModel):

@@ -55,3 +55,17 @@ CREATE TABLE reaction_events (
     message TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE TABLE workspace_data (
+    id UUID PRIMARY KEY,            
+    team_id VARCHAR(255) NOT NULL,  
+    access_token VARCHAR(255) NOT NULL,
+    installed_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE threads (
+    id UUID PRIMARY KEY,
+    bot_id UUID NOT NULL REFERENCES bots(id),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT fk_bot FOREIGN KEY (bot_id) REFERENCES bots(id)
+);

@@ -56,6 +56,18 @@ class AppConfig:
         if not found:
             invalid = True
 
+        self.slack_client_id, found = self.validate_env_var("SLACK_CLIENT_ID")
+        if not found:
+            invalid = True
+
+        self.slack_client_secret, found = self.validate_env_var("SLACK_CLIENT_SECRET")
+        if not found:
+            invalid = True
+
+        self.slack_scopes, found = self.parse_env_list("SLACK_SCOPES")
+        if not found:
+            invalid = True
+
         self.openai_api_key, found = self.validate_env_var("OPENAI_API_KEY")
         if not found:
             invalid = True

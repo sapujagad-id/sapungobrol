@@ -3,9 +3,14 @@ from fastapi import FastAPI, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slack_bolt import App
+from slack_bolt.oauth.oauth_settings import OAuthSettings
 
-from adapter import SlackAdapter, PostgresReactionEventRepository
+from adapter.slack import SlackAdapter
+from adapter.reaction_event_repository import PostgresReactionEventRepository
+from adapter.slack_repository import PostgresWorkspaceDataRepository, CustomInstallationStore
+from adapter.view import SlackViewV1
 from auth.controller import AuthControllerV1
+from auth.middleware import AuthMiddleware, LoginDecorator
 from auth.repository import PostgresAuthRepository
 from auth.service import AuthServiceV1
 from auth.dto import GoogleCredentials, ProfileResponse
@@ -13,10 +18,10 @@ from auth.view import UserViewV1
 from bot.view import BotViewV1
 from config import AppConfig, configure_logger
 from chat import ChatEngineSelector
-from data_source.view import DataSourceViewV1
 from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
 
+from adapter.slack_dto import SlackConfig
 from document.dto import AWSConfig
 from document.view import DocumentViewV1
 from web.logging import RequestLoggingMiddleware
@@ -24,6 +29,7 @@ from web.logging import RequestLoggingMiddleware
 import uvicorn
 import sentry_sdk
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+from sentry_sdk.integrations.threading import ThreadingIntegration
 import os
 
 from document.controller import DocumentControllerV1
@@ -38,6 +44,7 @@ sentry_sdk.init(
     dsn=os.getenv("SENTRY_DSN"),
     traces_sample_rate=1.0,
     environment=os.getenv("ENVIRONMENT", "production"),
+    integrations=[ThreadingIntegration(propagate_scope=True)],
     _experiments={
         "continuous_profiling_auto_start": True,
     },
@@ -46,6 +53,7 @@ sentry_sdk.init(
 
 if __name__ == "__main__":
     config = AppConfig()
+
 
     google_credentials = GoogleCredentials(
         client_id=config.google_client_id,
@@ -58,23 +66,33 @@ if __name__ == "__main__":
         aws_secret_access_key=config.aws_secret_access_key,
         aws_public_bucket_name=config.aws_public_bucket_name,
         aws_region=config.aws_region,
-        aws_endpoint_url=config.aws_endpoint_url
+        aws_endpoint_url=config.aws_endpoint_url,
     )
 
+    slack_config = SlackConfig(
+        slack_bot_token=config.slack_bot_token,
+        slack_signing_secret=config.slack_signing_secret,
+        slack_client_id=config.slack_client_id,
+        slack_client_secret=config.slack_client_secret,
+        slack_scopes=config.slack_scopes
+    )
+    
     configure_logger(config.log_level)
 
     sessionmaker = config_db(config.database_url)
 
-    slack_app = App(
-        token=config.slack_bot_token, signing_secret=config.slack_signing_secret
+    auth_repository = PostgresAuthRepository(sessionmaker)
+
+    auth_service = AuthServiceV1(
+        auth_repository,
+        google_credentials,
+        config.base_url,
+        config.jwt_secret_key,
+        config.admin_emails,
     )
 
-    auth_repository = PostgresAuthRepository(sessionmaker)
-    
-    auth_service = AuthServiceV1(auth_repository, google_credentials, config.base_url, config.jwt_secret_key, config.admin_emails)
-    
     auth_controller = AuthControllerV1(auth_service)
- 
+
     user_view = UserViewV1(auth_controller, auth_service, config.admin_emails)
 
     bot_repository = PostgresBotRepository(sessionmaker)
@@ -83,9 +101,10 @@ if __name__ == "__main__":
 
     bot_controller = BotControllerV1(bot_service)
 
-    bot_view = BotViewV1(bot_controller, bot_service, auth_controller, config.admin_emails)
+    bot_view = BotViewV1(
+        bot_controller, bot_service, auth_controller, config.admin_emails
+    )
 
-    data_source_view = DataSourceViewV1(auth_controller)
     engine_selector = ChatEngineSelector(
         openai_api_key=config.openai_api_key,
         anthropic_api_key=config.anthropic_api_key,
@@ -108,18 +127,53 @@ if __name__ == "__main__":
     
     automation = DocumentIndexing(aws_config, document_service)
     
+
+    workspace_data_repository = PostgresWorkspaceDataRepository(sessionmaker)
+
+    custom_instalation_store = CustomInstallationStore(workspace_data_repository)
+
+    oauth_settings = OAuthSettings(
+        client_id=config.slack_client_id,
+        client_secret=config.slack_client_secret,
+        scopes=config.slack_scopes,
+        redirect_uri=None,
+        install_path="/slack/install",
+        redirect_uri_path="/api/slack/oauth_redirect",
+        installation_store=custom_instalation_store,
+        state_validation_enabled=False
+    )
+
+    slack_app = App(
+        signing_secret=config.slack_signing_secret,
+        oauth_settings=oauth_settings,
+    )
+
     slack_adapter = SlackAdapter(
         slack_app,
         engine_selector,
         bot_service,
         reaction_event_repository,
-        auth_repository
+        workspace_data_repository,
+        auth_repository,
+        slack_config
     )
 
     slack_app.event("message")(slack_adapter.event_message)
     slack_app.event("reaction_added")(slack_adapter.reaction_added)
 
+    slack_view = SlackViewV1(auth_controller, slack_config, config.admin_emails)
+
     app = FastAPI()
+    app.add_middleware(AuthMiddleware, jwt_secret_key=config.jwt_secret_key, included_routes=[
+        "/", 
+        "/create", 
+        "/edit/{id}", 
+        "/document", 
+        "/users", 
+        "/create-document",
+        "/api/*",
+        "/slack/*",
+    ])
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(SentryAsgiMiddleware)
 
@@ -237,6 +291,15 @@ if __name__ == "__main__":
     app.add_api_route(
         "/api/slack/events", endpoint=slack_adapter.handle_events, methods=["POST"]
     )
+
+    app.add_api_route(
+        "/slack/install", endpoint=slack_view.install, methods=["GET"]
+    )
+
+    app.add_api_route(
+        "/api/slack/oauth_redirect", endpoint=slack_adapter.oauth_redirect, methods=["GET", "POST"], response_model=None 
+    )
+
     app.add_api_route(
         "/api/slack/interactivity",
         endpoint=slack_adapter.handle_interactions,
@@ -265,7 +328,7 @@ if __name__ == "__main__":
 
     app.add_api_route(
         "/api/user/get-all-user-basic-info",
-        endpoint=auth_controller.get_all_users_basic_info, 
+        endpoint=auth_controller.get_all_users_basic_info,
         methods=["GET"],
     )
 
@@ -288,6 +351,21 @@ if __name__ == "__main__":
         endpoint=auth_controller.logout,
         response_class=RedirectResponse,
         methods=["GET"],
+    )
+    
+    app.add_api_route(
+        "/dashboard",
+        endpoint=bot_view.show_dashboard,
+        response_class=HTMLResponse,
+        description="Dashboard Page"
+    )
+
+    
+    app.add_api_route(
+        "/api/dashboard/{bot_id}",
+        endpoint=bot_controller.get_dashboard_data,
+        methods=["GET"],
+        name="Dashboard Data for Bot"
     )
 
     app.add_api_route(

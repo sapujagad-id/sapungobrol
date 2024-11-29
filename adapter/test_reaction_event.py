@@ -1,7 +1,6 @@
 import pytest
 
 from .reaction_event import ReactionEventCreate, Reaction, UnknownReaction
-from bot.bot import MessageAdapter
 from uuid import uuid4
 
 
@@ -51,7 +50,7 @@ class TestReactionEvent:
 
             assert reaction_event_create.bot_id == bot_id
             assert reaction_event_create.reaction == expected_reaction
-            assert reaction_event_create.source_adapter == MessageAdapter.SLACK
+            assert reaction_event_create.source_adapter == "Slack"
             assert (
                 reaction_event_create.source_adapter_message_id == event["item"]["ts"]
             )

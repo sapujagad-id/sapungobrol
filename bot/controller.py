@@ -3,23 +3,24 @@ from fastapi import HTTPException
 
 from .bot import BotCreate, BotNotFound, BotUpdate, NameIsRequired, SlugIsExist, SlugIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
 from .service import BotService
+from loguru import logger
 
 
 class BotController(ABC):
     @abstractmethod
-    def fetch_chatbots(self, skip: int, limit: int):
+    def fetch_chatbots(self, skip: int, limit: int): # pragma: no cover
         pass
 
     @abstractmethod
-    def create_chatbot(self, request: BotCreate):
+    def create_chatbot(self, request: BotCreate): # pragma: no cover
         pass
 
     @abstractmethod
-    def update_chatbot(self, bot_id, request: BotUpdate):
+    def update_chatbot(self, bot_id, request: BotUpdate): # pragma: no cover
         pass
     
     @abstractmethod
-    def delete_chatbot(self, bot_id):
+    def delete_chatbot(self, bot_id): # pragma: no cover
         pass
 
 
@@ -29,6 +30,7 @@ class BotControllerV1(BotController):
     def __init__(self, service: BotService) -> None:
         super().__init__()
         self.service = service
+        self.logger = logger.bind(service="BotControllerV1")
 
     def fetch_chatbots(self, skip = 0, limit:int = 10):
         return self.service.get_chatbots(skip, limit)
@@ -87,3 +89,13 @@ class BotControllerV1(BotController):
     def check_slug_exist(self, slug: str):
         exists = self.service.is_slug_exist(slug)
         return {"detail": exists}
+    
+    def get_dashboard_data(self, bot_id: str):
+        try:
+            data = self.service.get_dashboard_data(bot_id)
+            if not data:  # Check if data is None or empty
+                raise HTTPException(status_code=404, detail=f"No data found for bot_id: {bot_id}")
+            return data
+        except Exception as e:
+            self.logger.error(f"Failed to fetch dashboard data for bot_id: {bot_id}. Error: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to fetch dashboard data")

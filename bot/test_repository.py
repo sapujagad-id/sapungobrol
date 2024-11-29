@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from uuid import uuid4
+from unittest.mock import MagicMock, patch
 
 from bot.bot import BotCreate, BotUpdate
 from bot.repository import BotModel, PostgresBotRepository
@@ -79,3 +80,59 @@ class TestBotRepository:
         non_existent_bot_id = uuid4()
         bot = setup_repository.find_bot_by_id(non_existent_bot_id)
         assert bot is None
+    
+    def test_get_dashboard_data(self, setup_repository, bot_create_data):
+        mock_bot_id = uuid4()
+
+        mock_session = MagicMock() 
+        setup_repository.create_session = MagicMock()
+        setup_repository.create_session.return_value.__enter__.return_value = mock_session
+
+        mock_last_threads = [
+            ("message1", 3, 1),
+            ("message2", 5, 3),
+        ]
+
+        mock_cumulative_threads = 10
+
+        mock_session.query.return_value.filter.return_value.group_by.return_value.limit.return_value.all.return_value = mock_last_threads
+        mock_session.query.return_value.filter.return_value.scalar.return_value = mock_cumulative_threads
+
+        result = setup_repository.get_dashboard_data(mock_bot_id)
+
+        assert "last_threads" in result
+        assert "cumulative_threads" in result
+        assert len(result["last_threads"]) == len(mock_last_threads)
+        assert result["cumulative_threads"] == mock_cumulative_threads
+
+    def test_get_dashboard_data_no_threads(self, setup_repository):
+        mock_bot_id = uuid4()
+
+        mock_session = MagicMock()
+        setup_repository.create_session = MagicMock()
+        setup_repository.create_session.return_value.__enter__.return_value = mock_session
+
+        mock_session.query.return_value.filter.return_value.group_by.return_value.limit.return_value.all.return_value = []
+        mock_session.query.return_value.filter.return_value.scalar.return_value = 0
+
+        result = setup_repository.get_dashboard_data(mock_bot_id)
+
+        assert result["last_threads"] == []
+        assert result["cumulative_threads"] == 0
+        
+    def test_get_dashboard_data_with_exception(self, setup_repository):
+        mock_bot_id = uuid4()
+
+        mock_session = MagicMock()
+        setup_repository.create_session = MagicMock()
+        setup_repository.create_session.return_value.__enter__.return_value = mock_session
+
+        with patch.object(setup_repository, 'logger') as mock_logger:
+            mock_session.query.side_effect = Exception("Simulated database error")
+
+            with pytest.raises(Exception, match="Simulated database error"):
+                setup_repository.get_dashboard_data(mock_bot_id)
+
+            mock_logger.error.assert_called_once_with(
+                f"Error in get_dashboard_data for bot_id: {mock_bot_id}. Error: Simulated database error"
+            )

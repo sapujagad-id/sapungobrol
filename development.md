@@ -86,3 +86,21 @@ To apply your migrations to your local database, run the command below.
 ```bash
 atlas migrate apply --url postgres://postgres:postgres@localhost:5433
 ```
+
+Or this if you face ssl errors
+
+```bash
+atlas migrate apply --url postgres://postgres:postgres@localhost:5433?sslmode=disable
+```
+
+### Accessing Centralized Logs
+
+We use VictoriaLogs and Promtail to extract our logs (assume that the main server is running on a Docker container).
+To access it, visit `{HOST_URL}:9428/select/vmui`. This browser request goes through the `vmauth` container acting as a proxy
+for `victorialogs` container. The credentials are the environment variables `VMAUTH_USERNAME` and `VMAUTH_PASSWORD` (see `.env.example`).
+
+### Fixing team_id not found
+```sql
+INSERT INTO workspace_data (id, team_id, access_token)
+VALUES (gen_random_uuid(), '<team_id>', 'xoxb-<your-token>');
+```

@@ -1,0 +1,16 @@
+services:
+  vectordb:
+    image: ankane/pgvector:latest 
+    container_name: sapungobrol-vector-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - vector-db:/var/lib/postgresql/data
+    ports:
+      - 5434:5432
+
+volumes:
+  vector-db:

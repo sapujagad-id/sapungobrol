@@ -3,35 +3,40 @@ from loguru import logger
 
 from .repository import BotRepository
 from .bot import BotResponse, BotCreate, BotUpdate, SlugIsExist, BotNotFound
+from uuid import UUID
 
 
 class BotService(ABC):
     @abstractmethod
-    def get_chatbots(self, skip: int, limit: int) -> list[BotResponse]:
+    def get_chatbots(self, skip: int, limit: int) -> list[BotResponse]: # pragma: no cover
         pass
 
     @abstractmethod
-    def create_chatbot(self, request: BotCreate):
+    def create_chatbot(self, request: BotCreate): # pragma: no cover
         pass
 
     @abstractmethod
-    def update_chatbot(self, bot_id: str, request: BotUpdate):
+    def update_chatbot(self, bot_id: str, request: BotUpdate): # pragma: no cover
         pass
     
     @abstractmethod
-    def delete_chatbot(self, bot_id: str):
+    def delete_chatbot(self, bot_id: str): # pragma: no cover
         pass
 
     @abstractmethod
-    def get_chatbot_by_id(self, bot_id: str):
+    def get_chatbot_by_id(self, bot_id: str): # pragma: no cover
         pass
 
     @abstractmethod
-    def get_chatbot_by_slug(self, slug: str):
+    def get_chatbot_by_slug(self, slug: str): # pragma: no cover
         pass
 
     @abstractmethod
-    def is_slug_exist(self, slug: str):
+    def is_slug_exist(self, slug: str): # pragma: no cover
+        pass
+    
+    @abstractmethod
+    def get_dashboard_data(self, bot_id: UUID): # pragma: no cover
         pass
 
 
@@ -81,3 +86,6 @@ class BotServiceV1(BotService):
     def get_chatbot_by_slug(self, slug):
         bot = self.repository.find_bot_by_slug(slug)
         return bot if bot else None
+    
+    def get_dashboard_data(self, bot_id: UUID):
+        return self.repository.get_dashboard_data(bot_id)
