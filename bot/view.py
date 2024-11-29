@@ -7,7 +7,6 @@ from jinja2 import Environment
 import jinja2
 
 from auth.controller import AuthController
-from auth.middleware import login_required
 from bot.service import BotService
 
 from common.shared_types import MessageAdapter
@@ -47,7 +46,6 @@ class BotViewV1(BotView):
         self.auth_controller = auth_controller
         self.admin_emails = admin_emails
     
-    @login_required()
     def show_list_chatbots(self, request: Request):
         bots = self.controller.fetch_chatbots()
         user_profile = self.auth_controller.user_profile_google(request)
@@ -60,7 +58,6 @@ class BotViewV1(BotView):
                      },
         )
         
-    @login_required()
     def show_edit_chatbot(self, id: str, request:Request):
         user_profile = self.auth_controller.user_profile_google(request)
         bot = self.service.get_chatbot_by_id(id)
@@ -77,7 +74,6 @@ class BotViewV1(BotView):
                         }
         )
 
-    @login_required()
     def show_create_chatbots(self, request: Request):
         user_profile = self.auth_controller.user_profile_google(request)  # Make sure to await if this is a coroutine
         return self.templates.TemplateResponse(

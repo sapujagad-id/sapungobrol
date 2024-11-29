@@ -8,8 +8,7 @@ from auth.view import UserViewV1
 
 class TestUserView:
 
-    @pytest.mark.asyncio
-    async def test_view_users_success(self, setup_controller, setup_service, setup_jwt_secret):
+    def test_view_users_success(self, setup_controller, setup_service, setup_jwt_secret):
         user_view = UserViewV1(controller=setup_controller, service=setup_service, admin_emails=["admin@broom.id", ])
 
         request = Mock(spec=Request)
@@ -27,7 +26,7 @@ class TestUserView:
         ])
         setup_controller.user_profile_google = Mock(return_value={"data": {"email": "admin@broom.id"}})
 
-        response = await user_view.view_users(request, testing=True)
+        response = user_view.view_users(request)
 
         assert response.template.name == "view-users.html"
         assert "users" in response.context
