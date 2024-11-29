@@ -3,7 +3,9 @@ import pytest
 
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+from uuid import uuid4
 
+from adapter.reaction_event_controller import ReactionEventControllerV1
 from adapter.reaction_event_service import ReactionEventServiceV1
 
 from .reaction_event_repository import (
@@ -45,3 +47,8 @@ def setup_service(setup_repository):
 def setup_real_service(setup_repository):
     service = ReactionEventServiceV1(setup_repository)
     return service
+
+@pytest.fixture()
+def setup_controller(setup_service):
+    controller = ReactionEventControllerV1(setup_service)
+    return controller
