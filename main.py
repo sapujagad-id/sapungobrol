@@ -6,6 +6,8 @@ from slack_bolt import App
 from slack_bolt.oauth.oauth_settings import OAuthSettings
 
 from adapter import SlackAdapter, PostgresReactionEventRepository
+from adapter.reaction_event_controller import ReactionEventControllerV1
+from adapter.reaction_event_service import ReactionEventServiceV1
 from adapter.slack_repository import PostgresWorkspaceDataRepository, CustomInstallationStore
 from adapter.view import SlackViewV1
 from auth.controller import AuthControllerV1
@@ -121,6 +123,10 @@ if __name__ == "__main__":
     document_view = DocumentViewV1(document_service, auth_controller)
 
     reaction_event_repository = PostgresReactionEventRepository(sessionmaker)
+
+    reaction_event_service = ReactionEventServiceV1(reaction_event_repository)
+
+    reaction_event_controller = ReactionEventControllerV1(reaction_event_service)
 
     workspace_data_repository = PostgresWorkspaceDataRepository(sessionmaker)
 
@@ -338,6 +344,12 @@ if __name__ == "__main__":
         endpoint=auth_controller.user_profile_google,
         response_model=ProfileResponse,
         methods=["GET"],
+    )
+
+    app.add_api_route(
+        "/api/reaction-event/negative",
+        endpoint=reaction_event_controller.get_reaction_event_by_chatbot_id,
+        methods=['GET']
     )
 
     app.add_api_route(
