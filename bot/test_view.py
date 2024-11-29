@@ -210,7 +210,7 @@ class TestBotViews:
         }, setup_jwt_secret) 
         request.cookies = {'token': token}
 
-        response = await view.show_create_chatbots(request=request, testing=True)
+        response = view.show_create_chatbots(request=request)
 
         assert response.template.name == "create-chatbot.html"
         assert response.context["user_profile"].get('email') == dummy_user_profile.get("data")["email"]
@@ -237,7 +237,7 @@ class TestBotViews:
         }, setup_jwt_secret)
         request.cookies = {'token': token}
 
-        response = await view.show_edit_chatbot(bot_id, request=request, testing=True)
+        response = view.show_edit_chatbot(bot_id, request=request)
 
         assert response.template.name == "edit-chatbot.html"
         assert "bot" in response.context
@@ -279,7 +279,7 @@ class TestBotViews:
 
         request.cookies = {'token': token}
         
-        response = await view.show_dashboard(request, testing=True)
+        response = view.show_dashboard(request)
 
         assert response.template.name == "dashboard.html"
         assert "bots" in response.context
@@ -306,7 +306,7 @@ class TestBotViews:
             }, setup_jwt_secret)
         }
 
-        response = await view.show_dashboard_with_id(request, bot_id, testing=True)
+        response = view.show_dashboard_with_id(request, bot_id)
 
         assert response.template.name == "dashboard.html"
         assert response.context["selected_bot_id"] == bot_id
@@ -333,7 +333,7 @@ class TestBotViews:
         }
 
         with pytest.raises(HTTPException) as exc:
-            await view.show_dashboard_with_id(request, bot_id, testing=True)
+            await view.show_dashboard_with_id(request, bot_id)
 
         assert exc.value.status_code == 404
         assert exc.value.detail == "Bot not found"

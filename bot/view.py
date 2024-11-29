@@ -88,7 +88,6 @@ class BotViewV1(BotView):
             }
         )
         
-    @login_required()
     def show_dashboard(self, request: Request):
         user_profile = self.auth_controller.user_profile_google(request)
         bots = self.controller.fetch_chatbots()
@@ -98,7 +97,6 @@ class BotViewV1(BotView):
             context={"bots": bots, "user_profile": user_profile.get("data")}
         )
         
-    @login_required()
     def show_dashboard_with_id(self, request: Request, bot_id: str):
         user_profile = self.auth_controller.user_profile_google(request)
         bots = self.controller.fetch_chatbots()
