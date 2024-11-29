@@ -140,8 +140,7 @@ class TestBotViews:
         assert '<option value="Slack" selected' in rendered
         assert 'docs2' in rendered
 
-    @pytest.mark.asyncio
-    async def test_show_list_chatbots(self, setup_view, setup_service, setup_jwt_secret, dummy_user_profile):
+    def test_show_list_chatbots(self, setup_view, setup_service, setup_jwt_secret, dummy_user_profile):
         view = setup_view
 
         # Create a mock request
@@ -181,7 +180,7 @@ class TestBotViews:
         view.auth_controller.user_profile_google = Mock(return_value=dummy_user_profile)
 
         # Call the view method
-        response = await view.show_list_chatbots(request, testing=True)
+        response = view.show_list_chatbots(request)
 
         # Check that the correct template is used and context is passed
         assert response.template.name == "list.html"
@@ -196,8 +195,7 @@ class TestBotViews:
         assert 'Bot A' in rendered
         assert 'Bot B' in rendered
 
-    @pytest.mark.asyncio
-    async def test_show_create_chatbot(self, setup_view, setup_service, dummy_user_profile, setup_jwt_secret):
+    def test_show_create_chatbot(self, setup_view, setup_service, dummy_user_profile, setup_jwt_secret):
         view = setup_view
 
         # Mock the user_profile_google method
@@ -213,14 +211,13 @@ class TestBotViews:
         request.cookies = {'token': token}
 
         # Call the show_edit_chatbot method
-        response = await view.show_create_chatbots(request=request, testing=True)
+        response = view.show_create_chatbots(request=request)
 
         # Assertions
         assert response.template.name == "create-chatbot.html"
         assert response.context["user_profile"].get('email') == dummy_user_profile.get("data")["email"]
 
-    @pytest.mark.asyncio
-    async def test_show_edit_chatbot(self, setup_view, setup_service, dummy_user_profile, setup_jwt_secret):
+    def test_show_edit_chatbot(self, setup_view, setup_service, dummy_user_profile, setup_jwt_secret):
         view = setup_view
         bot_id = str(uuid4())
 
@@ -246,7 +243,7 @@ class TestBotViews:
         request.cookies = {'token': token}
 
         # Call the show_edit_chatbot method
-        response = await view.show_edit_chatbot(bot_id, request=request, testing=True)
+        response = view.show_edit_chatbot(bot_id, request=request)
 
         # Assertions
         assert response.template.name == "edit-chatbot.html"
