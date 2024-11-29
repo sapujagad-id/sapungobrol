@@ -5,7 +5,8 @@ from fastapi.staticfiles import StaticFiles
 from slack_bolt import App
 from slack_bolt.oauth.oauth_settings import OAuthSettings
 
-from adapter import SlackAdapter, PostgresReactionEventRepository
+from adapter.slack import SlackAdapter
+from adapter.reaction_event_repository import PostgresReactionEventRepository
 from adapter.slack_repository import PostgresWorkspaceDataRepository, CustomInstallationStore
 from adapter.view import SlackViewV1
 from auth.controller import AuthControllerV1
@@ -345,6 +346,21 @@ if __name__ == "__main__":
         endpoint=auth_controller.logout,
         response_class=RedirectResponse,
         methods=["GET"],
+    )
+    
+    app.add_api_route(
+        "/dashboard",
+        endpoint=bot_view.show_dashboard,
+        response_class=HTMLResponse,
+        description="Dashboard Page"
+    )
+
+    
+    app.add_api_route(
+        "/api/dashboard/{bot_id}",
+        endpoint=bot_controller.get_dashboard_data,
+        methods=["GET"],
+        name="Dashboard Data for Bot"
     )
 
     uvicorn.run(app, host="0.0.0.0", port=config.port, access_log=False)

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Navbar -->
+    {% include 'navbar.html' %}
+    
+    <main class="container mx-auto mt-8 px-4">
+        <h1 class="text-2xl font-bold text-center mb-6">Dashboard</h1>
+
+        <!-- Bot Selection -->
+        <div class="mb-6">
+            <label for="bot-select" class="block text-gray-700 text-sm font-bold mb-2">Select Bot:</label>
+            <select id="bot-select" class="shadow border rounded w-full py-2 px-3 text-gray-700 focus:outline-none">
+                {% for bot in bots %}
+                    <option value="{{ bot.id }}" {% if bot.id == selected_bot_id %}selected{% endif %}>
+                        {{ bot.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Chart -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <canvas id="dashboard-chart" height="100"></canvas>
+        </div>
+
+        <!-- Cumulative Threads -->
+        <div class="mt-4 p-4 bg-white shadow rounded text-center">
+            <h2 class="text-xl">Cumulative Threads:</h2>
+            <p id="cumulative-threads" class="text-2xl font-bold">Loading...</p>
+        </div>
+    </main>
+
+    <script>
+        const botSelect = document.getElementById('bot-select');
+        const chartCanvas = document.getElementById('dashboard-chart').getContext('2d');
+        const cumulativeThreadsEl = document.getElementById('cumulative-threads');
+    
+        let chart;
+    
+        async function fetchDashboardData(botId) {
+            const res = await fetch(`/api/dashboard/${botId}`);
+            const data = await res.json();
+            return data;
+        }
+    
+        async function updateDashboard() {
+            const botId = botSelect.value;
+    
+            // Fetch Data
+            const data = await fetchDashboardData(botId);
+    
+            // Update Cumulative Threads
+            cumulativeThreadsEl.textContent = data.cumulative_threads;
+    
+            // Update Chart
+            const labels = data.last_threads.map(t => t.thread);
+            const negativeCounts = data.last_threads.map(t => t.negative_count);
+            const positiveCounts = data.last_threads.map(t => t.positive_count);
+    
+            if (chart) chart.destroy();
+    
+            chart = new Chart(chartCanvas, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Negative Reactions',
+                            data: negativeCounts,
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Positive Reactions',
+                            data: positiveCounts,
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    
+        // Initialize the dashboard for the preselected bot ID
+        updateDashboard();
+    
+        // Add event listener for dropdown changes
+        botSelect.addEventListener('change', updateDashboard);
+    </script>
+</body>
+</html>

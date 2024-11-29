@@ -2,7 +2,7 @@ import enum
 
 from typing import Any
 from pydantic import BaseModel, ConfigDict, UUID4
-from bot.bot import MessageAdapter
+from common.shared_types import MessageAdapter
 
 
 class UnknownReaction(Exception):

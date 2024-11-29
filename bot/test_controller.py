@@ -1,9 +1,8 @@
-from datetime import datetime
 from uuid import uuid4
 from fastapi import HTTPException
 import pytest
 
-from .bot import BotCreate, BotResponse, BotUpdate, MessageAdapter, ModelEngine
+from bot.bot import BotCreate, BotUpdate
 
 class TestBotControllerFetch:
     def test_fetch_chatbots_success(self, setup_controller):
@@ -408,3 +407,34 @@ class TestBotControllerCheckSlugExist:
         assert response == {"detail": False}  
 
     
+class TestBotControllerGetDashboardData:
+    def test_get_dashboard_data_success(self, setup_controller, mocker):
+        bot_id = "some-valid-bot-id"
+        mock_data = {"some_key": "some_value"}
+        
+        mocker.patch.object(setup_controller.service, 'get_dashboard_data', return_value=mock_data)
+        
+        response = setup_controller.get_dashboard_data(bot_id)
+        assert response == mock_data
+
+    def test_get_dashboard_data_not_found(self, setup_controller, mocker):
+        bot_id = "non-existent-bot-id"
+        
+        mocker.patch.object(setup_controller.service, 'get_dashboard_data', return_value=None)
+        
+        with pytest.raises(HTTPException) as exc:
+            setup_controller.get_dashboard_data(bot_id)
+        
+        assert exc.value.status_code == 500
+        assert exc.value.detail == "Failed to fetch dashboard data"
+
+    def test_get_dashboard_data_general_exception(self, setup_controller, mocker):
+        bot_id = "some-bot-id"
+        
+        mocker.patch.object(setup_controller.service, 'get_dashboard_data', side_effect=Exception("Unexpected error"))
+        
+        with pytest.raises(HTTPException) as exc:
+            setup_controller.get_dashboard_data(bot_id)
+        
+        assert exc.value.status_code == 500
+        assert exc.value.detail == "Failed to fetch dashboard data"
