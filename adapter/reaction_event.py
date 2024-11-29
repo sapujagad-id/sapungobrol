@@ -1,6 +1,7 @@
+from datetime import datetime
 import enum
 
-from typing import Any
+from typing import Any, List, Optional
 from pydantic import BaseModel, ConfigDict, UUID4
 from bot.bot import MessageAdapter
 
@@ -8,6 +9,9 @@ from bot.bot import MessageAdapter
 class UnknownReaction(Exception):
     message = "Unknown reaction found"
 
+
+class ReactionNotFound(Exception):
+    message = "Reaction not found"
 
 class Reaction(enum.StrEnum):
     POSITIVE = "Positive"
