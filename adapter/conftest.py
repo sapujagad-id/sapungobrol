@@ -3,8 +3,8 @@ import pytest
 
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from uuid import uuid4
 
+from adapter.reaction_event_service import ReactionEventServiceV1
 
 from .reaction_event_repository import (
     PostgresReactionEventRepository,
@@ -34,3 +34,14 @@ def setup_repository(session):
     """Set up the repository with the test session."""
     repository = PostgresReactionEventRepository(session=lambda: session)
     return repository
+
+@pytest.fixture()
+def setup_service(setup_repository):
+    service = Mock(spec=ReactionEventServiceV1)
+    service.repository = Mock(spec=PostgresReactionEventRepository)
+    return service
+
+@pytest.fixture()
+def setup_real_service(setup_repository):
+    service = ReactionEventServiceV1(setup_repository)
+    return service
