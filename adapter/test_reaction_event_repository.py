@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from uuid import uuid4
 
-from bot.bot import MessageAdapter
+from common.shared_types import MessageAdapter
 from .reaction_event import ReactionEventCreate, Reaction
 from .reaction_event_repository import (
     PostgresReactionEventRepository,

@@ -5,11 +5,10 @@ from sqlalchemy import Column, Uuid, Enum, String, Text, DateTime, func
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from uuid import uuid4
 
-from bot.bot import MessageAdapter
+from common.shared_types import MessageAdapter
 from .reaction_event import ReactionEventCreate, Reaction
 
 Base = declarative_base()
-
 
 class ReactionEventModel(Base):
     __tablename__ = "reaction_events"
@@ -26,7 +25,7 @@ class ReactionEventModel(Base):
 
 class ReactionEventRepository(ABC):
     @abstractmethod
-    def create_reaction_event(self, event_create: ReactionEventCreate):
+    def create_reaction_event(self, event_create: ReactionEventCreate): # pragma: no cover
         pass
 
     @abstractmethod
