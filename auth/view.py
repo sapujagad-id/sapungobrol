@@ -8,7 +8,6 @@ import jinja2
 from auth.controller import AuthController
 from auth.service import AuthService
 
-from auth.middleware import login_required
 
 class UserView(ABC):
     @abstractmethod
@@ -28,7 +27,6 @@ class UserViewV1(UserView):
         self.service = service 
 
        
-    @login_required()
     def view_users(self, request: Request):
         users = self.controller.get_all_users_basic_info(request)
         user_profile = self.controller.user_profile_google(request)

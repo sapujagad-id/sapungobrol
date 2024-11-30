@@ -1,33 +1,34 @@
 from abc import ABC, abstractmethod
 
 from fastapi import Request
+from fastapi.exceptions import HTTPException
 from fastapi.templating import Jinja2Templates
 from jinja2 import Environment
 import jinja2
 
 from auth.controller import AuthController
-from auth.middleware import login_required
 from bot.service import BotService
 
-from .bot import MessageAdapter, ModelEngine
+from common.shared_types import MessageAdapter
+from .bot import ModelEngine
 from bot.controller import BotController
 
 
 class BotView(ABC):
     @abstractmethod
-    def show_list_chatbots(self, request: Request):
+    def show_list_chatbots(self, request: Request): # pragma: no cover
         pass
       
     @abstractmethod
-    def show_create_chatbots(self, request:Request):
+    def show_create_chatbots(self, request:Request): # pragma: no cover
         pass
     
     @abstractmethod
-    def show_edit_chatbot(self, id: str, request:Request):
+    def show_edit_chatbot(self, id: str, request:Request): # pragma: no cover
         pass
     
     @abstractmethod
-    def show_login(self, request: Request):
+    def show_login(self, request: Request): # pragma: no cover
         pass
     
 # note: authentication not impl yet
@@ -44,7 +45,6 @@ class BotViewV1(BotView):
         self.service = service
         self.auth_controller = auth_controller
     
-    @login_required()
     def show_list_chatbots(self, request: Request):
         bots = self.controller.fetch_chatbots()
         user_profile = self.auth_controller.user_profile_google(request)
@@ -57,7 +57,6 @@ class BotViewV1(BotView):
                      },
         )
         
-    @login_required()
     def show_edit_chatbot(self, id: str, request:Request):
         user_profile = self.auth_controller.user_profile_google(request)
         bot = self.service.get_chatbot_by_id(id)
@@ -74,7 +73,6 @@ class BotViewV1(BotView):
                         }
         )
 
-    @login_required()
     def show_create_chatbots(self, request: Request):
         user_profile = self.auth_controller.user_profile_google(request)  # Make sure to await if this is a coroutine
         return self.templates.TemplateResponse(
@@ -86,6 +84,34 @@ class BotViewV1(BotView):
                 "is_admin": request.cookies.get("is_admin"),
                 "user_profile": user_profile.get("data"),
                 "data_source":["docs1","docs2","docs3"]
+            }
+        )
+        
+    def show_dashboard(self, request: Request):
+        user_profile = self.auth_controller.user_profile_google(request)
+        bots = self.controller.fetch_chatbots()
+        return self.templates.TemplateResponse(
+            request=request,
+            name="dashboard.html",
+            context={"bots": bots, "user_profile": user_profile.get("data")}
+        )
+        
+    def show_dashboard_with_id(self, request: Request, bot_id: str):
+        user_profile = self.auth_controller.user_profile_google(request)
+        bots = self.controller.fetch_chatbots()
+
+        # Validate if bot_id exists
+        selected_bot = next((bot for bot in bots if bot.id == bot_id), None)
+        if not selected_bot:
+            raise HTTPException(status_code=404, detail="Bot not found")
+
+        return self.templates.TemplateResponse(
+            request=request,
+            name="dashboard.html",
+            context={
+                "bots": bots,
+                "user_profile": user_profile.get("data"),
+                "selected_bot_id": bot_id,  # Pass selected bot ID to the template
             }
         )
     

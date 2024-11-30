@@ -28,15 +28,15 @@ class WorkspaceDataModel(Base):
 
 class WorkspaceDataRepository(ABC):
     @abstractmethod
-    def create_workspace_data(self, workspace_data: WorkspaceData):
+    def create_workspace_data(self, workspace_data: WorkspaceData): # pragma: no cover
         pass
     
     @abstractmethod
-    def get_workspace_data_by_team_id(self, team_id:str) -> WorkspaceDataModel | None:
+    def get_workspace_data_by_team_id(self, team_id:str) -> WorkspaceDataModel | None: # pragma: no cover
         pass
 
     @abstractmethod
-    def get_all_workspace_data(self) -> list[WorkspaceData]:
+    def get_all_workspace_data(self) -> list[WorkspaceData]: # pragma: no cover
         pass
 
 class PostgresWorkspaceDataRepository(WorkspaceDataRepository):

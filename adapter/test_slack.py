@@ -10,7 +10,8 @@ from slack_sdk.web import WebClient
 from datetime import datetime
 from uuid import uuid4
 from auth.repository import AuthRepository, UserModel
-from bot.bot import BotResponse, MessageAdapter, ModelEngine
+from common.shared_types import MessageAdapter
+from bot.bot import BotResponse, ModelEngine
 from bot.service import BotService
 from bot.helper import relative_time
 from chat import ChatEngineSelector, ChatOpenAI
@@ -32,7 +33,15 @@ class TestSlackAdapter:
             mock_engine_selector.select_engine.return_value = ChatOpenAI(mock_retriever)
             mock_chatbot = mock_engine_selector.select_engine()
             mock_bot_service = MagicMock(spec=BotService)
+            
             mock_reaction_event_repository = MagicMock(spec=ReactionEventRepository)
+            mock_session = MagicMock()  # Simulates the session object
+            mock_create_session = MagicMock(
+                __enter__=MagicMock(return_value=mock_session),  # Mock entering the context
+                __exit__=MagicMock(return_value=None),  # Mock exiting the context
+            )
+            mock_reaction_event_repository.create_session = MagicMock(return_value=mock_create_session)
+                
             mock_auth_repository = MagicMock(spec=AuthRepository)
             mock_workspace_data_repository = MagicMock(spec=WorkspaceDataRepository)
             mock_slack_config = SlackConfig(
@@ -177,6 +186,10 @@ class TestSlackAdapter:
     @pytest.fixture
     def mock_negative_reaction_event(self):
         return self.mock_reaction_added_event("-1")
+    
+    @pytest.fixture
+    def mock_positive_reaction_event(self):
+        return self.mock_reaction_added_event("+1")
 
     def mock_interaction_form(self):
         return {
@@ -401,12 +414,12 @@ class TestSlackAdapter:
 
         context = {"team_id": "T1234567"}
 
-        slack_adapter.negative_reaction = MagicMock()
+        slack_adapter.handle_rating_reaction = MagicMock()
         res = slack_adapter.reaction_added(negative_reaction, context)
 
         assert res.status_code == 200
 
-        slack_adapter.negative_reaction.assert_called_once_with(negative_reaction, mock_client)
+        slack_adapter.handle_rating_reaction.assert_called_once_with(negative_reaction, mock_client)
 
     @pytest.mark.asyncio
     async def test_negative_reaction(
@@ -432,7 +445,7 @@ class TestSlackAdapter:
             updated_at_relative=relative_time(datetime.now()),
         )
 
-        slack_adapter.negative_reaction(event=negative_reaction, client=mock_client)
+        slack_adapter.handle_rating_reaction(event=negative_reaction, client=mock_client)
 
         mock_client.conversations_history.assert_called_once()
         mock_bot_service.get_chatbot_by_slug.assert_called_once()
@@ -452,7 +465,7 @@ class TestSlackAdapter:
 
         mock_client.conversations_history.return_value = conversations_history
 
-        slack_adapter.negative_reaction(event=negative_reaction, client=mock_client)
+        slack_adapter.handle_rating_reaction(event=negative_reaction, client=mock_client)
 
         mock_client.conversations_history.assert_called_once()
         slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
@@ -471,7 +484,7 @@ class TestSlackAdapter:
 
         mock_client.conversations_history.return_value = conversations_history
 
-        slack_adapter.negative_reaction(event=negative_reaction, client=mock_client)
+        slack_adapter.handle_rating_reaction(event=negative_reaction, client=mock_client)
 
         mock_client.conversations_history.assert_called_once()
         slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
@@ -490,7 +503,7 @@ class TestSlackAdapter:
 
         mock_client.conversations_history.return_value = conversations_history
 
-        slack_adapter.negative_reaction(event=negative_reaction, client=mock_client)
+        slack_adapter.handle_rating_reaction(event=negative_reaction, client=mock_client)
 
         mock_client.conversations_history.assert_called_once()
         slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
@@ -509,10 +522,121 @@ class TestSlackAdapter:
 
         mock_bot_service.get_chatbot_by_slug.return_value = None
 
-        slack_adapter.negative_reaction(event=negative_reaction, client=mock_client)
+        slack_adapter.handle_rating_reaction(event=negative_reaction, client=mock_client)
 
         mock_client.conversations_history.assert_called_once()
         slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_positive_reaction(
+        self, mock_positive_reaction_event, mock_slack_adapter, mock_conversations_history
+    ):
+        positive_reaction = mock_positive_reaction_event
+        components = mock_slack_adapter
+        mock_bot_service = components["mock_bot_service"]
+        slack_adapter = components["slack_adapter"]
+        mock_client = components["mock_client"]
+
+        mock_client.conversations_history.return_value = mock_conversations_history
+
+        mock_bot_service.get_chatbot_by_slug.return_value = BotResponse(
+            id=uuid4(),
+            name="Bot A",
+            system_prompt="a prompt for Bot A",
+            slug="management-2",
+            model=ModelEngine.OPENAI,
+            adapter=MessageAdapter.SLACK,
+            created_at=datetime.now(),
+            updated_at=datetime.now(),
+            updated_at_relative=relative_time(datetime.now()),
+        )
+
+        slack_adapter.handle_rating_reaction(event=positive_reaction, client=mock_client)
+
+        mock_client.conversations_history.assert_called_once()
+        mock_bot_service.get_chatbot_by_slug.assert_called_once()
+        slack_adapter.reaction_event_repository.create_reaction_event.assert_called_once()
+
+
+    @pytest.mark.asyncio
+    async def test_positive_reaction_not_parent_message(
+        self, mock_positive_reaction_event, mock_slack_adapter, mock_conversations_history
+    ):
+        positive_reaction = mock_positive_reaction_event
+        components = mock_slack_adapter
+        slack_adapter = components["slack_adapter"]
+        mock_client = components["mock_client"]
+
+        conversations_history = mock_conversations_history
+        conversations_history["messages"][0]["thread_ts"] = "different-thread-id"
+
+        mock_client.conversations_history.return_value = conversations_history
+
+        slack_adapter.handle_rating_reaction(event=positive_reaction, client=mock_client)
+
+        mock_client.conversations_history.assert_called_once()
+        slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
+
+
+    @pytest.mark.asyncio
+    async def test_positive_reaction_no_metadata(
+        self, mock_positive_reaction_event, mock_slack_adapter, mock_conversations_history
+    ):
+        positive_reaction = mock_positive_reaction_event
+        components = mock_slack_adapter
+        slack_adapter = components["slack_adapter"]
+        mock_client = components["mock_client"]
+
+        conversations_history = mock_conversations_history
+        conversations_history["messages"][0]["metadata"] = None
+
+        mock_client.conversations_history.return_value = conversations_history
+
+        slack_adapter.handle_rating_reaction(event=positive_reaction, client=mock_client)
+
+        mock_client.conversations_history.assert_called_once()
+        slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
+
+
+    @pytest.mark.asyncio
+    async def test_positive_reaction_invalid_event(
+        self, mock_positive_reaction_event, mock_slack_adapter, mock_conversations_history
+    ):
+        positive_reaction = mock_positive_reaction_event
+        components = mock_slack_adapter
+        slack_adapter = components["slack_adapter"]
+        mock_client = components["mock_client"]
+
+        conversations_history = mock_conversations_history
+        conversations_history["messages"][0]["metadata"]["event_type"] = "unknown-event-type"
+
+        mock_client.conversations_history.return_value = conversations_history
+
+        slack_adapter.handle_rating_reaction(event=positive_reaction, client=mock_client)
+
+        mock_client.conversations_history.assert_called_once()
+        slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
+
+
+    @pytest.mark.asyncio
+    async def test_positive_reaction_chatbot_not_found(
+        self, mock_positive_reaction_event, mock_slack_adapter, mock_conversations_history
+    ):
+        positive_reaction = mock_positive_reaction_event
+        components = mock_slack_adapter
+        mock_bot_service = components["mock_bot_service"]
+        slack_adapter = components["slack_adapter"]
+        mock_client = components["mock_client"]
+
+        mock_client.conversations_history.return_value = mock_conversations_history
+
+        mock_bot_service.get_chatbot_by_slug.return_value = None
+
+        slack_adapter.handle_rating_reaction(event=positive_reaction, client=mock_client)
+
+        mock_client.conversations_history.assert_called_once()
+        slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
+
 
     @pytest.mark.asyncio
     async def test_ask_form(self, mock_slack_adapter, mock_request):

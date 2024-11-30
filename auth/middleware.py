@@ -1,55 +1,86 @@
-from fastapi import HTTPException, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import RedirectResponse
 from functools import wraps
 from loguru import logger
 from jose import jwt
+import re
 
-from auth.utils import get_jwt_secret_key
+class AuthMiddleware:
+    def __init__(self, app: FastAPI, jwt_secret_key: str, login_url: str = "/login", included_routes: list[str] = None):
+        self.app = app
+        self.jwt_secret_key = jwt_secret_key
+        self.login_url = login_url
+        self.included_routes = included_routes or []
 
-def login_required(jwt_secret_key=None):
-    """
-    Decorator to require login, with an optional jwt_secret_key parameter.
-    
-    Parameters:
-    - jwt_secret_key: Optional JWT secret key. If not provided, it will be obtained from the utils function.
-    """
-    def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            if kwargs.pop('testing', None):
-                return func(*args, **kwargs)
-            
-            logger_service = logger.bind(service="AuthMiddleware")
-            request = kwargs.get("request")
+        self.regex_patterns = []
+        for route in self.included_routes:
+            if "{" in route and "}" in route:  
+                pattern = re.sub(r"{[^}]+}", r"[^/]+", route)
+                pattern = f"^{pattern}$"
+                self.regex_patterns.append(re.compile(pattern))  
 
-            if not request or not isinstance(request, Request):
-                raise HTTPException(status_code=400, detail="Request object is missing or invalid")
+    def is_route_included(self, path: str) -> bool:
+        """
+        Check if the given path matches any route in the included_routes list.
+        """
+        for route in self.included_routes:
+            if self._is_wildcard_match(route, path):
+                return True
+            if self._is_exact_match(route, path):
+                return True
+            if self._is_dynamic_match(route, path):
+                return True
+        return False
 
-            token = request.cookies.get("token")
-            if not token:
-                return RedirectResponse(url="/login", status_code=302)
+    def _is_wildcard_match(self, route: str, path: str) -> bool:
+        """
+        Check if the path matches a wildcard route (e.g., `/api/*`).
+        """
+        return route.endswith("*") and path.startswith(route.rstrip("*"))
 
-            try:
-                # Use the provided jwt_secret_key, or get from utils if not provided
-                secret_key = jwt_secret_key or get_jwt_secret_key()
+    def _is_exact_match(self, route: str, path: str) -> bool:
+        """
+        Check if the path matches an exact route.
+        """
+        return path == route
 
-                # Decode the JWT token
-                decoded = jwt.decode(
-                    token=token, 
-                    key=secret_key,
-                    algorithms=["HS256"],
-                )
+    def _is_dynamic_match(self, route: str, path: str) -> bool:
+        """
+        Check if the path matches a dynamic route (e.g., `/edit/{id}`).
+        """
+        if "{" in route and "}" in route:
+            for pattern in self.regex_patterns:
+                if pattern.match(path):
+                    return True
+        return False
 
-                # Raise an exception if the token is invalid
-                if not decoded:
-                    raise HTTPException(status_code=401, detail="Invalid token")
-            except Exception as e:
-                logger_service.info(str(e))
-                return RedirectResponse(url="/login", status_code=302)
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            request = Request(scope, receive, send)
+            path = request.url.path
+            logger.debug(f"Processing path: {path}")
 
-            # Set the user profile in the request state
-            request.state.user_profile = decoded
-            return func(*args, **kwargs)
-        
-        return wrapper
-    return decorator
+            if path == self.login_url:
+                logger.debug("Login route, bypassing middleware.")
+                await self.app(scope, receive, send)
+                return
+
+            if self.is_route_included(path):
+                logger.debug("Route included in middleware.")
+                token = request.cookies.get("token")
+                if not token:
+                    logger.debug("No token found, redirecting to login.")
+                    response = RedirectResponse(url=self.login_url)
+                    await response(scope, receive, send)
+                    return
+
+                try:
+                    jwt.decode(token, self.jwt_secret_key, algorithms=["HS256"])
+                    logger.debug("Token is valid.")
+                except Exception:
+                    logger.debug("Invalid token, redirecting to login.")
+                    response = RedirectResponse(url=self.login_url)
+                    await response(scope, receive, send)
+                    return
+
+        await self.app(scope, receive, send)

@@ -5,10 +5,12 @@ from fastapi.staticfiles import StaticFiles
 from slack_bolt import App
 from slack_bolt.oauth.oauth_settings import OAuthSettings
 
-from adapter import SlackAdapter, PostgresReactionEventRepository
+from adapter.slack import SlackAdapter
+from adapter.reaction_event_repository import PostgresReactionEventRepository
 from adapter.slack_repository import PostgresWorkspaceDataRepository, CustomInstallationStore
 from adapter.view import SlackViewV1
 from auth.controller import AuthControllerV1
+from auth.middleware import AuthMiddleware, LoginDecorator
 from auth.repository import PostgresAuthRepository
 from auth.service import AuthServiceV1
 from auth.dto import GoogleCredentials, ProfileResponse
@@ -16,7 +18,6 @@ from auth.view import UserViewV1
 from bot.view import BotViewV1
 from config import AppConfig, configure_logger
 from chat import ChatEngineSelector
-from data_source.view import DataSourceViewV1
 from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
 
@@ -50,6 +51,7 @@ sentry_sdk.init(
 
 if __name__ == "__main__":
     config = AppConfig()
+
 
     google_credentials = GoogleCredentials(
         client_id=config.google_client_id,
@@ -101,7 +103,6 @@ if __name__ == "__main__":
         bot_controller, bot_service, auth_controller
     )
 
-    data_source_view = DataSourceViewV1(auth_controller)
     engine_selector = ChatEngineSelector(
         openai_api_key=config.openai_api_key,
         anthropic_api_key=config.anthropic_api_key,
@@ -158,6 +159,16 @@ if __name__ == "__main__":
     slack_view = SlackViewV1(auth_controller, slack_config, config.admin_emails)
 
     app = FastAPI()
+    app.add_middleware(AuthMiddleware, jwt_secret_key=config.jwt_secret_key, included_routes=[
+        "/", 
+        "/create", 
+        "/edit/{id}", 
+        "/document", 
+        "/users", 
+        "/create-document",
+        "/api/*",
+        "/slack/*",
+    ])
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(SentryAsgiMiddleware)
 
@@ -335,6 +346,21 @@ if __name__ == "__main__":
         endpoint=auth_controller.logout,
         response_class=RedirectResponse,
         methods=["GET"],
+    )
+    
+    app.add_api_route(
+        "/dashboard",
+        endpoint=bot_view.show_dashboard,
+        response_class=HTMLResponse,
+        description="Dashboard Page"
+    )
+
+    
+    app.add_api_route(
+        "/api/dashboard/{bot_id}",
+        endpoint=bot_controller.get_dashboard_data,
+        methods=["GET"],
+        name="Dashboard Data for Bot"
     )
 
     uvicorn.run(app, host="0.0.0.0", port=config.port, access_log=False)
