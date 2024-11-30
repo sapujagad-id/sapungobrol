@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
     auth_controller = AuthControllerV1(auth_service)
 
-    user_view = UserViewV1(auth_controller, auth_service, config.admin_emails)
+    user_view = UserViewV1(auth_controller, auth_service)
 
     bot_repository = PostgresBotRepository(sessionmaker)
 
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     bot_controller = BotControllerV1(bot_service)
 
     bot_view = BotViewV1(
-        bot_controller, bot_service, auth_controller, config.admin_emails
+        bot_controller, bot_service, auth_controller
     )
 
     engine_selector = ChatEngineSelector(

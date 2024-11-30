@@ -20,7 +20,7 @@ class DocumentViewV1(DocumentView):
         super().__init__()
         self.templates = Jinja2Templates(
             env=Environment(
-                loader=jinja2.FileSystemLoader(['document/templates', 'bot/templates']),
+                loader=jinja2.FileSystemLoader(['document/templates', 'components/templates']),
                 autoescape=True,
             )
         )

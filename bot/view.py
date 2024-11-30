@@ -33,18 +33,17 @@ class BotView(ABC):
     
 # note: authentication not impl yet
 class BotViewV1(BotView):    
-    def __init__(self, controller: BotController, service: BotService, auth_controller: AuthController, admin_emails=list[str]) -> None:
+    def __init__(self, controller: BotController, service: BotService, auth_controller: AuthController) -> None:
         super().__init__()
         self.templates = Jinja2Templates(
             env=Environment(
-                loader=jinja2.FileSystemLoader('bot/templates'),
+                loader=jinja2.FileSystemLoader(['bot/templates', 'components/templates']),
                 autoescape=True,
             )
         )
         self.controller = controller
         self.service = service
         self.auth_controller = auth_controller
-        self.admin_emails = admin_emails
     
     def show_list_chatbots(self, request: Request):
         bots = self.controller.fetch_chatbots()
@@ -53,7 +52,7 @@ class BotViewV1(BotView):
             request=request, 
             name="list.html", 
             context={"bots": bots,
-                    "admin_emails": self.admin_emails,
+                    "is_admin": request.cookies.get("is_admin"),
                      "user_profile": user_profile.get("data")
                      },
         )
@@ -67,7 +66,7 @@ class BotViewV1(BotView):
             context =   {   
                             "model_engines": [e.value for e in ModelEngine],
                             "bot":bot,
-                            "admin_emails": self.admin_emails,
+                            "is_admin": request.cookies.get("is_admin"),
                             "message_adapters": [e.value for e in MessageAdapter],
                             "user_profile": user_profile.get("data"),
                             "data_source":["docs1","docs2","docs3"]
@@ -82,7 +81,7 @@ class BotViewV1(BotView):
             context={   
                 "model_engines": [e.value for e in ModelEngine],
                 "message_adapters": [e.value for e in MessageAdapter],
-                "admin_emails": self.admin_emails,
+                "is_admin": request.cookies.get("is_admin"),
                 "user_profile": user_profile.get("data"),
                 "data_source":["docs1","docs2","docs3"]
             }
