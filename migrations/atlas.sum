@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-h1:QggWrpMOqdli8Nrqcp4Y5/+a9EtSC695D3pVpROi58s=
-=======
-h1:WNU8F4yudsIxXHiW6bxNw84m2q1aFzYfHMDKhdth7G0=
->>>>>>> main
+h1:gKt4MOdoOdnde0mSp+JB7BuuYc0qWRc5hYs0zbbSbn4=
 20240923095223_create_bots.sql h1:b+ptk5RBZ/UlKGp9lfjOmVwsitN804Qsncs4VSdVBbs=
 20240925055750_add_bot_message_adapter_column.sql h1:kC0ahrjuFiHEEqSDaIv531y4QwP5Q1bN19mchJs8Dcs=
 20241010142723_add_slug_field_and_anthropic_enum.sql h1:qQH6hJF3QlCveiUxKVv0YNjxnNnMx3B5rftMwMbatQo=
@@ -12,9 +8,6 @@ h1:WNU8F4yudsIxXHiW6bxNw84m2q1aFzYfHMDKhdth7G0=
 20241110193900_add_data_source.sql h1:rUJDvVgnfyssOSoqEfYn4T94CUSNusxiMfa6ctbzWBk=
 20241111020516_create_reaction_events.sql h1:mPdA6ApSj4YBrMJDg7IkrUDG/3c75QmVQXKHJlDVw4A=
 20241115072452_add_access_level_document.sql h1:Wb+lk3FQuSO+yIdCKhyMRR6p2cFhASMHGqBR2GROVos=
-<<<<<<< HEAD
-20241122171021_default_access_level.sql h1:THSuunO/q4QkV237f2IIr8EZIxSoaAV9za9N8xqpICc=
-=======
 20241122085859_add_workspace_data.sql h1:ebqNX1sjdKCZib0f5Ybg053B6/GpwVzsm2E9j3/guvI=
-20241126155206_create_thread_table.sql h1:WYtB+kveaQLq3h6OUbH4P1INDfDemuzFNtyvDmBeNYE=
->>>>>>> main
+20241122171021_default_access_level.sql h1:f5B5QZsFLPQz4M6nvcmLfiHGzmkrg23WTzs16CEwMJ4=
+20241126155206_create_thread_table.sql h1:rNZxJcsd4sI2epZFnDEwMZkeTMIXFB3c09ald94QeWE=
