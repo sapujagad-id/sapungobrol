@@ -8,7 +8,6 @@ import jinja2
 from auth.controller import AuthController
 from auth.service import AuthService
 
-from auth.middleware import login_required
 
 class UserView(ABC):
     @abstractmethod
@@ -16,20 +15,18 @@ class UserView(ABC):
         pass
       
 class UserViewV1(UserView):    
-    def __init__(self, controller: AuthController, service: AuthService, admin_emails:list[str]) -> None:
+    def __init__(self, controller: AuthController, service: AuthService) -> None:
         super().__init__()
         self.templates = Jinja2Templates(
             env=Environment(
-                loader=jinja2.FileSystemLoader(['auth/templates', "bot/templates"]),
+                loader=jinja2.FileSystemLoader(['auth/templates', "components/templates"]),
                 autoescape=True,
             )
         )
         self.controller = controller
         self.service = service 
-        self.admin_emails = admin_emails
 
        
-    @login_required()
     def view_users(self, request: Request):
         users = self.controller.get_all_users_basic_info(request)
         user_profile = self.controller.user_profile_google(request)
@@ -39,7 +36,7 @@ class UserViewV1(UserView):
                 name="view-users.html",
                 context={
                     "users": users,
-                    "admin_emails": self.admin_emails,
+                    "is_admin": request.cookies.get("is_admin"),
                     "user_profile": user_profile.get("data")
             },
         )

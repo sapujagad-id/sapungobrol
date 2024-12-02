@@ -17,7 +17,7 @@ class DataSourceViewV1(DataSourceView):
         super().__init__()
         self.templates = Jinja2Templates(
             env=Environment(
-                loader=jinja2.FileSystemLoader(['data_source/templates', 'bot/templates']),
+                loader=jinja2.FileSystemLoader(['data_source/templates', 'components/templates']),
                 autoescape=True,
             )
         )

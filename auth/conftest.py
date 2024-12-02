@@ -3,11 +3,14 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from jose import jwt
+from fastapi.testclient import TestClient
+from fastapi import FastAPI
 
 from auth.controller import AuthControllerV1
 from auth.dto import GoogleCredentials
 from auth.repository import PostgresAuthRepository, UserModel
 from auth.service import AuthServiceV1
+from auth.middleware import AuthMiddleware
 
 TEST_DATABASE_URL = "sqlite:///:memory:"  # Change as needed for your test setu
 
@@ -84,3 +87,40 @@ def valid_token(setup_jwt_secret):
 def invalid_token(setup_jwt_secret):
     # Generate an invalid JWT token (e.g., altered or expired)
     return "invalid.token.string"
+
+
+
+@pytest.fixture
+def app(setup_jwt_secret):
+    app = FastAPI()
+
+    @app.get("/public")
+    async def public_endpoint():
+        return {"message": "Public"}
+
+    @app.get("/private")
+    async def private_endpoint():
+        return {"message": "Private"}
+
+    @app.get("/dynamic/{id}")
+    async def dynamic_endpoint(id: str):
+        return {"id": id}
+
+    @app.get("/login")
+    async def login_endpoint():
+        return {"message": "Login"}
+
+    included_routes = ["/private", "/dynamic/*", "/private-curly/{id}"]
+    app.add_middleware(
+        AuthMiddleware,
+        jwt_secret_key=setup_jwt_secret,
+        login_url="/login",
+        included_routes=included_routes,
+    )
+    return app
+
+
+@pytest.fixture
+def client(app):
+    return TestClient(app)
+

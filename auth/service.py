@@ -121,6 +121,12 @@ class AuthServiceV1(AuthService):
         httponly=True, 
         secure=True,
       )
+      response.set_cookie(
+        key="is_admin",
+        value=user_info_json["email"] in self.admin_emails,
+        httponly=True,
+        secure=True,
+      )
       
       return response
     

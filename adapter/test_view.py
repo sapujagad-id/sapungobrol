@@ -63,7 +63,7 @@ class TestSlackViewV1:
 
         setup_controller.user_profile_google = Mock(return_value={"data": MockUserProfile("admin@broom.id")})
 
-        response = await slack_view.install(request, testing=True)
+        response = slack_view.install(request)
 
         assert response.template.name == "slack-install.html"
         assert "oauth_url" in response.context
@@ -97,7 +97,7 @@ class TestSlackViewV1:
         setup_controller.user_profile_google = Mock(return_value={"data": MockUserProfile("user@broom.id")})
 
         with pytest.raises(HTTPException) as exc_info:
-            await slack_view.install(request, testing=True)
+            await slack_view.install(request)
 
         assert exc_info.value.status_code == 403
         assert exc_info.value.detail == "Access denied"

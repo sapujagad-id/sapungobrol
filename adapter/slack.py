@@ -4,6 +4,7 @@ import threading
 import asyncio
 import json
 import requests
+from uuid import uuid4
 
 from typing import Any, Dict
 from fastapi import Request, Response, HTTPException
@@ -14,6 +15,7 @@ from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from auth.repository import AuthRepository
 from bot.service import BotService
+from bot.repository import ThreadModel
 from chat import ChatEngineSelector, ChatEngine
 from chat.exceptions import ChatResponseGenerationError
 from .reaction_event import ReactionEventCreate, Reaction
@@ -173,9 +175,8 @@ class SlackAdapter:
         team_id = context["team_id"]
         client = self.create_webclient_based_on_team_id(team_id)
 
-        # Handle negative reactions
-        if reaction == "-1":
-            self.negative_reaction(event, client)
+        if reaction == "-1" or reaction == "+1":
+            self.handle_rating_reaction(event, client)
 
         return Response(status_code=200)
     
@@ -353,6 +354,12 @@ class SlackAdapter:
 
             if chatbot is None:
                 raise MissingChatbot
+            
+            with self.reaction_event_repository.create_session() as session:
+                thread_id = uuid4()
+                new_thread = ThreadModel(id=thread_id, bot_id=chatbot.id)
+                session.add(new_thread)
+                session.commit()
 
             response = client.chat_postMessage(
                 channel=channel_id,

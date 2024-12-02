@@ -6,7 +6,6 @@ import jinja2
 from loguru import logger
 
 from auth.controller import AuthController
-from auth.middleware import login_required
 from document.document import DocumentType
 from document.dto import DocumentFilter
 from document.service import DocumentService
@@ -21,7 +20,7 @@ class DocumentViewV1(DocumentView):
         super().__init__()
         self.templates = Jinja2Templates(
             env=Environment(
-                loader=jinja2.FileSystemLoader(['document/templates', 'bot/templates']),
+                loader=jinja2.FileSystemLoader(['document/templates', 'components/templates']),
                 autoescape=True,
             )
         )
@@ -29,7 +28,6 @@ class DocumentViewV1(DocumentView):
         self.service = document_service
         self.logger = logger.bind(service="DocumentView")
 
-    @login_required()
     def show_list_documents(self, request: Request):
         documents = self.service.get_documents(DocumentFilter())
         user_profile = self.auth_controller.user_profile_google(request)
@@ -42,7 +40,6 @@ class DocumentViewV1(DocumentView):
             }
         )
         
-    @login_required()
     def new_document_view(self, request: Request):
         user_profile = self.auth_controller.user_profile_google(request)
         max_level = user_profile.get('data').access_level

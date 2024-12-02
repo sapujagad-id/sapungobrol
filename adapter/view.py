@@ -9,12 +9,11 @@ from starlette.status import HTTP_403_FORBIDDEN
 
 from auth.controller import AuthController
 
-from auth.middleware import login_required
 from .slack_dto import SlackConfig
 
 class SlackView(ABC):
     @abstractmethod
-    def install(self, request: Request):
+    def install(self, request: Request): # pragma: no cover
         pass
 
 class SlackViewV1(SlackView):    
@@ -22,7 +21,7 @@ class SlackViewV1(SlackView):
         super().__init__()
         self.templates = Jinja2Templates(
             env=Environment(
-                loader=jinja2.FileSystemLoader(["adapter/templates", "bot/templates"]),
+                loader=jinja2.FileSystemLoader(["adapter/templates", "components/templates"]),
                 autoescape=True,
             )
         )
@@ -31,7 +30,6 @@ class SlackViewV1(SlackView):
         self.admin_emails = admin_emails
         self.slack_scopes = slack_config.slack_scopes
     
-    @login_required()
     def install(self, request: Request):
         user_profile = self.auth_controller.user_profile_google(request)
         user_profile_data = user_profile.get("data")
@@ -46,7 +44,7 @@ class SlackViewV1(SlackView):
             name="slack-install.html",
             context={
                 "oauth_url": oauth_url,
-                "admin_emails": self.admin_emails,
+                "is_admin": request.cookies.get("is_admin"),
                 "user_profile": user_profile.get("data")
             }
         )

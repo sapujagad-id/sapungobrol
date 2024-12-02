@@ -9,7 +9,8 @@ import pytest
 
 from auth.controller import AuthControllerV1
 from auth.dto import ProfileResponse
-from bot.bot import BotResponse, MessageAdapter, ModelEngine
+from common.shared_types import MessageAdapter
+from bot.bot import BotResponse, ModelEngine
 from bot.helper import relative_time
 from bot.view import BotViewV1
 

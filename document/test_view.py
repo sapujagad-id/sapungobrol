@@ -11,10 +11,8 @@ from document.document import DocumentType
 
 from .view import DocumentViewV1  # Update with the correct import for your view class
 
-@pytest.mark.asyncio
 class TestDocumentView:
-    @pytest.mark.asyncio
-    async def test_show_list_document(self, setup_view, setup_jwt_secret, dummy_user_profile):
+    def test_show_list_document(self, setup_view, setup_jwt_secret, dummy_user_profile):
         view = setup_view
 
         # Create a mock request
@@ -39,7 +37,7 @@ class TestDocumentView:
         view.auth_controller.user_profile_google = Mock(return_value=dummy_user_profile)
 
         # Call the view method
-        response = await view.show_list_documents(request=request)
+        response = view.show_list_documents(request=request)
 
         # Check that the correct template is used and context is passed
         assert response.template.name == "document-list.html"
@@ -55,8 +53,7 @@ class TestDocumentView:
         assert 'pdf' in rendered
         assert 'doc2.txt' in rendered
         
-    @pytest.mark.asyncio
-    async def test_show_create_document_form(self, setup_view, setup_jwt_secret, dummy_user_profile):
+    def test_show_create_document_form(self, setup_view, setup_jwt_secret, dummy_user_profile):
         view = setup_view
 
         # Create a mock request
@@ -84,7 +81,7 @@ class TestDocumentView:
         )))
 
         # Call the view method
-        response = await view.new_document_view(request=request)
+        response = view.new_document_view(request=request)
 
         # Check that the correct template is used and context is passed
         assert response.template.name == "new-document.html"
