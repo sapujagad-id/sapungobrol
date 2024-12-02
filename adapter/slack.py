@@ -189,8 +189,8 @@ class SlackAdapter:
 
         return Response(status_code=200)
     
-    def negative_reaction(self, event: Dict[str, any], client:WebClient):
-        self.logger().info("handle negative reaction")
+    def handle_rating_reaction(self, event: Dict[str, any], client:WebClient):
+        self.logger().info("handle rating reaction")
 
         # Fetch message data
         res = client.conversations_history(
