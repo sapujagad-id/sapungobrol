@@ -28,6 +28,10 @@ class ReactionEventRepository(ABC):
     def create_reaction_event(self, event_create: ReactionEventCreate): # pragma: no cover
         pass
 
+    @abstractmethod
+    def delete_reaction_event(self, reaction: Reaction, source_adapter_message_id: str, source_adapter_user_id: str): # pragma: no cover
+        pass
+
 
 class PostgresReactionEventRepository(ReactionEventRepository):
     def __init__(self, session: sessionmaker[Session]) -> None:
@@ -50,3 +54,34 @@ class PostgresReactionEventRepository(ReactionEventRepository):
                 )
                 session.add(new_reaction_event)
                 session.commit()
+    
+    def delete_reaction_event(
+        self,
+        reaction: Reaction,
+        source_adapter_message_id: str,
+        source_adapter_user_id: str
+    ):
+        self.logger.bind(
+            reaction=reaction,
+            message_id=source_adapter_message_id,
+            user_id=source_adapter_user_id,
+        ).info("deleting reaction event")
+
+        with self.create_session() as session:
+            with self.logger.catch(message="delete reaction event error", reraise=True):
+                reaction_event = (
+                    session.query(ReactionEventModel)
+                    .filter_by(
+                        reaction=reaction,
+                        source_adapter_message_id=source_adapter_message_id,
+                        source_adapter_user_id=source_adapter_user_id,
+                    )
+                    .first()
+                )
+                
+                if reaction_event:
+                    session.delete(reaction_event)
+                    session.commit()
+                    self.logger.info("Reaction event deleted successfully")
+                else:
+                    self.logger.warning("No matching reaction event found for deletion")

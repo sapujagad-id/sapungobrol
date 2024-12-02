@@ -19,7 +19,7 @@ from chat.exceptions import ChatResponseGenerationError
 from .slack_dto import SlackConfig
 from bot.repository import BotModel
 from .reaction_event_repository import ReactionEventRepository
-from .reaction_event import ReactionEventCreate
+from .reaction_event import ReactionEventCreate, Reaction
 from .slack_repository import WorkspaceDataRepository
 
 
@@ -526,6 +526,53 @@ class TestSlackAdapter:
 
         mock_client.conversations_history.assert_called_once()
         slack_adapter.reaction_event_repository.create_reaction_event.assert_not_called()
+
+
+    def test_remove_reaction(self, mock_slack_adapter):
+        components = mock_slack_adapter
+        slack_adapter = components["slack_adapter"]
+        reaction_event_repository = slack_adapter.reaction_event_repository
+
+        event = {
+            "item": {
+                "ts": "1234567890.123456"
+            },
+            "user": "U12345678",
+            "reaction": "-1"
+        }
+
+        reaction = event["reaction"]
+
+        with patch.object(slack_adapter, 'logger', return_value=MagicMock()) as mock_logger:
+            slack_adapter.remove_reaction(event, reaction)
+            mock_logger.return_value.info.assert_called_once_with("handle negative reaction removed")
+
+        reaction_event_repository.delete_reaction_event.assert_called_once_with(
+            reaction,
+            ("1234567890.123456",),
+            ("U12345678",)
+        )
+
+    def test_reaction_removed_negative_reaction(self, mock_slack_adapter):
+        components = mock_slack_adapter
+        slack_adapter = components["slack_adapter"]
+
+        slack_adapter.remove_reaction = MagicMock()
+
+        event = {
+            "reaction": "-1",
+            "item": {
+                "ts": "1234567890.123456"
+            },
+            "user": "U12345678"
+        }
+
+        response = slack_adapter.reaction_removed(event)
+
+        slack_adapter.remove_reaction.assert_called_once_with(event, Reaction.NEGATIVE)
+
+        assert response.status_code == 200
+
 
     @pytest.mark.asyncio
     async def test_positive_reaction(

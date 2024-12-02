@@ -18,7 +18,7 @@ from bot.service import BotService
 from bot.repository import ThreadModel
 from chat import ChatEngineSelector, ChatEngine
 from chat.exceptions import ChatResponseGenerationError
-from .reaction_event import ReactionEventCreate
+from .reaction_event import ReactionEventCreate, Reaction
 from .reaction_event_repository import ReactionEventRepository
 from .slack_dto import WorkspaceData, SlackConfig
 from .slack_repository import WorkspaceDataRepository
@@ -179,7 +179,16 @@ class SlackAdapter:
             self.handle_rating_reaction(event, client)
 
         return Response(status_code=200)
+    
+    def reaction_removed(self, event):
+        reaction = event["reaction"]
 
+        # Handle negative reactions
+        if reaction == "-1":
+            self.remove_reaction(event, Reaction.NEGATIVE)
+
+        return Response(status_code=200)
+    
     def handle_rating_reaction(self, event: Dict[str, any], client:WebClient):
         self.logger().info("handle rating reaction")
 
@@ -219,6 +228,17 @@ class SlackAdapter:
         )
 
         self.reaction_event_repository.create_reaction_event(reaction_event_create)
+
+    def remove_reaction(self, event: Dict[str, any], reaction:Reaction):
+        self.logger().info("handle negative reaction removed")
+
+        source_adapter_message_id=event["item"]["ts"],
+        source_adapter_user_id=event["user"],
+
+        self.reaction_event_repository.delete_reaction_event(
+                reaction,
+                source_adapter_message_id, 
+                source_adapter_user_id)
 
     def send_generated_response(
         self,
