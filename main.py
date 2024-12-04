@@ -167,7 +167,7 @@ if __name__ == "__main__":
         "/document", 
         "/users", 
         "/create-document",
-        "/api/*",
+        # "/api/*", # see SAP-79
         "/slack/*",
     ])
     app.add_middleware(RequestLoggingMiddleware)
