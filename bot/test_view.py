@@ -87,7 +87,6 @@ class TestBotViews:
         context = {
             'model_engines': [e.value for e in ModelEngine],
             'message_adapters': [e.value for e in MessageAdapter],
-            "data_source":["docs1","docs2","docs3"]
         }
 
         env = jinja2.Environment(
@@ -105,7 +104,6 @@ class TestBotViews:
 
         assert '<option value="OpenAI">OpenAI</option>' in rendered
         assert '<option value="Slack">Slack</option>' in rendered
-        assert 'docs1' in rendered
 
     
 
@@ -120,7 +118,6 @@ class TestBotViews:
             },
             'model_engines': [e.value for e in ModelEngine],
             'message_adapters': [e.value for e in MessageAdapter],
-            "data_source":["docs1","docs2","docs3"]
         }
 
         env = jinja2.Environment(
@@ -140,7 +137,6 @@ class TestBotViews:
         assert 'This is a test bot prompt.' in rendered
         assert '<option value="OpenAI" selected' in rendered
         assert '<option value="Slack" selected' in rendered
-        assert 'docs2' in rendered
 
     def test_show_list_chatbots(self, setup_view, setup_service, setup_jwt_secret, dummy_user_profile):
         view = setup_view

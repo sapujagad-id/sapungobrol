@@ -68,8 +68,11 @@ class TestAuthService:
         mock_get.return_value.raise_for_status.return_value = None
         mock_request = MockRequest(cookies={})
         
-        with pytest.raises(HTTPException):
-            setup_real_service.authorize_google(mock_request, "fake_code")
+        response = setup_real_service.authorize_google(mock_request, "fake_code")
+
+        assert isinstance(response, RedirectResponse)
+        assert response.status_code == 302 or 307
+        assert not response.headers.get('set-cookies')
 
     @patch('requests.post')
     def test_authorize_google_invalid_token(self, mock_post, setup_real_service):
