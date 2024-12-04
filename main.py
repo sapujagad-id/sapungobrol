@@ -10,7 +10,7 @@ from adapter.reaction_event_repository import PostgresReactionEventRepository
 from adapter.slack_repository import PostgresWorkspaceDataRepository, CustomInstallationStore
 from adapter.view import SlackViewV1
 from auth.controller import AuthControllerV1
-from auth.middleware import AuthMiddleware, LoginDecorator
+from auth.middleware import AuthMiddleware
 from auth.repository import PostgresAuthRepository
 from auth.service import AuthServiceV1
 from auth.dto import GoogleCredentials, ProfileResponse
