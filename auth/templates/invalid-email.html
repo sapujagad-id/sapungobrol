@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Invalid Email</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="h-[90dvh]">
+  <!-- Navbar -->
+  {% include 'navbar.html' %}
+
+  <div class="text-center flex flex-col items-center justify-center h-full bg-gray-100">
+    <p class="text-red-600 text-xl font-bold">
+      Invalid email, please use a broom.id email address.
+    </p>
+    <br/>
+    <a href="/login/google" class="flex items-center bg-white border border-gray-300 px-4 py-2 rounded hover:bg-gray-100">
+      <img src="/assets/google-logo-v1.png" alt="Google Logo" class="h-5 mr-2">
+      <span class="text-gray-700">Sign in with Google</span>
+    </a>
+  </div>
+</body>
+</html>

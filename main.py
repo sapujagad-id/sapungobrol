@@ -189,6 +189,13 @@ if __name__ == "__main__":
         response_class=HTMLResponse,
         description="Page that displays login page",
     )
+    
+    app.add_api_route(
+        "/invalid-email",
+        endpoint=user_view.view_invalid_login_email,
+        response_class=HTMLResponse,
+        description="Page that displays Invalid Email error",
+    )
 
     app.add_api_route(
         "/create",
