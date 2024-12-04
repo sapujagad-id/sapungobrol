@@ -50,5 +50,6 @@ class DocumentViewV1(DocumentView):
             context={
                 "document_types": [x.lower() for x in DocumentType._member_names_],
                 "access_levels": [i for i in range(0, int(max_level) + 1)],
+                "user_profile": user_profile.get("data")
             }
         )
