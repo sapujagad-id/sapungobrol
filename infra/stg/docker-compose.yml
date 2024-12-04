@@ -72,7 +72,7 @@ services:
       - public-web
 
   sapungobrol-victoriametrics:
-    image: victoriametrics/victoria-metrics:latest
+    image: victoriametrics/victoria-metrics:v1.106.0
     ports:
       - '8428:8428'
     command:
