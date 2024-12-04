@@ -41,3 +41,12 @@ class TestUserView:
         rendered = response.body.decode()
         assert 'User1' in rendered
         assert 'User2' in rendered
+        
+    def test_view_email_error(self, setup_controller, setup_service, setup_jwt_secret):
+        user_view = UserViewV1(controller=setup_controller, service=setup_service)
+        request = Mock(spec=Request)
+        response = user_view.view_invalid_login_email(request)
+
+        rendered = response.body.decode()
+        assert response.template.name == "invalid-email.html"
+        assert "Invalid email" in rendered
