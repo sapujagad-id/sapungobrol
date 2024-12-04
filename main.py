@@ -10,7 +10,7 @@ from adapter.reaction_event_repository import PostgresReactionEventRepository
 from adapter.slack_repository import PostgresWorkspaceDataRepository, CustomInstallationStore
 from adapter.view import SlackViewV1
 from auth.controller import AuthControllerV1
-from auth.middleware import AuthMiddleware, LoginDecorator
+from auth.middleware import AuthMiddleware
 from auth.repository import PostgresAuthRepository
 from auth.service import AuthServiceV1
 from auth.dto import GoogleCredentials, ProfileResponse
@@ -155,6 +155,7 @@ if __name__ == "__main__":
 
     slack_app.event("message")(slack_adapter.event_message)
     slack_app.event("reaction_added")(slack_adapter.reaction_added)
+    slack_app.event("reaction_removed")(slack_adapter.reaction_removed)
 
     slack_view = SlackViewV1(auth_controller, slack_config, config.admin_emails)
 
