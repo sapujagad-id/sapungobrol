@@ -1,11 +1,12 @@
-import pytest
-from unittest.mock import MagicMock, patch
-from chat.exceptions import ChatResponseGenerationError
-from chat import ChatEngineSelector
-from bot import ModelEngine
-
-from rag.retriever.retriever import Retriever
 from typing import List
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from bot import ModelEngine
+from chat import ChatEngineSelector
+from chat.exceptions import ChatResponseGenerationError
+from rag.retriever.retriever import Retriever
 
 
 @pytest.fixture

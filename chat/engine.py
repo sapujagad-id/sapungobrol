@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
+
 from chat.exceptions import ChatResponseGenerationError
 from rag.retriever.retriever import Retriever
+
 
 class ChatEngine(ABC):
 

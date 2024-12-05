@@ -1,10 +1,12 @@
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from bot import ModelEngine
+
 from . import ChatEngineSelector
-from .openai_chat import ChatOpenAI
 from .anthropic_chat import ChatAnthropic
+from .openai_chat import ChatOpenAI
 
 
 class TestChatEngineSelector:
