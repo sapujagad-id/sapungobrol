@@ -1,6 +1,10 @@
-import pytest
 from pathlib import Path
-from rag.parsing.parsing_txt import TXTProcessor  # Adjust import based on your project structure
+
+import pytest
+
+from rag.parsing.parsing_txt import \
+    TXTProcessor  # Adjust import based on your project structure
+
 
 @pytest.fixture
 def mock_simple_directory_reader(mocker):

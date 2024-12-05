@@ -1,13 +1,16 @@
-import pytest
-from unittest.mock import MagicMock, patch, mock_open
 from datetime import datetime
+from unittest.mock import MagicMock, mock_open, patch
+
+import pandas as pd
+import pytest
+
+from document.document import Document
+from document.service import DocumentServiceV1
+from rag.automation.document_automation import DocumentIndexing
 from rag.parsing.parsing_csv import CSVProcessor
 from rag.parsing.parsing_pdf import PDFProcessor
 from rag.parsing.parsing_txt import TXTProcessor
-from rag.automation.document_automation import DocumentIndexing
-from document.document import Document
-from document.service import DocumentServiceV1
-import pandas as pd
+
 
 @pytest.fixture
 def mock_service():

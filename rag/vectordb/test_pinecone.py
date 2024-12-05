@@ -1,8 +1,10 @@
-import pytest
 from unittest.mock import MagicMock
-from rag.vectordb.pinecone.pinecone_node_storage import PineconeNodeStorage
-from rag.vectordb.pinecone.pinecone_handler import PineconeHandler
+
+import pytest
 from pinecone.core.openapi.shared.exceptions import UnauthorizedException
+
+from rag.vectordb.pinecone.pinecone_handler import PineconeHandler
+from rag.vectordb.pinecone.pinecone_node_storage import PineconeNodeStorage
 
 
 @pytest.fixture

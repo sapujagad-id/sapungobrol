@@ -1,20 +1,23 @@
+import os
+from datetime import datetime
+
+import boto3
+import pandas as pd
+import requests
+from sqlalchemy import text
+
+from document.document import Document
+from document.dto import AWSConfig
+from document.service import DocumentServiceV1
+from document.utils import generate_presigned_url
 from rag.parsing.parsing_csv import CSVProcessor
-from rag.parsing.parsing_txt import TXTProcessor
 from rag.parsing.parsing_pdf import PDFProcessor
+from rag.parsing.parsing_txt import TXTProcessor
 from rag.sql.postgres_db_loader import get_postgres_engine
 from rag.vectordb.postgres_handler import PostgresHandler
 from rag.vectordb.postgres_node_storage import PostgresNodeStorage
-from document.document import Document
-from document.service import DocumentServiceV1
-from document.utils import generate_presigned_url
-from document.dto import AWSConfig
-import boto3
-from sqlalchemy import text
-from datetime import datetime
-import pandas as pd
-import requests
-import os
-    
+
+
 class DocumentIndexing:
     def __init__(self, aws_config: AWSConfig, service:DocumentServiceV1):
 

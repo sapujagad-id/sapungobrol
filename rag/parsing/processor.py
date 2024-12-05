@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
+
 from llama_index.core.bridge.pydantic import BaseModel, Field
+
 
 class TableInfo(BaseModel):
     table_name: str = Field(..., description="Unique table name (must use underscores and NO spaces)")
