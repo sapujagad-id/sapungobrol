@@ -1,12 +1,14 @@
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from datetime import datetime
-from loguru import logger
-from sqlalchemy import Column, Uuid, Enum, String, Text, DateTime
-from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from uuid import uuid4
 
+from loguru import logger
+from sqlalchemy import Column, DateTime, Enum, String, Text, Uuid
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
+
 from common.shared_types import MessageAdapter
-from .reaction_event import ReactionEventCreate, Reaction
+
+from .reaction_event import Reaction, ReactionEventCreate
 
 Base = declarative_base()
 

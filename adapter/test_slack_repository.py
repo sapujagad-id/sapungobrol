@@ -1,17 +1,16 @@
-import pytest
-from unittest.mock import MagicMock
-from sqlalchemy.orm import sessionmaker
-from uuid import uuid4
 from datetime import datetime
+from unittest.mock import MagicMock
+from uuid import uuid4
 
-from .slack_repository import (
-    PostgresWorkspaceDataRepository,
-    WorkspaceDataModel,
-    CustomInstallationStore
-)
-from .slack_dto import WorkspaceData
-from slack_sdk.oauth.installation_store.models.installation import Installation
+import pytest
 from slack_sdk.oauth.installation_store.models.bot import Bot
+from slack_sdk.oauth.installation_store.models.installation import Installation
+from sqlalchemy.orm import sessionmaker
+
+from .slack_dto import WorkspaceData
+from .slack_repository import (CustomInstallationStore,
+                               PostgresWorkspaceDataRepository,
+                               WorkspaceDataModel)
 
 
 class TestSlackRepository:

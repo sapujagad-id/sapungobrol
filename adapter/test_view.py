@@ -1,14 +1,16 @@
-import pytest
-from unittest.mock import Mock
-from fastapi import Request, HTTPException
-from jose import jwt
 from datetime import datetime, timedelta, timezone
+from unittest.mock import Mock
 
-from .view import SlackViewV1
-from .slack_dto import SlackConfig
+import pytest
+from fastapi import HTTPException, Request
+from jose import jwt
+
 from auth.controller import AuthControllerV1
 from auth.repository import PostgresAuthRepository
 from auth.service import AuthServiceV1
+
+from .slack_dto import SlackConfig
+from .view import SlackViewV1
 
 
 @pytest.fixture()

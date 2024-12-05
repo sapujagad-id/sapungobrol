@@ -1,27 +1,30 @@
-import sqlalchemy
-import sentry_sdk
-import threading
 import asyncio
 import json
-import requests
+import threading
+from typing import Dict
 from uuid import uuid4
 
-from typing import Dict
-from fastapi import Request, Response, HTTPException
+import requests
+import sentry_sdk
+import sqlalchemy
+from fastapi import HTTPException, Request, Response
 from loguru import logger
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
+
 from auth.repository import AuthRepository
-from bot.service import BotService
 from bot.repository import ThreadModel
-from chat import ChatEngineSelector, ChatEngine
+from bot.service import BotService
+from chat import ChatEngine, ChatEngineSelector
 from chat.exceptions import ChatResponseGenerationError
-from .reaction_event import ReactionEventCreate, Reaction
+
+from .reaction_event import Reaction, ReactionEventCreate
 from .reaction_event_repository import ReactionEventRepository
-from .slack_dto import WorkspaceData, SlackConfig
+from .slack_dto import SlackConfig, WorkspaceData
 from .slack_repository import WorkspaceDataRepository
+
 
 class UnableToRespondToInteraction(Exception):
     pass
