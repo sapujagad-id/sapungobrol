@@ -172,7 +172,6 @@ if __name__ == "__main__":
         "/document", 
         "/users", 
         "/create-document",
-        "/api/*",
         "/slack/*",
     ])
     app.add_middleware(RequestLoggingMiddleware)
