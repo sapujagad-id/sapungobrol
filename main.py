@@ -1,42 +1,40 @@
+import os
+
+import sentry_sdk
+import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+from sentry_sdk.integrations.threading import ThreadingIntegration
 from slack_bolt import App
 from slack_bolt.oauth.oauth_settings import OAuthSettings
 
-from adapter.slack import SlackAdapter
 from adapter.reaction_event_repository import PostgresReactionEventRepository
-from adapter.slack_repository import PostgresWorkspaceDataRepository, CustomInstallationStore
+from adapter.slack import SlackAdapter
+from adapter.slack_dto import SlackConfig
+from adapter.slack_repository import (CustomInstallationStore,
+                                      PostgresWorkspaceDataRepository)
 from adapter.view import SlackViewV1
 from auth.controller import AuthControllerV1
+from auth.dto import GoogleCredentials, ProfileResponse
 from auth.middleware import AuthMiddleware
 from auth.repository import PostgresAuthRepository
 from auth.service import AuthServiceV1
-from auth.dto import GoogleCredentials, ProfileResponse
 from auth.view import UserViewV1
-from bot.view import BotViewV1
-from config import AppConfig, configure_logger
-from chat import ChatEngineSelector
-from db import config_db
 from bot import Bot, BotControllerV1, BotServiceV1, PostgresBotRepository
-
-from adapter.slack_dto import SlackConfig
-from document.dto import AWSConfig
-from document.view import DocumentViewV1
-from web.logging import RequestLoggingMiddleware
-
-import uvicorn
-import sentry_sdk
-from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
-from sentry_sdk.integrations.threading import ThreadingIntegration
-import os
-
+from bot.view import BotViewV1
+from chat import ChatEngineSelector
+from config import AppConfig, configure_logger
+from db import config_db
 from document.controller import DocumentControllerV1
+from document.dto import AWSConfig
 from document.repository import PostgresDocumentRepository
 from document.service import DocumentServiceV1
-
+from document.view import DocumentViewV1
 from rag.automation.document_automation import DocumentIndexing
+from web.logging import RequestLoggingMiddleware
 
 load_dotenv(override=True)
 
