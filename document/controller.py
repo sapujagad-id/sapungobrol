@@ -3,8 +3,10 @@ from typing import Annotated
 
 from fastapi import File, Form, HTTPException, UploadFile
 from loguru import logger
-from document import DocumentFilter, DocumentCreate, DocumentUpdate
-from document.document import DocumentTitleError, DocumentTypeError, ObjectNameError
+
+from document import DocumentCreate, DocumentFilter, DocumentUpdate
+from document.document import (DocumentTitleError, DocumentTypeError,
+                               ObjectNameError)
 from document.service import DocumentService
 
 

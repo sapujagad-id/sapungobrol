@@ -1,7 +1,10 @@
+from io import BytesIO
+
 import pytest
 from fastapi import HTTPException, UploadFile
+
 from document.dto import DocumentFilter
-from io import BytesIO
+
 
 class TestDocumentController:
     def test_fetch_documents_found(self, setup_controller, setup_documents):

@@ -1,10 +1,13 @@
-import pytest
-from document.document import DocumentType, ObjectNameError
-from document.dto import DocumentCreate, DocumentFilter
 import io
 from unittest.mock import ANY, MagicMock
+
 import pytest
-from botocore.exceptions import NoCredentialsError, PartialCredentialsError, BotoCoreError # type: ignore
+from botocore.exceptions import (BotoCoreError,  # type: ignore
+                                 NoCredentialsError, PartialCredentialsError)
+
+from document.document import DocumentType, ObjectNameError
+from document.dto import DocumentCreate, DocumentFilter
+
 
 class TestDocumentService:
     def test_get_documents(self, setup_service, setup_documents):

@@ -1,7 +1,9 @@
 from datetime import datetime
 from enum import Enum
-from pydantic import UUID4, BaseModel
+
 from botocore.exceptions import ClientError
+from pydantic import UUID4, BaseModel
+
 
 class DocumentTitleError(Exception):
     def __init__(self, message="Document title is required"):
