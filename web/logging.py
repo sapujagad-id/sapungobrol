@@ -1,13 +1,12 @@
-import sentry_sdk
 import time
 import traceback
+from typing import Any, Callable
+from uuid import uuid4
 
-from typing import Callable, Any
-
+import sentry_sdk
 from fastapi import FastAPI, Request, Response
 from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
-from uuid import uuid4
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
