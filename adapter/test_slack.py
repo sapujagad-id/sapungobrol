@@ -19,7 +19,7 @@ from chat.exceptions import ChatResponseGenerationError
 from .slack_dto import SlackConfig
 from bot.repository import BotModel
 from .reaction_event_repository import ReactionEventRepository
-from .reaction_event import ReactionEventCreate, Reaction
+from .reaction_event import Reaction
 from .slack_repository import WorkspaceDataRepository
 
 

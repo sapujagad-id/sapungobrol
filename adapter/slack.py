@@ -6,7 +6,7 @@ import json
 import requests
 from uuid import uuid4
 
-from typing import Any, Dict
+from typing import Dict
 from fastapi import Request, Response, HTTPException
 from loguru import logger
 from slack_bolt import App

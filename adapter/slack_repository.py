@@ -7,7 +7,6 @@ from uuid import uuid4
 from typing import Optional
 
 from .slack_dto import WorkspaceData
-from slack_bolt.authorization import AuthorizeResult
 from slack_sdk import WebClient
 
 from slack_sdk.oauth.installation_store import InstallationStore

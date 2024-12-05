@@ -10,7 +10,6 @@ from .reaction_event import ReactionEventCreate, Reaction
 from .reaction_event_repository import (
     PostgresReactionEventRepository,
     ReactionEventModel,
-    ReactionEventRepository,
 )
 
 TEST_DATABASE_URL = "sqlite:///:memory:"
