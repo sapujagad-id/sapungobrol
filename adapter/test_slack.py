@@ -4,6 +4,7 @@ import time
 import requests
 from unittest.mock import AsyncMock, MagicMock, patch, call
 from fastapi import Request, HTTPException, Response
+from fastapi.responses import RedirectResponse
 from .slack import SlackAdapter, EmptyQuestion, MissingChatbot
 from slack_sdk.errors import SlackApiError
 from slack_sdk.web import WebClient
@@ -1650,4 +1651,4 @@ class TestSlackAdapter:
 
         assert created_workspace_data.team_id == "T12345678"
         assert created_workspace_data.access_token == "xoxb-mock-token"
-        assert response == "Auth complete!"
+        assert isinstance(response, RedirectResponse)

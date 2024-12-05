@@ -101,3 +101,33 @@ class TestSlackViewV1:
 
         assert exc_info.value.status_code == 403
         assert exc_info.value.detail == "Access denied"
+
+    @pytest.mark.asyncio
+    async def test_install_success(self, setup_controller, setup_jwt_secret):
+        slack_config = SlackConfig(
+            slack_bot_token="",
+            slack_signing_secret="",
+            slack_client_id="test_client_id",
+            slack_client_secret="",
+            slack_scopes=["channels:history", "chat:write"],
+        )
+        slack_view = SlackViewV1(
+            auth_controller=setup_controller,
+            slack_config=slack_config,
+            admin_emails=["admin@broom.id"]
+        )
+
+        request = Mock(spec=Request)
+
+        token = jwt.encode({
+            "email": "admin@broom.id",
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1)
+        }, setup_jwt_secret, algorithm="HS256")
+
+        request.cookies = {"token": token}
+
+        setup_controller.user_profile_google = Mock(return_value={"data": MockUserProfile("admin@broom.id")})
+
+        response = slack_view.success(request)
+
+        assert response.template.name == "slack-install-success.html"
