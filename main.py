@@ -172,7 +172,6 @@ if __name__ == "__main__":
         "/document", 
         "/users", 
         "/create-document",
-        "/slack/*",
     ])
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(SentryAsgiMiddleware)
@@ -295,6 +294,11 @@ if __name__ == "__main__":
     app.add_api_route(
         "/slack/install", endpoint=slack_view.install, methods=["GET"]
     )
+
+    app.add_api_route(
+        "/slack/install/success", endpoint=slack_view.success, methods=["GET"]
+    )
+
 
     app.add_api_route(
         "/api/slack/oauth_redirect", endpoint=slack_adapter.oauth_redirect, methods=["GET", "POST"], response_model=None 
