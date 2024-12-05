@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, AsyncMock, PropertyMock
+from unittest.mock import AsyncMock, PropertyMock
 
 from fastapi import FastAPI, Request, Response
 from typing import Callable
