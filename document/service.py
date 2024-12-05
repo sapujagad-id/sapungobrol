@@ -6,7 +6,7 @@ import boto3
 from botocore.exceptions import BotoCoreError, NoCredentialsError, PartialCredentialsError
 
 from document.document import ObjectNameError
-from document.dto import AWSConfig, DocumentCreate, DocumentFilter, DocumentResponse, DocumentUpdate
+from document.dto import AWSConfig, DocumentCreate, DocumentFilter, DocumentResponse
 from document.repository import DocumentRepository
 
 

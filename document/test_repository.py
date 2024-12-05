@@ -2,8 +2,7 @@ from datetime import datetime
 from uuid import uuid4
 from document.document import DocumentType
 from document.dto import DocumentCreate, DocumentFilter
-from document.repository import DocumentModel, PostgresDocumentRepository, DocumentRepository
-from loguru import logger
+from document.repository import DocumentModel
 
 def get_sample_document_models():
     return [

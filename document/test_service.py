@@ -1,11 +1,6 @@
-from datetime import datetime
-from uuid import uuid4
 import pytest
-from sqlalchemy import create_engine
 from document.document import DocumentType, ObjectNameError
 from document.dto import DocumentCreate, DocumentFilter
-from document.repository import DocumentModel, PostgresDocumentRepository
-from document.service import DocumentServiceV1
 import io
 from unittest.mock import ANY, MagicMock
 import pytest

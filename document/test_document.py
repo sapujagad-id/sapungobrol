@@ -2,7 +2,7 @@ from pydantic import ValidationError
 import pytest
 from datetime import datetime
 from uuid import uuid4
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from document import Document, DocumentTitleError, DocumentType, DocumentTypeError, ObjectNameError, DocumentPresignedURLError
 from botocore.exceptions import ClientError
 

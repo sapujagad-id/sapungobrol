@@ -1,9 +1,6 @@
 import pytest
 from fastapi import HTTPException, UploadFile
-from document.controller import DocumentControllerV1
-from document.dto import DocumentCreate, DocumentFilter
-from document.service import DocumentServiceV1
-from document.document import DocumentTypeError, DocumentTitleError, ObjectNameError
+from document.dto import DocumentFilter
 from io import BytesIO
 
 class TestDocumentController:
