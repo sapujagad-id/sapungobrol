@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from .openai_chat import ChatOpenAI
 from chat.exceptions import ChatResponseGenerationError
 from chat import ChatEngineSelector
 from bot import ModelEngine
