@@ -7,9 +7,7 @@ from rag.parsing.parsing_txt import TXTProcessor
 from rag.automation.document_automation import DocumentIndexing
 from document.document import Document
 from document.service import DocumentServiceV1
-from sqlalchemy import text
 import pandas as pd
-import os
 
 @pytest.fixture
 def mock_service():

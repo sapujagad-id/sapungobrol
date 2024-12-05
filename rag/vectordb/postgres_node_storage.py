@@ -1,7 +1,6 @@
 from typing import List
 from rag.vectordb.postgres_handler import PostgresHandler
 from rag.parsing.parsing_pdf import PDFProcessor
-from rag.parsing.parsing_txt import TXTProcessor
 import openai
 import os
 

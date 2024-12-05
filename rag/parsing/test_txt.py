@@ -1,7 +1,5 @@
 import pytest
-from unittest.mock import MagicMock
 from pathlib import Path
-from rag.parsing.processor import FileProcessor
 from rag.parsing.parsing_txt import TXTProcessor  # Adjust import based on your project structure
 
 @pytest.fixture

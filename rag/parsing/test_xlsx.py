@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import MagicMock, patch
 from pathlib import Path
 import pandas as pd
 from rag.parsing.processor import TableInfo

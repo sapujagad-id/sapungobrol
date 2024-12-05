@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import MagicMock
 from pathlib import Path
 from rag.parsing.parsing_pdf import PDFProcessor
 from llama_index.core import Document
