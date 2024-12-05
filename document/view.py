@@ -49,6 +49,6 @@ class DocumentViewV1(DocumentView):
             name="new-document.html", 
             context={
                 "document_types": [x.lower() for x in DocumentType._member_names_],
-                "access_levels": [i for i in range(0, int(max_level) + 1)],
+                "access_levels": [i for i in range(1, int(max_level) + 1)],
             }
         )
