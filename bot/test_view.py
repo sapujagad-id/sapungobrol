@@ -1,16 +1,17 @@
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 from uuid import uuid4
+
 import jinja2
 import pytest
 from fastapi import Request
 from fastapi.exceptions import HTTPException
-
-from common.shared_types import MessageAdapter
-from bot.bot import ModelEngine
 from jose import jwt
 
-        
+from bot.bot import ModelEngine
+from common.shared_types import MessageAdapter
+
+
 class TestBotViews:
     def test_show_list_chatbots(self, setup_bots):
         context = {

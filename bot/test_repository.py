@@ -1,8 +1,10 @@
-import pytest
-from uuid import uuid4
 from unittest.mock import MagicMock, patch
+from uuid import uuid4
+
+import pytest
 
 from bot.bot import BotCreate, BotUpdate
+
 
 @pytest.fixture
 def bot_create_data():

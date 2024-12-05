@@ -1,9 +1,13 @@
+from unittest.mock import MagicMock
 from uuid import uuid4
+
 import pytest
 
-from .bot import BotCreate, BotNotFound, BotUpdate, NameIsRequired, SlugIsExist, SlugIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
+from .bot import (BotCreate, BotNotFound, BotUpdate, NameIsRequired,
+                  SlugIsExist, SlugIsRequired, SystemPromptIsRequired,
+                  UnsupportedAdapter, UnsupportedModel)
 from .service import BotService
-from unittest.mock import MagicMock
+
 
 class TestBotServiceGetBotById:
     def test_find_bot_by_id_success(self, setup_service: BotService):

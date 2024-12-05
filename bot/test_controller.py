@@ -1,8 +1,10 @@
 from uuid import uuid4
-from fastapi import HTTPException
+
 import pytest
+from fastapi import HTTPException
 
 from bot.bot import BotCreate, BotUpdate
+
 
 class TestBotControllerFetch:
     def test_fetch_chatbots_success(self, setup_controller):
