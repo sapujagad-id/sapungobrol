@@ -4,8 +4,7 @@ from uuid import uuid4
 from loguru import logger
 from sqlalchemy import Boolean, Column, DateTime, Enum, String, Uuid, Integer
 from sqlalchemy.orm import sessionmaker, Session, declarative_base, load_only
-from config import AppConfig
-from auth.user import GoogleUserInfo, LoginMethod, User
+from auth.user import GoogleUserInfo, LoginMethod
 
 Base = declarative_base()
 

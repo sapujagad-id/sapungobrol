@@ -3,10 +3,8 @@ from fastapi.responses import RedirectResponse
 import pytest
 from fastapi import HTTPException
 from auth.exceptions import NoTokenSupplied, UserNotFound, UserUnauthorized
-from auth.repository import AuthRepository
 from auth.service import AuthServiceV1
-from jose import jwt, ExpiredSignatureError, JWTError
-from uuid import uuid4
+from jose import jwt
 from datetime import UTC, datetime, timedelta
 
 from auth.user import GoogleUserInfo

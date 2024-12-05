@@ -1,17 +1,12 @@
 from abc import ABC, abstractmethod
-from urllib.parse import urlencode
-from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from fastapi import HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
-from fastapi.security import OAuth2PasswordBearer
 from jose import ExpiredSignatureError, JWTError
 from loguru import logger
-import requests
 
 from auth.dto import ProfileResponse
 from auth.service import AuthService
-from auth.user import GoogleUserInfo
 from auth.exceptions import NoTokenSupplied, UserNotFound, UserUnauthorized
-from config import AppConfig
 
 class AuthController(ABC):
   @abstractmethod
