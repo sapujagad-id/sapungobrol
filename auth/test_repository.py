@@ -1,6 +1,8 @@
 from uuid import uuid4
+
 from .repository import UserModel
 from .user import GoogleUserInfo, LoginMethod
+
 
 class TestAuthRepository:
     def test_find_user_by_sub_not_found(self, setup_repository):

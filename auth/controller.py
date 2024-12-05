@@ -1,12 +1,14 @@
 from abc import ABC, abstractmethod
+
 from fastapi import HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 from jose import ExpiredSignatureError, JWTError
 from loguru import logger
 
 from auth.dto import ProfileResponse
-from auth.service import AuthService
 from auth.exceptions import NoTokenSupplied, UserNotFound, UserUnauthorized
+from auth.service import AuthService
+
 
 class AuthController(ABC):
   @abstractmethod

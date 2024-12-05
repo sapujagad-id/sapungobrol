@@ -1,18 +1,19 @@
-from abc import ABC, abstractmethod
 import base64
+from abc import ABC, abstractmethod
 from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
 
+import requests
 from fastapi import HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
-from loguru import logger
-import requests
-
-from auth.repository import AuthRepository
-from auth.dto import GoogleCredentials
-from .exceptions import NoTokenSupplied, UserNotFound, UserUnauthorized
-from auth.user import GoogleUserInfo, User
 from jose import jwt
+from loguru import logger
+
+from auth.dto import GoogleCredentials
+from auth.repository import AuthRepository
+from auth.user import GoogleUserInfo, User
+
+from .exceptions import NoTokenSupplied, UserNotFound, UserUnauthorized
 
 
 class AuthService(ABC):

@@ -1,6 +1,8 @@
-from typing_extensions import TypedDict
 from pydantic import BaseModel
+from typing_extensions import TypedDict
+
 from auth.user import User
+
 
 class LoginResponse(BaseModel):
   access_token: str
