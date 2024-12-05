@@ -3,7 +3,7 @@ from uuid import uuid4, UUID
 from loguru import logger
 
 from datetime import datetime
-from sqlalchemy.orm import sessionmaker, Session, declarative_base
+from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import Column, Enum, Uuid, String, Text, DateTime, func, ForeignKey, case
 
 from bot.helper import relative_time

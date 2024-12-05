@@ -1,13 +1,8 @@
 from uuid import uuid4
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from fastapi import HTTPException
 import pytest
 
 from .bot import BotCreate, BotNotFound, BotUpdate, NameIsRequired, SlugIsExist, SlugIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
-from .service import BotService, BotServiceV1
-from .repository import BotModel, PostgresBotRepository
-from .controller import BotControllerV1
+from .service import BotService
 from unittest.mock import MagicMock
 
 class TestBotServiceGetBotById:

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 def relative_time(date: datetime) -> str:
     '''
