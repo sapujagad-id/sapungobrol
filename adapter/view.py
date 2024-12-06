@@ -48,3 +48,10 @@ class SlackViewV1(SlackView):
                 "user_profile": user_profile.get("data")
             }
         )
+    
+    def success(self, request: Request):
+        return self.templates.TemplateResponse(
+            request=request, 
+            name="slack-install-success.html",
+        )
+

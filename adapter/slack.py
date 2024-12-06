@@ -4,10 +4,12 @@ import threading
 from typing import Dict
 from uuid import uuid4
 
+from typing import Any, Dict
 import requests
 import sentry_sdk
 import sqlalchemy
 from fastapi import HTTPException, Request, Response
+from fastapi.responses import RedirectResponse
 from loguru import logger
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
@@ -83,7 +85,7 @@ class SlackAdapter:
         )
 
         self.workspace_data_repository.create_workspace_data(workspace_data)
-        return "Auth complete!"
+        return RedirectResponse(url="/slack/install/success")
 
     @sentry_sdk.trace
     async def handle_interactions(self, req: Request):
