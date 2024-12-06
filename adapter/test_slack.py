@@ -7,6 +7,7 @@ from uuid import uuid4
 import pytest
 import requests
 from fastapi import HTTPException, Request, Response
+from fastapi.responses import RedirectResponse
 from slack_sdk.errors import SlackApiError
 from slack_sdk.web import WebClient
 
@@ -1653,4 +1654,4 @@ class TestSlackAdapter:
 
         assert created_workspace_data.team_id == "T12345678"
         assert created_workspace_data.access_token == "xoxb-mock-token"
-        assert response == "Auth complete!"
+        assert isinstance(response, RedirectResponse)
