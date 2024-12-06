@@ -11,7 +11,7 @@ class ChatEngine(ABC):
         self.retriever = retriever
 
     @abstractmethod
-    def _get_generate_system(self) -> dict:
+    def _get_generate_system(self) -> dict: # pragma: no cover
         """
         Returns the system message specific to the chat engine.
 
@@ -24,7 +24,7 @@ class ChatEngine(ABC):
         pass
 
     @abstractmethod
-    def _api_call(self, full_input: str):
+    def _api_call(self, full_input: str): # pragma: no cover
         """
         Makes the API call in the child classes.
 
