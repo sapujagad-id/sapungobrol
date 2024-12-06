@@ -1,6 +1,6 @@
-from typing import Tuple
 import hashlib
 import os
+from typing import Tuple
 
 SENSITIVE_KEYWORDS = {"DELETE", "DROP", "UPDATE"}
 

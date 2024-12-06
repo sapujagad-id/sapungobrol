@@ -1,46 +1,54 @@
+import os
+from datetime import datetime
+
+import boto3
+import pandas as pd
+import requests
+from sqlalchemy import text
+
+from document.document import Document
+from document.dto import AWSConfig
+from document.service import DocumentServiceV1
+from document.utils import generate_presigned_url
 from rag.parsing.parsing_csv import CSVProcessor
-from rag.parsing.parsing_txt import TXTProcessor
 from rag.parsing.parsing_pdf import PDFProcessor
+from rag.parsing.parsing_txt import TXTProcessor
 from rag.sql.postgres_db_loader import get_postgres_engine
 from rag.vectordb.postgres_handler import PostgresHandler
 from rag.vectordb.postgres_node_storage import PostgresNodeStorage
-from sqlalchemy import text
-from datetime import datetime
-import pandas as pd
-import os
 
-class Document:
-    def __init__(self, id, title, type, object_name, created_at, updated_at, access_level):
-        self.id = id
-        self.title = title
-        self.type = type
-        self.object_name = object_name
-        self.created_at = created_at
-        self.updated_at = updated_at
-        self.access_level = access_level
 
-    def generate_presigned_url(self) -> str:
-        # Placeholder method to generate a presigned URL
-        return '' # Example implementation
-
-class DocumentServiceV1:
-
-    def get_documents(self, doc_filter) -> list[Document]:
-        del doc_filter
-
-        return []
-    
 class DocumentIndexing:
-    def __init__(self):
-        self.service = DocumentServiceV1()
+    def __init__(self, aws_config: AWSConfig, service:DocumentServiceV1):
 
-    def fetch_documents(self, start_date: datetime = None):
+        self.service = service
+        self.aws_config = aws_config
+        self.s3_client = boto3.client(
+            's3',
+            aws_access_key_id=self.aws_config.aws_access_key_id,
+            aws_secret_access_key=self.aws_config.aws_secret_access_key,
+            region_name=self.aws_config.aws_region,
+            endpoint_url=self.aws_config.aws_endpoint_url
+        )
+
+    def fetch_documents(self, start_date: datetime = None) -> list:
         doc_filter = {
-            "created_after": start_date.isoformat(),
+            "created_after": start_date.isoformat() if start_date else None,
             "created_before": datetime.now().isoformat()
         }
-        return self.service.get_documents(doc_filter=doc_filter)
+        doc_filter = {key: value for key, value in doc_filter.items() if value is not None}
+        return self.service.get_documents(filter=doc_filter)
 
+    def _request_url(self, document_type, document_url):
+        response = requests.get(document_url)
+        response.raise_for_status()
+
+        document_path = f"temp.{document_type}"
+        with open(document_path, "wb") as file:
+            file.write(response.content)
+        
+        return document_path
+    
     def _get_processor(self, document_type: str, document_url: str):
         """Returns the appropriate processor based on document type."""
         processors = {
@@ -66,13 +74,19 @@ class DocumentIndexing:
         })
         return node
 
-    def process_documents(self):
+    def process_documents(self, start_date: datetime = None):
         """Main method to process documents based on their type."""
-        documents = self.fetch_documents()
+        documents = self.fetch_documents(start_date)
         
         for document in documents:
-            document_url = document.generate_presigned_url()
-            processor = self._get_processor(document.type, document_url)
+
+            document_url = generate_presigned_url(document, self.s3_client, self.aws_config.aws_public_bucket_name)
+
+            document_type = document.type
+            # Ambil dokumen url
+            document_path = self._request_url(document_type, document_url)
+
+            processor = self._get_processor(document.type, document_path)
             
             if document.type == 'csv':
                 summary = processor.process()
@@ -82,6 +96,9 @@ class DocumentIndexing:
             else:
                 nodes = processor.process()
                 nodes = [self._update_metadata(node, document) for node in nodes]
+
+                print(len(nodes))
+
                 self._store_vector(nodes, document.access_level)
 
     def _store_tabular(self, table_name: str, data: pd.DataFrame, document: Document, summary: str):

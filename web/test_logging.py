@@ -1,9 +1,9 @@
-import pytest
-from unittest.mock import MagicMock, AsyncMock, PropertyMock
-
-from fastapi import FastAPI, Request, Response
 from typing import Callable
-from uuid import uuid4, UUID
+from unittest.mock import AsyncMock, PropertyMock
+from uuid import UUID, uuid4
+
+import pytest
+from fastapi import FastAPI, Request, Response
 
 from .logging import RequestLoggingMiddleware
 

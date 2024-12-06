@@ -1,6 +1,9 @@
 from anthropic import Anthropic
-from .engine import ChatEngine
+
 from rag.retriever.retriever import Retriever
+
+from .engine import ChatEngine
+
 
 class ChatAnthropic(ChatEngine):
 

@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
+
 from chat.exceptions import ChatResponseGenerationError
 from rag.retriever.retriever import Retriever
+
 
 class ChatEngine(ABC):
 
@@ -11,12 +13,10 @@ class ChatEngine(ABC):
     @abstractmethod
     def _get_generate_system(self) -> dict:
         """Return the system message specific to the chat engine."""
-        pass
 
     @abstractmethod
     def _api_call(self, full_input: str):
         """Abstract method for making the API call in the child classes."""
-        pass
 
     def retrieve(self, query: str, access_level: int):
         return self.retriever.query(query, access_level)

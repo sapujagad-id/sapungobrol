@@ -1,15 +1,15 @@
-from unittest.mock import patch, MagicMock
-from fastapi.responses import RedirectResponse
+from datetime import UTC, datetime, timedelta
+from unittest.mock import MagicMock, patch
+
 import pytest
 from fastapi import HTTPException
-from auth.exceptions import NoTokenSupplied, UserNotFound, UserUnauthorized
-from auth.repository import AuthRepository
-from auth.service import AuthServiceV1
-from jose import jwt, ExpiredSignatureError, JWTError
-from uuid import uuid4
-from datetime import UTC, datetime, timedelta
+from fastapi.responses import RedirectResponse
+from jose import jwt
 
+from auth.exceptions import NoTokenSupplied, UserNotFound, UserUnauthorized
+from auth.service import AuthServiceV1
 from auth.user import GoogleUserInfo
+
 
 class MockRequest:
     def __init__(self, cookies):

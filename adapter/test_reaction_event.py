@@ -1,7 +1,8 @@
+from uuid import uuid4
+
 import pytest
 
-from .reaction_event import ReactionEventCreate, Reaction, UnknownReaction
-from uuid import uuid4
+from .reaction_event import Reaction, ReactionEventCreate, UnknownReaction
 
 
 class TestReactionEvent:

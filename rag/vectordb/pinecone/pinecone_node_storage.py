@@ -1,9 +1,11 @@
-from typing import List
-from rag.vectordb.pinecone.pinecone_handler import PineconeHandler
-from rag.parsing.parsing_pdf import PDFProcessor
-from rag.parsing.parsing_txt import TXTProcessor
-import openai
 import os
+from typing import List
+
+import openai
+
+from rag.parsing.parsing_txt import TXTProcessor
+from rag.vectordb.pinecone.pinecone_handler import PineconeHandler
+
 
 class PineconeNodeStorage:
     """Orchestrates the storage of document nodes into Pinecone via embedding vectors."""

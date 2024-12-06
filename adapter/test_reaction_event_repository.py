@@ -1,17 +1,15 @@
-import pytest
-
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
-from unittest.mock import patch, MagicMock
+
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 from common.shared_types import MessageAdapter
-from .reaction_event import ReactionEventCreate, Reaction
-from .reaction_event_repository import (
-    PostgresReactionEventRepository,
-    ReactionEventModel,
-    ReactionEventRepository,
-)
+
+from .reaction_event import Reaction, ReactionEventCreate
+from .reaction_event_repository import (PostgresReactionEventRepository,
+                                        ReactionEventModel)
 
 TEST_DATABASE_URL = "sqlite:///:memory:"
 

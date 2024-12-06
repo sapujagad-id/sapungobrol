@@ -1,14 +1,16 @@
 from abc import ABC, abstractmethod
+
+import jinja2
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from jinja2 import Environment
-import jinja2
 from loguru import logger
 
 from auth.controller import AuthController
 from document.document import DocumentType
 from document.dto import DocumentFilter
 from document.service import DocumentService
+
 
 class DocumentView(ABC):
     @abstractmethod

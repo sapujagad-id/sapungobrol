@@ -1,15 +1,13 @@
-from uuid import uuid4
-from fastapi.responses import JSONResponse, RedirectResponse
-from fastapi import HTTPException, Request, Response
-from fastapi.testclient import TestClient
-
-import pytest
 from unittest.mock import Mock
 
+import pytest
+from fastapi import HTTPException, Response
+from fastapi.responses import RedirectResponse
 from jose import ExpiredSignatureError, JWTError
+
 from auth.exceptions import NoTokenSupplied, UserNotFound, UserUnauthorized
 from auth.repository import UserModel
-from auth.service import AuthServiceV1
+
 
 class TestAuthController:
     def test_logout(self, setup_controller):

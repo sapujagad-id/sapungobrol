@@ -1,10 +1,8 @@
-import pytest
 from uuid import uuid4
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError
-from .repository import PostgresAuthRepository, UserModel
+
+from .repository import UserModel
 from .user import GoogleUserInfo, LoginMethod
+
 
 class TestAuthRepository:
     def test_find_user_by_sub_not_found(self, setup_repository):

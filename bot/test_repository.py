@@ -1,11 +1,10 @@
-import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from uuid import uuid4
 from unittest.mock import MagicMock, patch
+from uuid import uuid4
+
+import pytest
 
 from bot.bot import BotCreate, BotUpdate
-from bot.repository import BotModel, PostgresBotRepository
+
 
 @pytest.fixture
 def bot_create_data():

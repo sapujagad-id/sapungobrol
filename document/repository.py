@@ -1,13 +1,12 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from uuid import uuid4
-from loguru import logger
-from sqlalchemy.orm import sessionmaker, Session, declarative_base
-from sqlalchemy import Column, Enum, Integer, Uuid, String, Text, DateTime
-from uuid import UUID as pythonUUID
 
-from document.document import DocumentType
-from document.dto import DocumentCreate, DocumentFilter, DocumentUpdate
+from loguru import logger
+from sqlalchemy import Column, DateTime, Integer, String, Uuid
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
+
+from document.dto import DocumentCreate, DocumentFilter
 
 Base = declarative_base()
 

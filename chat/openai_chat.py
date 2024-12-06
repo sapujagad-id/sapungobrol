@@ -1,5 +1,7 @@
 import openai
+
 from .engine import ChatEngine
+
 
 class ChatOpenAI(ChatEngine):
 

@@ -1,7 +1,10 @@
-from rag.parsing.processor import FileProcessor
-from llama_index.core import SimpleDirectoryReader
 from pathlib import Path
+
+from llama_index.core import SimpleDirectoryReader
 from llama_index.core.node_parser import SentenceSplitter
+
+from rag.parsing.processor import FileProcessor
+
 
 class TXTProcessor(FileProcessor):
     

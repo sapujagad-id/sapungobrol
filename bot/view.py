@@ -1,17 +1,17 @@
 from abc import ABC, abstractmethod
 
+import jinja2
 from fastapi import Request
 from fastapi.exceptions import HTTPException
 from fastapi.templating import Jinja2Templates
 from jinja2 import Environment
-import jinja2
 
 from auth.controller import AuthController
-from bot.service import BotService
-
-from common.shared_types import MessageAdapter
-from .bot import ModelEngine
 from bot.controller import BotController
+from bot.service import BotService
+from common.shared_types import MessageAdapter
+
+from .bot import ModelEngine
 
 
 class BotView(ABC):

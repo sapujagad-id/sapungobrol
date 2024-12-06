@@ -1,15 +1,15 @@
 from abc import ABC, abstractmethod
 
-from fastapi import Request, HTTPException
+import jinja2
+from fastapi import HTTPException, Request
 from fastapi.templating import Jinja2Templates
 from jinja2 import Environment
-import jinja2
-
 from starlette.status import HTTP_403_FORBIDDEN
 
 from auth.controller import AuthController
 
 from .slack_dto import SlackConfig
+
 
 class SlackView(ABC):
     @abstractmethod

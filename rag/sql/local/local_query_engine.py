@@ -8,7 +8,7 @@ from llama_index.core.query_engine import NLSQLTableQueryEngine
 from llama_index.llms.openai import OpenAI
 from sqlalchemy import create_engine, inspect, text
 
-from rag.sql.local.local_db_loader import load_csv_to_db, load_xlsx_to_db
+from rag.sql.local.local_db_loader import load_xlsx_to_db
 from rag.sql.security import check_sql_security
 
 

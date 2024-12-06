@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 
+import jinja2
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from jinja2 import Environment
-import jinja2
 
 from auth.controller import AuthController
 from auth.service import AuthService
