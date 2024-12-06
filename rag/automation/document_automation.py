@@ -108,6 +108,7 @@ class DocumentIndexing:
 
         data.to_sql(table_name, con=engine, if_exists="replace", index=False)
         
+        # SQL query to create a metadata table if it doesn't exist
         create_metadata_table_query = text(
             "CREATE TABLE IF NOT EXISTS metadata_table (\n"
             "    id SERIAL PRIMARY KEY,\n"
@@ -125,6 +126,7 @@ class DocumentIndexing:
         with engine.connect() as conn:
             conn.execute(create_metadata_table_query)
 
+            # SQL query to insert metadata into the metadata_table or update if the document_id already exists
             insert_metadata_query = text(
                 "INSERT INTO metadata_table (document_id, title, type, object_name, created_at, updated_at, access_level, summary)\n"
                 "VALUES (:document_id, :title, :type, :object_name, :created_at, :updated_at, :access_level, :summary)\n"

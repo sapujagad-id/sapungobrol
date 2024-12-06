@@ -12,11 +12,29 @@ class ChatEngine(ABC):
 
     @abstractmethod
     def _get_generate_system(self) -> dict:
-        """Return the system message specific to the chat engine."""
+        """
+        Returns the system message specific to the chat engine.
+
+        This method should be implemented in the child classes to return a system message
+        that is tailored to the specific behavior or configuration of the chat engine.
+
+        Returns:
+            dict: A dictionary representing the system message for the chat engine.
+        """
+        pass
 
     @abstractmethod
     def _api_call(self, full_input: str):
-        """Abstract method for making the API call in the child classes."""
+        """
+        Makes the API call in the child classes.
+
+        This method should be implemented to handle the specific API request, including
+        passing the full input to the appropriate API and handling the response.
+
+        Args:
+            full_input (str): The input string to be passed to the API for processing.
+        """
+        pass
 
     def retrieve(self, query: str, access_level: int):
         return self.retriever.query(query, access_level)
