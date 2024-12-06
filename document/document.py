@@ -1,17 +1,17 @@
 from datetime import datetime
 from enum import Enum
-
-from botocore.exceptions import ClientError
+from typing import Optional
 from pydantic import UUID4, BaseModel
+from botocore.exceptions import ClientError
 
 
 class DocumentTitleError(Exception):
-    def __init__(self, message="Document title is required"):
+    def __init__(self, message="Document title is required or invalid"):
         self.message = message
         super().__init__(self.message)
         
 class ObjectNameError(Exception):
-    def __init__(self, message="Object name is required"):
+    def __init__(self, message="Object name is required or invalid"):
         self.message = message
         super().__init__(self.message)
         
@@ -22,6 +22,16 @@ class DocumentTypeError(Exception):
 
 class DocumentPresignedURLError(Exception):
     def __init__(self, message="Failed to generate presigned URL"):
+        self.message = message
+        super().__init__(self.message)
+
+class FileSizeExceededMaxLimit(Exception):
+    def __init__(self, message="File size exceeds the allowed limit"):
+        self.message = message
+        super().__init__(self.message)
+
+class FileExtensionDoesNotMatchType(Exception):
+    def __init__(self, message="File extension does not match the expected type"):
         self.message = message
         super().__init__(self.message)
 
@@ -42,10 +52,17 @@ class Document(BaseModel):
     def validate(self):
       if self.type not in DocumentType._value2member_map_:
         raise DocumentTypeError
-      if not self.title:
+      if not self._validate_title():
         raise DocumentTitleError
-      if not self.object_name:
+      if not self._validate_object_name():
         raise ObjectNameError
+      
+    def _validate_title(self):
+        return bool(self.title and self.title.strip())
+    
+    def _validate_object_name(self):
+        stripped_object_name = self.object_name.strip()
+        return bool(stripped_object_name) and not self.object_name != stripped_object_name
         
     def generate_presigned_url(self, s3_client, bucket_name: str, expiration: int = 28800) -> str:
         '''
