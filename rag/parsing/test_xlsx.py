@@ -1,11 +1,8 @@
 from pathlib import Path
-
 import pandas as pd
 import pytest
-
 from rag.parsing.parsing_xlsx import XLSXProcessor
 from rag.parsing.processor import TableInfo
-
 
 @pytest.fixture
 def mock_openai_llm(mocker):
@@ -71,12 +68,12 @@ def test_load_document_general_error(mocker):
     with pytest.raises(RuntimeError, match="Failed to load document due to an unexpected error: Unexpected error"):
         processor._load_document()
 
-def test_get_table_info(mock_openai_llm, mock_xlsx_data):
-    """Test the _get_table_info method."""
+def test_generate_table_summary(mock_openai_llm, mock_xlsx_data):
+    """Test the _generate_table_summary method."""
     processor = XLSXProcessor("dummy_path.xlsx")
     processor.df = pd.DataFrame({'col1': [1, 2], 'col2': [3, 4]})
     
-    table_info = processor._get_table_info()
+    table_info = processor._generate_table_summary()
     
     mock_openai_llm.structured_predict.assert_called_once()
     
@@ -93,10 +90,10 @@ def test_process(mock_openai_llm, mock_xlsx_data):
     
     mock_openai_llm.structured_predict.assert_called_once()
 
-def test_get_table_info_no_df():
-    """Test _get_table_info raises a RuntimeError when DataFrame is not loaded."""
+def test_generate_table_summary_no_df():
+    """Test _generate_table_summary raises a RuntimeError when DataFrame is not loaded."""
     processor = XLSXProcessor("dummy_path.xlsx")
     processor.df = None
     
-    with pytest.raises(RuntimeError, match="DataFrame is not loaded."):
-        processor._get_table_info()
+    with pytest.raises(RuntimeError, match="DataFrame is not loaded. Please load the document first."):
+        processor._generate_table_summary()
