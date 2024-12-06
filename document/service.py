@@ -1,36 +1,36 @@
-import io
 from abc import ABC, abstractmethod
+import io
+import os
 
-import boto3
-from botocore.exceptions import (BotoCoreError, NoCredentialsError,
-                                 PartialCredentialsError)
+from fastapi import UploadFile
 from loguru import logger
+import boto3
+from botocore.exceptions import BotoCoreError, NoCredentialsError, PartialCredentialsError
 
-from document.document import ObjectNameError
-from document.dto import (AWSConfig, DocumentCreate, DocumentFilter,
-                          DocumentResponse)
+from document.document import FileExtensionDoesNotMatchType, FileSizeExceededMaxLimit, ObjectNameError
+from document.dto import AWSConfig, DocumentCreate, DocumentFilter, DocumentResponse, DocumentUpdate
 from document.repository import DocumentRepository
 
 
 class DocumentService(ABC):
     @abstractmethod
-    def upload_document(self, file, object_name):
+    def upload_document(self, file, object_name, type): # pragma: no cover
         pass
 
     @abstractmethod
-    def get_documents(self, filter: DocumentFilter) -> list[DocumentResponse]:
+    def get_documents(self, filter: DocumentFilter) -> list[DocumentResponse]: # pragma: no cover
         pass
       
     @abstractmethod
-    def get_document_by_name(self, object_name: str) -> DocumentResponse:
+    def get_document_by_name(self, object_name: str) -> DocumentResponse: # pragma: no cover
         pass
       
     @abstractmethod
-    def get_document_by_id(self, doc_id: str) -> DocumentResponse:
+    def get_document_by_id(self, doc_id: str) -> DocumentResponse: # pragma: no cover
         pass
 
     @abstractmethod
-    def create_document(self, request: DocumentCreate):
+    def create_document(self, request: DocumentCreate, file: UploadFile): # pragma: no cover
         pass
 
     # note: Not implemented to ensure vector database and document entries are not out of sync
@@ -43,7 +43,7 @@ class DocumentService(ABC):
     #     pass
       
 class DocumentServiceV1(DocumentService):
-    def __init__(self, aws_config: AWSConfig, repository: DocumentRepository):
+    def __init__(self, aws_config: AWSConfig, repository: DocumentRepository, max_file_size=10*1024*1024):
         super().__init__()
         self.repository = repository
         self.s3_client = boto3.client(
@@ -54,11 +54,24 @@ class DocumentServiceV1(DocumentService):
             endpoint_url=aws_config.aws_endpoint_url
         )
         self.bucket_name = aws_config.aws_public_bucket_name
+        self.max_file_size = max_file_size
         self.logger = logger.bind(service="DocumentService")
 
-    def upload_document(self, file_content, object_name):
+    def upload_document(self, file_content, object_name, type):
         try:
+            
             file_content_bytes = file_content.file.read()
+
+            file_size = len(file_content_bytes)
+            if file_size > self.max_file_size:
+                self.logger.error(f"File size exceeds the maximum limit of {self.max_file_size} bytes.")
+                raise FileSizeExceededMaxLimit
+
+            _, file_extension = os.path.splitext(file_content.filename)
+            if file_extension.lower().lstrip('.') != type:
+                self.logger.error(f"File extension '{file_extension}' does not match the expected type '{type}'.")
+                raise FileExtensionDoesNotMatchType
+            
             file_object = io.BytesIO(file_content_bytes)
 
             self.s3_client.upload_fileobj(file_object, self.bucket_name, object_name)
@@ -84,10 +97,11 @@ class DocumentServiceV1(DocumentService):
         doc = self.repository.get_document_by_id(doc_id=doc_id)
         return doc if doc else None
 
-    def create_document(self, request: DocumentCreate):
+    def create_document(self, request: DocumentCreate, file: UploadFile):
         request.validate()
         self.logger.debug(f"model dump: {request.model_dump()}" )
         if self.repository.get_document_by_name(request.object_name) is None:
+            self.upload_document(file, request.object_name, request.type)
             self.repository.create_document(request)
         else:
             raise ObjectNameError("Object by this name already exists")
