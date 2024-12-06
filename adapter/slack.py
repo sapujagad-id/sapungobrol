@@ -8,7 +8,8 @@ from typing import Any, Dict
 import requests
 import sentry_sdk
 import sqlalchemy
-from fastapi import HTTPException, Request, Response, RedirectResponse
+from fastapi import HTTPException, Request, Response
+from fastapi.responses import RedirectResponse
 from loguru import logger
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
