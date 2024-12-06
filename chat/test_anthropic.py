@@ -1,6 +1,9 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+
 from chat.exceptions import ChatResponseGenerationError
+
 from .anthropic_chat import ChatAnthropic
 
 

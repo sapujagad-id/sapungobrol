@@ -1,7 +1,8 @@
-from pinecone import Pinecone
-from pinecone import ServerlessSpec
 import os
+
 import openai
+from pinecone import Pinecone, ServerlessSpec
+
 
 class PineconeHandler:
     """Handles all interactions with Pinecone, including indexing and querying."""

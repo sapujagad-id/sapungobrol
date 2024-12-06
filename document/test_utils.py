@@ -1,7 +1,10 @@
-import pytest
 from unittest.mock import MagicMock
-from document.utils import generate_presigned_url
+
+import pytest
+
 from document.document import DocumentPresignedURLError
+from document.utils import generate_presigned_url
+
 
 class TestGeneratePresignedURL:
     @pytest.fixture()

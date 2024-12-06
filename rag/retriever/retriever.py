@@ -1,5 +1,7 @@
-from rag.vectordb.postgres_handler import PostgresHandler
 import openai
+
+from rag.vectordb.postgres_handler import PostgresHandler
+
 
 class Retriever:
     def __init__(self, postgres_handler: PostgresHandler):

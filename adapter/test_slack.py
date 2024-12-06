@@ -1,25 +1,28 @@
 import json
-import pytest
 import time
+from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, call, patch
+from uuid import uuid4
+
+import pytest
 import requests
-from unittest.mock import AsyncMock, MagicMock, patch, call
-from fastapi import Request, HTTPException, Response
-from .slack import SlackAdapter, EmptyQuestion, MissingChatbot
+from fastapi import HTTPException, Request, Response
 from slack_sdk.errors import SlackApiError
 from slack_sdk.web import WebClient
-from datetime import datetime
-from uuid import uuid4
+
 from auth.repository import AuthRepository, UserModel
-from common.shared_types import MessageAdapter
 from bot.bot import BotResponse, ModelEngine
-from bot.service import BotService
 from bot.helper import relative_time
+from bot.repository import BotModel
+from bot.service import BotService
 from chat import ChatEngineSelector, ChatOpenAI
 from chat.exceptions import ChatResponseGenerationError
-from .slack_dto import SlackConfig
-from bot.repository import BotModel
+from common.shared_types import MessageAdapter
+
+from .reaction_event import Reaction
 from .reaction_event_repository import ReactionEventRepository
-from .reaction_event import ReactionEventCreate, Reaction
+from .slack import EmptyQuestion, MissingChatbot, SlackAdapter
+from .slack_dto import SlackConfig
 from .slack_repository import WorkspaceDataRepository
 
 

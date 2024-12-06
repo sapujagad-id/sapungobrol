@@ -1,9 +1,13 @@
-from pydantic import ValidationError
-import pytest
-from auth.user import LoginMethod, User
-from .exceptions import SubNotFound, InvalidEmail, InvalidName, InvalidPictureURL
-from uuid import uuid4
 from datetime import datetime
+from uuid import uuid4
+
+import pytest
+from pydantic import ValidationError
+
+from auth.user import LoginMethod, User
+
+from .exceptions import (InvalidEmail, InvalidName, InvalidPictureURL,
+                         SubNotFound)
 
 # Tests
 

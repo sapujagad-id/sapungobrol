@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
-from fastapi import HTTPException
 
-from .bot import BotCreate, BotNotFound, BotUpdate, NameIsRequired, SlugIsExist, SlugIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
-from .service import BotService
+from fastapi import HTTPException
 from loguru import logger
+
+from .bot import (BotCreate, BotNotFound, BotUpdate, NameIsRequired,
+                  SlugIsExist, SlugIsRequired, SystemPromptIsRequired,
+                  UnsupportedAdapter, UnsupportedModel)
+from .service import BotService
 
 
 class BotController(ABC):

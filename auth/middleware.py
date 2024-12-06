@@ -1,9 +1,10 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import RedirectResponse
-from functools import wraps
-from loguru import logger
-from jose import jwt
 import re
+
+from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse
+from jose import jwt
+from loguru import logger
+
 
 class AuthMiddleware:
     def __init__(self, app: FastAPI, jwt_secret_key: str, login_url: str = "/login", included_routes: list[str] = None):

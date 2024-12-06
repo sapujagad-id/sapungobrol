@@ -1,9 +1,10 @@
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
+from uuid import UUID
+
 from loguru import logger
 
+from .bot import BotCreate, BotNotFound, BotResponse, BotUpdate, SlugIsExist
 from .repository import BotRepository
-from .bot import BotResponse, BotCreate, BotUpdate, SlugIsExist, BotNotFound
-from uuid import UUID
 
 
 class BotService(ABC):

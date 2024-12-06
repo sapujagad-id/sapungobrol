@@ -1,16 +1,17 @@
 from unittest.mock import Mock
+
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from jose import jwt
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from jose import jwt
-from fastapi.testclient import TestClient
-from fastapi import FastAPI
 
 from auth.controller import AuthControllerV1
 from auth.dto import GoogleCredentials
+from auth.middleware import AuthMiddleware
 from auth.repository import PostgresAuthRepository, UserModel
 from auth.service import AuthServiceV1
-from auth.middleware import AuthMiddleware
 
 TEST_DATABASE_URL = "sqlite:///:memory:"  # Change as needed for your test setu
 

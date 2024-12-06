@@ -1,8 +1,11 @@
 from typing import Optional
+
 from pydantic import BaseModel
 from typing_extensions import TypedDict
 
-from document.document import Document, DocumentTitleError, DocumentType, DocumentTypeError, ObjectNameError
+from document.document import (Document, DocumentTitleError, DocumentType,
+                               DocumentTypeError, ObjectNameError)
+
 
 class DocumentFilter(TypedDict):
   id: Optional[str]

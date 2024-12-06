@@ -110,3 +110,8 @@ note
 
 #atlas
 atlas.exe
+
+#temp
+temp.DocumentType.csv
+temp.pdf
+temp.txt
