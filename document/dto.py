@@ -1,11 +1,8 @@
 from typing import Optional
-
 from pydantic import BaseModel
 from typing_extensions import TypedDict
 
-from document.document import (Document, DocumentTitleError, DocumentType,
-                               DocumentTypeError, ObjectNameError)
-
+from document.document import Document, DocumentTitleError, DocumentType, DocumentTypeError, ObjectNameError
 
 class DocumentFilter(TypedDict):
   id: Optional[str]
@@ -23,12 +20,19 @@ class DocumentCreate(BaseModel):
   access_level: int
   
   def validate(self):
-    if self.type not in DocumentType._value2member_map_:
-      raise DocumentTypeError
-    if not self.title:
-      raise DocumentTitleError
-    if not self.object_name:
-      raise ObjectNameError
+      if self.type not in DocumentType._value2member_map_:
+        raise DocumentTypeError
+      if not self._validate_title():
+        raise DocumentTitleError
+      if not self._validate_object_name():
+        raise ObjectNameError
+      
+  def _validate_title(self):
+      return bool(self.title and self.title.strip())
+  
+  def _validate_object_name(self):
+      stripped_object_name = self.object_name.strip()
+      return bool(stripped_object_name) and ' ' not in self.object_name
     
     
 class DocumentUpdate(TypedDict):
