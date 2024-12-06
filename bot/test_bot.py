@@ -1,6 +1,7 @@
 import pytest
 
-from .bot import BotCreate, NameIsRequired, SlugIsRequired, SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel
+from .bot import (BotCreate, NameIsRequired, SlugIsRequired,
+                  SystemPromptIsRequired, UnsupportedAdapter, UnsupportedModel)
 
 # Tests
 

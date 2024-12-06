@@ -1,9 +1,12 @@
-from datetime import datetime
 import enum
-from typing_extensions import TypedDict
-from pydantic import UUID4, BaseModel
+from datetime import datetime
 
-from .exceptions import InvalidEmail, InvalidName, InvalidPictureURL, SubNotFound
+from pydantic import UUID4, BaseModel
+from typing_extensions import TypedDict
+
+from .exceptions import (InvalidEmail, InvalidName, InvalidPictureURL,
+                         SubNotFound)
+
 
 class LoginMethod(str, enum.Enum):
   GOOGLE = "Google"

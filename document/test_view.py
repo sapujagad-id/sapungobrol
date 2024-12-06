@@ -1,15 +1,17 @@
-import pytest
-from unittest.mock import Mock
-from fastapi import Request
 from datetime import datetime, timedelta
-from jose import jwt
+from unittest.mock import Mock
 from uuid import uuid4
+
+from fastapi import Request
+from jose import jwt
 
 from auth.dto import ProfileResponse
 from auth.user import User
 from document.document import DocumentType
 
-from .view import DocumentViewV1  # Update with the correct import for your view class
+from .view import \
+    DocumentViewV1  # Update with the correct import for your view class
+
 
 class TestDocumentView:
     def test_show_list_document(self, setup_view, setup_jwt_secret, dummy_user_profile):

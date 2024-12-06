@@ -3,20 +3,21 @@
 from datetime import datetime
 from unittest.mock import Mock
 from uuid import uuid4
+
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import pytest
 
 from auth.controller import AuthControllerV1
 from auth.dto import ProfileResponse
-from common.shared_types import MessageAdapter
 from bot.bot import BotResponse, ModelEngine
 from bot.helper import relative_time
 from bot.view import BotViewV1
+from common.shared_types import MessageAdapter
 
-from .service import BotServiceV1
-from .repository import BotModel, PostgresBotRepository
 from .controller import BotControllerV1
+from .repository import BotModel, PostgresBotRepository
+from .service import BotServiceV1
 
 TEST_DATABASE_URL = "sqlite:///:memory:"  # Change as needed for your test setu
 

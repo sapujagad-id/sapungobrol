@@ -1,8 +1,10 @@
-import pytest
-from unittest.mock import MagicMock
 from pathlib import Path
-from rag.parsing.parsing_pdf import PDFProcessor
+
+import pytest
 from llama_index.core import Document
+
+from rag.parsing.parsing_pdf import PDFProcessor
+
 
 @pytest.fixture
 def mock_pdf_reader(mocker):

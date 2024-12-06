@@ -1,19 +1,17 @@
-from abc import abstractmethod, ABC
-from loguru import logger
+from abc import ABC, abstractmethod
 from datetime import datetime
-from sqlalchemy import Column, Uuid, String, DateTime
-from sqlalchemy.orm import sessionmaker, Session, declarative_base
-from uuid import uuid4
 from typing import Optional
+from uuid import uuid4
+
+from loguru import logger
+from slack_sdk import WebClient
+from slack_sdk.oauth.installation_store import InstallationStore
+from slack_sdk.oauth.installation_store.models.bot import Bot
+from slack_sdk.oauth.installation_store.models.installation import Installation
+from sqlalchemy import Column, DateTime, String, Uuid
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from .slack_dto import WorkspaceData
-from slack_bolt.authorization import AuthorizeResult
-from slack_sdk import WebClient
-
-from slack_sdk.oauth.installation_store import InstallationStore
-from slack_sdk.oauth.installation_store.models.installation import Installation
-from slack_sdk.oauth.installation_store.models.bot import Bot
-
 
 Base = declarative_base()
 

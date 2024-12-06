@@ -1,10 +1,11 @@
-import pytest
+from datetime import datetime, timedelta, timezone
 from unittest.mock import Mock
+
 from fastapi import Request
 from jose import jwt
-from datetime import datetime, timedelta, timezone
 
 from auth.view import UserViewV1
+
 
 class TestUserView:
 

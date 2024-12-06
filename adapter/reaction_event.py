@@ -1,7 +1,8 @@
 import enum
-
 from typing import Any
-from pydantic import BaseModel, ConfigDict, UUID4
+
+from pydantic import UUID4, BaseModel, ConfigDict
+
 from common.shared_types import MessageAdapter
 
 

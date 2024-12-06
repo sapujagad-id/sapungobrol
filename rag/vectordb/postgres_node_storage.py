@@ -1,9 +1,11 @@
-from typing import List
-from rag.vectordb.postgres_handler import PostgresHandler
-from rag.parsing.parsing_pdf import PDFProcessor
-from rag.parsing.parsing_txt import TXTProcessor
-import openai
 import os
+from typing import List
+
+import openai
+
+from rag.parsing.parsing_pdf import PDFProcessor
+from rag.vectordb.postgres_handler import PostgresHandler
+
 
 class PostgresNodeStorage:
     """Orchestrates the storage of document nodes into PostgreSQL (pgvector) via embedding vectors."""

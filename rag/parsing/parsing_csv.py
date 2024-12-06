@@ -1,9 +1,12 @@
-from rag.parsing.processor import FileProcessor, TableInfo
 from pathlib import Path
+
+import pandas as pd
+from llama_index.core.llms import ChatMessage
 from llama_index.core.prompts import ChatPromptTemplate
 from llama_index.llms.openai import OpenAI
-from llama_index.core.llms import ChatMessage
-import pandas as pd
+
+from rag.parsing.processor import FileProcessor, TableInfo
+
 
 class CSVProcessor(FileProcessor):
     

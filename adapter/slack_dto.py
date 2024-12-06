@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class SlackConfig(BaseModel):
     slack_bot_token: str
     slack_signing_secret: str
