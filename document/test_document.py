@@ -1,14 +1,10 @@
-from datetime import datetime
-from unittest.mock import patch
-from uuid import uuid4
-
-import pytest
-from botocore.exceptions import ClientError
 from pydantic import ValidationError
-
-from document import (Document, DocumentPresignedURLError, DocumentTitleError,
-                      DocumentType, DocumentTypeError, ObjectNameError)
-
+import pytest
+from datetime import datetime
+from uuid import uuid4
+from unittest.mock import Mock, patch
+from document import Document, DocumentTitleError, DocumentType, DocumentTypeError, ObjectNameError, DocumentPresignedURLError
+from botocore.exceptions import ClientError
 
 # Helper to create a valid document
 def create_valid_document():
@@ -46,7 +42,7 @@ class TestDocument:
             doc = create_valid_document()
             doc.title = ""  # Clear title to trigger error
             doc.validate()
-        assert str(excinfo.value) == "Document title is required"
+        assert str(excinfo.value) == "Document title is required or invalid"
 
     # Test for missing object name
     def test_missing_object_name(self):
@@ -54,7 +50,7 @@ class TestDocument:
             doc = create_valid_document()
             doc.object_name = ""  # Clear object_name to trigger error
             doc.validate()
-        assert str(excinfo.value) == "Object name is required"
+        assert str(excinfo.value) == "Object name is required or invalid"
 
     # Test for all required fields missing - using Pydantic's ValidationError
     def test_document_validation_errors(self):
