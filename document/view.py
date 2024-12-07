@@ -38,7 +38,8 @@ class DocumentViewV1(DocumentView):
             name="document-list.html", 
             context={
                 "documents": documents,
-                "user_profile": user_profile.get("data")
+                "user_profile": user_profile.get("data"),
+                "is_admin": request.cookies.get("is_admin"),
             }
         )
         
@@ -51,6 +52,8 @@ class DocumentViewV1(DocumentView):
             name="new-document.html", 
             context={
                 "document_types": [x.lower() for x in DocumentType._member_names_],
-                "access_levels": [i for i in range(1, int(max_level) + 1)],
+                "access_levels": [i for i in range(0, int(max_level) + 1)],
+                "user_profile": user_profile.get("data"),
+                "is_admin": request.cookies.get("is_admin"),
             }
         )

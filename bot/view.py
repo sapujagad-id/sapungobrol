@@ -93,7 +93,11 @@ class BotViewV1(BotView):
         return self.templates.TemplateResponse(
             request=request,
             name="dashboard.html",
-            context={"bots": bots, "user_profile": user_profile.get("data")}
+            context={
+                "bots": bots, 
+                "user_profile": user_profile.get("data"),
+                "is_admin": request.cookies.get("is_admin"),
+            }
         )
         
     def show_dashboard_with_id(self, request: Request, bot_id: str):
@@ -111,6 +115,7 @@ class BotViewV1(BotView):
             context={
                 "bots": bots,
                 "user_profile": user_profile.get("data"),
+                "is_admin": request.cookies.get("is_admin"),
                 "selected_bot_id": bot_id,  # Pass selected bot ID to the template
             }
         )

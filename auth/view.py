@@ -40,5 +40,10 @@ class UserViewV1(UserView):
                     "user_profile": user_profile.get("data")
             },
         )
-    
+        
+    def view_invalid_login_email(self, request:Request):
+        return self.templates.TemplateResponse(
+            request=request,
+            name="invalid-email.html",
+        )
     
