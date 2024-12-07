@@ -10,9 +10,9 @@ from rag.parsing.processor import FileProcessor, TableInfo
 
 class CSVProcessor(FileProcessor):
     
-    def __init__(self, document_path):
+    def __init__(self, document_path, llm_model="gpt-4o-mini"):
         self.document_path = Path(document_path)
-        self.llm = OpenAI(model="gpt-4o-mini")
+        self.llm = OpenAI(model=llm_model)
         self.df = None  # Initialize dataframe attribute
 
     def _get_prompt_template(self):

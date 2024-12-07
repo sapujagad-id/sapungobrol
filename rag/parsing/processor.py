@@ -12,8 +12,24 @@ class FileProcessor(ABC):
 
     @abstractmethod
     def _load_document(self):
-        """Abstract method to load the document data."""
+        """
+        Loads the document data.
+
+        This method should be implemented to load the document from a specific source 
+        (e.g., file, database, etc.) and prepare it for further processing.
+
+        Raises:
+            SomeException: If the document loading fails.
+        """
     
     @abstractmethod
     def process(self):
-        """Processes the document and returns nodes."""
+        """
+        Processes the loaded document and returns the nodes.
+
+        This method should be implemented to process the loaded document, extract 
+        relevant information, and return it as a list of nodes or structured data.
+
+        Returns:
+            list: A list of nodes or processed data extracted from the document.
+        """
