@@ -81,7 +81,7 @@ jobs:
         run: atlas migrate apply --url postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable
 
       - name: Run test and get coverage
-        run: coverage run -m pytest && coverage xml
+        run: coverage run -m pytest && coverage xml --rcfile pyproject.toml
 
       - name: Scan code and upload coverage to Sonarcloud
         uses: SonarSource/sonarcloud-github-action@master

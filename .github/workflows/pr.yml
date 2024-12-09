@@ -69,7 +69,7 @@ jobs:
       - name: Run test and get coverage
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: coverage run -m pytest && coverage xml
+        run: coverage run -m pytest && coverage xml --rcfile pyproject.toml
 
       - name: Scan code and upload coverage to Sonarcloud
         uses: SonarSource/sonarcloud-github-action@master
