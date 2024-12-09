@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit User Access - Broom.id</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tom-select@2.0.0/dist/css/tom-select.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.0.0/dist/js/tom-select.complete.min.js"></script>
+  </head>
+  <body class="bg-gray-100">
+    <!-- Navbar -->
+    {% include 'navbar.html' %}
+
+    <main class="container mx-auto mt-8 px-4">
+      <form
+        id="edit-user-access-form"
+        class="bg-white shadow-md rounded-lg p-6"
+      >
+        <h1 class="text-2xl font-bold text-center mb-6">Edit User Access</h1>
+        <div class="mb-4">
+          <label for="name" class="block text-gray-700 text-sm font-bold mb-2"
+            >Access Level</label
+          >
+          <input
+            type="text"
+            class="hidden"
+            name="user_id"
+            id="user_id"
+            value="{{ user_id }}"
+          />
+          <input
+            type="number"
+            id="access_level"
+            name="access_level"
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            placeholder="Enter access level"
+            min="1"
+            max="{{ total_access_levels }}"
+            value="{{ access_level }}"
+          />
+        </div>
+
+        <div class="flex items-center justify-end">
+          <button
+            id="edit-user-access-button"
+            type="submit"
+            class="text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-all"
+            style="background-color: #2a4365"
+            onmouseover="this.style.backgroundColor='#1e3150'"
+            onmouseout="this.style.backgroundColor='#2a4365'"
+            onfocus="this.style.backgroundColor='#1e3150'"
+            onblur="this.style.backgroundColor='#2a4365'"
+          >
+            Update User Access
+          </button>
+        </div>
+      </form>
+    </main>
+    <script src="/static/js/editUserAccess.js"></script>
+  </body>
+</html>

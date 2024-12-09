@@ -231,6 +231,12 @@ if __name__ == "__main__":
         response_class=HTMLResponse,
         description="Page that displays all users",
     )
+    app.add_api_route(
+        "/edit-user/{user_id}",
+        endpoint=user_view.edit_user_access_page,
+        response_class=HTMLResponse,
+        description="Page to edit user access",
+    )
 
     app.add_api_route(
         "/create-document",
