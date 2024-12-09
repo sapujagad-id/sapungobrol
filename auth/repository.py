@@ -17,7 +17,7 @@ class UserModel(Base):
     """
 
     __tablename__ = "users"
-    USER_BASIC_INFO_FIELDS = ["name", "email", "access_level"]
+    USER_BASIC_INFO_FIELDS = ["id", "name", "email", "access_level"]
 
     id = Column(Uuid, primary_key=True)
     sub = Column(String(127), nullable=False)
@@ -34,6 +34,10 @@ class UserModel(Base):
 
 
 class AuthRepository(ABC):
+    @abstractmethod
+    def find_user_by_id(self, user_id: UUID) -> UserModel | None:
+        pass
+
     @abstractmethod
     def find_user_by_sub(self, sub: str) -> UserModel | None:
         pass
@@ -59,6 +63,15 @@ class PostgresAuthRepository(AuthRepository):
     def __init__(self, session: sessionmaker) -> None:
         self.create_session = session
         self.logger = logger.bind(service="PostgresAuthRepository")
+
+    # Will test later
+    def find_user_by_id(self, user_id: UUID) -> UserModel | None:  # pragma: no cover
+        with self.create_session() as session:
+            with self.logger.bind(user_id=str(user_id)).catch(
+                message=f"User not found",
+                reraise=True,
+            ):
+                return session.query(UserModel).filter(UserModel.id == user_id).first()
 
     def find_user_by_sub(self, sub: str) -> UserModel | None:
         with self.create_session() as session:
