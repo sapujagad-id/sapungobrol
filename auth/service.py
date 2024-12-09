@@ -182,12 +182,17 @@ class AuthServiceV1(AuthService):
 
     # Will test later
     def get_user_by_id(self, user_id: str) -> User:  # pragma: no cover
-        user = self.repository.find_user_by_id(user_id)
+        try:
+            user_id_uuid = UUID(user_id, version=4)
 
-        if user is None:
+            user = self.repository.find_user_by_id(user_id_uuid)
+
+            if user is None:
+                raise UserNotFound
+
+            return user
+        except ValueError:
             raise UserNotFound
-
-        return user
 
     def get_all_users_basic_info(self, token: str) -> User:
         self.logger.debug("jwt token", token)
