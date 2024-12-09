@@ -5,12 +5,19 @@ from auth.user import User
 
 
 class LoginResponse(BaseModel):
-  access_token: str
+    access_token: str
+
 
 class ProfileResponse(TypedDict):
-  data: User
+    data: User
+
 
 class GoogleCredentials(BaseModel):
-  client_id: str
-  client_secret: str
-  redirect_uri: str
+    client_id: str
+    client_secret: str
+    redirect_uri: str
+
+
+# This will be tested later
+class EditUserAccess(BaseModel):  # pragma: no cover
+    access_level: int
