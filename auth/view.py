@@ -67,7 +67,7 @@ class UserViewV1(UserView):
                     "user_id": user_id,
                     "access_level": user.access_level,
                     "total_access_levels": total_access_levels,
-                    "user_profile": user_profile,
+                    "user_profile": user_profile.get("data"),
                     "is_admin": request.cookies.get("is_admin"),
                 },
             )
