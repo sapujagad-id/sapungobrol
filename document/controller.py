@@ -1,12 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Annotated
 
-from fastapi import File, Form, HTTPException, UploadFile
+from fastapi import Body, File, Form, HTTPException, UploadFile
 from loguru import logger
-
-from document import DocumentCreate, DocumentFilter, DocumentUpdate
-from document.document import (DocumentTitleError, DocumentTypeError,
-                               ObjectNameError)
+from document import DocumentFilter, DocumentCreate, DocumentUpdate
+from document.document import Document, DocumentTitleError, DocumentTypeError, FileExtensionDoesNotMatchType, FileSizeExceededMaxLimit, ObjectNameError
 from document.service import DocumentService
 
 
@@ -104,15 +102,19 @@ class DocumentControllerV1(ABC):
         self.logger.info(file.filename)
         
         try:
-            self.service.upload_document(file, object_name)
-            self.service.create_document(request=doc_create)
+            self.service.create_document(request=doc_create, file=file)
             return {"detail": "Document created successfully!"}
         except DocumentTypeError as exc:
             raise HTTPException(status_code=400, detail=exc.message)
         except DocumentTitleError as exc:
             raise HTTPException(status_code=400, detail=exc.message)
+        except FileExtensionDoesNotMatchType as exc:
+            raise HTTPException(status_code=400, detail=exc.message)
+        except FileSizeExceededMaxLimit as exc:
+            raise HTTPException(status_code=400, detail=exc.message)
         except ObjectNameError as exc:
             raise HTTPException(status_code=400, detail=exc.message)
+        
         except Exception as e:
             self.logger.error(e.args)
             raise HTTPException(status_code=500)

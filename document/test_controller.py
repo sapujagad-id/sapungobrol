@@ -1,10 +1,10 @@
-from io import BytesIO
-
 import pytest
 from fastapi import HTTPException, UploadFile
-
-from document.dto import DocumentFilter
-
+from document.controller import DocumentControllerV1
+from document.dto import DocumentCreate, DocumentFilter
+from document.service import DocumentServiceV1
+from document.document import DocumentTypeError, DocumentTitleError, ObjectNameError
+from io import BytesIO
 
 class TestDocumentController:
     def test_fetch_documents_found(self, setup_controller, setup_documents):
@@ -94,7 +94,7 @@ class TestDocumentController:
         with pytest.raises(HTTPException) as exc:
             setup_controller.upload_document(**document_missing_title)
         assert exc.value.status_code == 400
-        assert exc.value.detail == "Document title is required"
+        assert exc.value.detail == "Document title is required or invalid"
 
     def test_upload_document_duplicate_name(self, setup_controller, setup_documents):
         duplicate_document = {
@@ -108,6 +108,45 @@ class TestDocumentController:
             setup_controller.upload_document(**duplicate_document)
         assert exc.value.status_code == 400
         assert exc.value.detail == "Object by this name already exists"
+
+    def test_upload_document_extension_not_match_with_type(self, setup_controller, setup_documents):
+        duplicate_document = {
+            "file": UploadFile(filename="sample.txt", file=BytesIO(b"Sample content")),
+            "type": "csv",
+            "title": "Duplicate Document",
+            "object_name": "doc1.csv",  # Name that already exists in setup_documents
+            "access_level": 0,
+        }
+        with pytest.raises(HTTPException) as exc:
+            setup_controller.upload_document(**duplicate_document)
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "File extension does not match the expected type"
+    
+    def test_upload_document_extension_not_match_with_type(self, setup_controller, setup_documents):
+        document = {
+            "file": UploadFile(filename="sample.txt", file=BytesIO(b"Sample content")),
+            "type": "csv",
+            "title": "Duplicate Document",
+            "object_name": "doc2.csv",  # Name that already exists in setup_documents
+            "access_level": 0,
+        }
+        with pytest.raises(HTTPException) as exc:
+            setup_controller.upload_document(**document)
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "File extension does not match the expected type"
+    
+    def test_upload_document_file_size_exceeds_limit(self, setup_controller, setup_documents):
+        duplicate_document = {
+            "file": UploadFile(filename="sample.txt", file=BytesIO(b"Sample content" * (2 * 1024 * 1024))),
+            "type": "txt",
+            "title": "Duplicate Document",
+            "object_name": "doc2.txt",  
+            "access_level": 0,
+        }
+        with pytest.raises(HTTPException) as exc:
+            setup_controller.upload_document(**duplicate_document)
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "File size exceeds the allowed limit"
 
     def test_upload_document_no_access_level(self, setup_controller, mocker):
         mocker.patch.object(setup_controller, 'upload_document', side_effect=Exception("Database error"))
