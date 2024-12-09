@@ -14,8 +14,10 @@ from slack_bolt.oauth.oauth_settings import OAuthSettings
 from adapter.reaction_event_repository import PostgresReactionEventRepository
 from adapter.slack import SlackAdapter
 from adapter.slack_dto import SlackConfig
-from adapter.slack_repository import (CustomInstallationStore,
-                                      PostgresWorkspaceDataRepository)
+from adapter.slack_repository import (
+    CustomInstallationStore,
+    PostgresWorkspaceDataRepository,
+)
 from adapter.view import SlackViewV1
 from auth.controller import AuthControllerV1
 from auth.dto import GoogleCredentials, ProfileResponse
@@ -52,7 +54,6 @@ sentry_sdk.init(
 if __name__ == "__main__":
     config = AppConfig()
 
-
     google_credentials = GoogleCredentials(
         client_id=config.google_client_id,
         client_secret=config.google_client_secret,
@@ -72,9 +73,9 @@ if __name__ == "__main__":
         slack_signing_secret=config.slack_signing_secret,
         slack_client_id=config.slack_client_id,
         slack_client_secret=config.slack_client_secret,
-        slack_scopes=config.slack_scopes
+        slack_scopes=config.slack_scopes,
     )
-    
+
     configure_logger(config.log_level)
 
     sessionmaker = config_db(config.database_url)
@@ -87,6 +88,7 @@ if __name__ == "__main__":
         config.base_url,
         config.jwt_secret_key,
         config.admin_emails,
+        config.total_access_levels,
     )
 
     auth_controller = AuthControllerV1(auth_service)
@@ -99,9 +101,7 @@ if __name__ == "__main__":
 
     bot_controller = BotControllerV1(bot_service)
 
-    bot_view = BotViewV1(
-        bot_controller, bot_service, auth_controller
-    )
+    bot_view = BotViewV1(bot_controller, bot_service, auth_controller)
 
     engine_selector = ChatEngineSelector(
         openai_api_key=config.openai_api_key,
@@ -122,9 +122,8 @@ if __name__ == "__main__":
     document_view = DocumentViewV1(document_service, auth_controller)
 
     reaction_event_repository = PostgresReactionEventRepository(sessionmaker)
-    
+
     automation = DocumentIndexing(aws_config, document_service)
-    
 
     workspace_data_repository = PostgresWorkspaceDataRepository(sessionmaker)
 
@@ -138,7 +137,7 @@ if __name__ == "__main__":
         install_path="/slack/install",
         redirect_uri_path="/api/slack/oauth_redirect",
         installation_store=custom_instalation_store,
-        state_validation_enabled=False
+        state_validation_enabled=False,
     )
 
     slack_app = App(
@@ -153,7 +152,7 @@ if __name__ == "__main__":
         reaction_event_repository,
         workspace_data_repository,
         auth_repository,
-        slack_config
+        slack_config,
     )
 
     slack_app.event("message")(slack_adapter.event_message)
@@ -163,22 +162,27 @@ if __name__ == "__main__":
     slack_view = SlackViewV1(auth_controller, slack_config, config.admin_emails)
 
     app = FastAPI()
-    app.add_middleware(AuthMiddleware, jwt_secret_key=config.jwt_secret_key, included_routes=[
-        "/", 
-        "/create", 
-        "/edit/{id}", 
-        "/document", 
-        "/users", 
-        "/create-document",
-        # "/api/*", # see SAP-79
-        "/slack/*",
-    ])
+    app.add_middleware(
+        AuthMiddleware,
+        jwt_secret_key=config.jwt_secret_key,
+        included_routes=[
+            "/",
+            "/create",
+            "/edit/{id}",
+            "/document",
+            "/users",
+            "/create-document",
+            # "/api/*", # see SAP-79
+            "/api/users/*",
+            "/slack/*",
+        ],
+    )
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(SentryAsgiMiddleware)
 
     app.mount("/assets", StaticFiles(directory="public"), name="assets")
     app.mount("/static", StaticFiles(directory="public"), name="static")
-    
+
     app.add_api_route(
         "/",
         endpoint=bot_view.show_list_chatbots,
@@ -192,7 +196,7 @@ if __name__ == "__main__":
         response_class=HTMLResponse,
         description="Page that displays login page",
     )
-    
+
     app.add_api_route(
         "/invalid-email",
         endpoint=user_view.view_invalid_login_email,
@@ -227,12 +231,18 @@ if __name__ == "__main__":
         response_class=HTMLResponse,
         description="Page that displays all users",
     )
-    
+
     app.add_api_route(
         "/create-document",
         endpoint=document_view.new_document_view,
         response_class=HTMLResponse,
         description="Page that displays Document Creation form",
+    )
+
+    app.add_api_route(
+        "/api/users/{user_id}/access",
+        endpoint=auth_controller.edit_user_access,
+        methods=["PATCH"],
     )
 
     app.add_api_route(
@@ -298,17 +308,17 @@ if __name__ == "__main__":
         "/api/slack/events", endpoint=slack_adapter.handle_events, methods=["POST"]
     )
 
-    app.add_api_route(
-        "/slack/install", endpoint=slack_view.install, methods=["GET"]
-    )
+    app.add_api_route("/slack/install", endpoint=slack_view.install, methods=["GET"])
 
     app.add_api_route(
         "/slack/install/success", endpoint=slack_view.success, methods=["GET"]
     )
 
-
     app.add_api_route(
-        "/api/slack/oauth_redirect", endpoint=slack_adapter.oauth_redirect, methods=["GET", "POST"], response_model=None 
+        "/api/slack/oauth_redirect",
+        endpoint=slack_adapter.oauth_redirect,
+        methods=["GET", "POST"],
+        response_model=None,
     )
 
     app.add_api_route(
@@ -363,20 +373,19 @@ if __name__ == "__main__":
         response_class=RedirectResponse,
         methods=["GET"],
     )
-    
+
     app.add_api_route(
         "/dashboard",
         endpoint=bot_view.show_dashboard,
         response_class=HTMLResponse,
-        description="Dashboard Page"
+        description="Dashboard Page",
     )
 
-    
     app.add_api_route(
         "/api/dashboard/{bot_id}",
         endpoint=bot_controller.get_dashboard_data,
         methods=["GET"],
-        name="Dashboard Data for Bot"
+        name="Dashboard Data for Bot",
     )
 
     app.add_api_route(
@@ -386,5 +395,5 @@ if __name__ == "__main__":
         description="Page that displays existing chatbots",
     )
 
-    #automation.process_documents()
+    # automation.process_documents()
     uvicorn.run(app, host="0.0.0.0", port=config.port, access_log=False)
