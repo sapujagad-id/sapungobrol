@@ -24,6 +24,10 @@ from .exceptions import (
 
 class AuthService(ABC):
     @abstractmethod
+    def get_total_access_levels(self) -> int:
+        pass
+
+    @abstractmethod
     def authorize_google(
         self, request: Request, user_info_json: GoogleUserInfo
     ) -> Response:
@@ -35,6 +39,10 @@ class AuthService(ABC):
 
     @abstractmethod
     def get_user_profile(self, token: str) -> User:
+        pass
+
+    @abstractmethod
+    def get_user_by_id(self, user_id: str) -> User:
         pass
 
     @abstractmethod
@@ -64,6 +72,10 @@ class AuthServiceV1(AuthService):
         self.jwt_secret = jwt_secret
         self.admin_emails = admin_emails
         self.total_access_levels = total_access_levels
+
+    # Will test later
+    def get_total_access_levels(self) -> int:  # pragma: no cover
+        return self.total_access_levels
 
     def login_redirect_google(self) -> Response:
         query_params = urlencode(
@@ -166,6 +178,15 @@ class AuthServiceV1(AuthService):
         user = self.repository.find_user_by_email(decoded["email"])
         if not user:
             raise UserNotFound
+        return user
+
+    # Will test later
+    def get_user_by_id(self, user_id: str) -> User:  # pragma: no cover
+        user = self.repository.find_user_by_id(user_id)
+
+        if user is None:
+            raise UserNotFound
+
         return user
 
     def get_all_users_basic_info(self, token: str) -> User:
