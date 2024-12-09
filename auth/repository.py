@@ -68,7 +68,7 @@ class PostgresAuthRepository(AuthRepository):
     def find_user_by_id(self, user_id: UUID) -> UserModel | None:  # pragma: no cover
         with self.create_session() as session:
             with self.logger.bind(user_id=str(user_id)).catch(
-                message=f"User not found",
+                message="User not found",
                 reraise=True,
             ):
                 return session.query(UserModel).filter(UserModel.id == user_id).first()
