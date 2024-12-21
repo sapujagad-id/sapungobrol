@@ -104,7 +104,7 @@ def test_postgres_handler_query(mock_psycopg2_connect):
     # Verify query was executed with the correct SQL for the access level table
     expected_query = """
             SELECT item_id, text_content, embedding <-> %s::vector AS distance
-            FROM index_L3
+            FROM index_l3
             ORDER BY distance
             LIMIT %s;
         """
