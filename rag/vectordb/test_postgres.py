@@ -146,7 +146,7 @@ def test_upsert_vectors(mock_psycopg2_connect):
 
     insert_calls = [
         call(
-            f"INSERT INTO index_L{lvl} (item_id, embedding, text_content) VALUES (%s, %s, %s) "
+            f"INSERT INTO index_l{lvl} (item_id, embedding, text_content) VALUES (%s, %s, %s) "
             f"ON CONFLICT (item_id) DO UPDATE SET embedding = EXCLUDED.embedding, text_content = EXCLUDED.text_content;",
             (vector["id"], vector["values"], '')
         )

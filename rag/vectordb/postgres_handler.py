@@ -41,7 +41,7 @@ class PostgresHandler:
     def _initialize_tables(self):
         """Creates tables for each access level if they do not exist."""
         for level in range(1, self.total_access_levels + 1):
-            table_name = f"index_L{level}"
+            table_name = f"index_l{level}"
             create_table_query = f"""
             CREATE TABLE IF NOT EXISTS {table_name} (
                 id SERIAL PRIMARY KEY,
@@ -56,7 +56,7 @@ class PostgresHandler:
     def upsert_vectors(self, vectors: List[Dict[str, Any]], level: int):
         """Inserts vectors into the PostgreSQL table for the given level and duplicates them in higher levels."""
         for lvl in range(level, self.total_access_levels + 1):  # Start from the specified level up to the highest level
-            table_name = f"index_L{lvl}"
+            table_name = f"index_l{lvl}"
             for vector in vectors:
                 item_id = vector['id']
                 embedding = vector['values']
@@ -70,7 +70,7 @@ class PostgresHandler:
 
     def query(self, vector, access_level: int, top_k: int = 10):
         """Queries only the table corresponding to the specified access level using cosine similarity."""
-        table_name = f"index_L{access_level}"
+        table_name = f"index_l{access_level}"
         self.cursor.execute(
             f"""
             SELECT item_id, text_content, embedding <-> %s::vector AS distance
