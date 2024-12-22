@@ -62,7 +62,7 @@ class Document(BaseModel):
     
     def _validate_object_name(self):
         stripped_object_name = self.object_name.strip()
-        return bool(stripped_object_name) and not self.object_name != stripped_object_name
+        return bool(stripped_object_name) and self.object_name == stripped_object_name
         
     def generate_presigned_url(self, s3_client, bucket_name: str, expiration: int = 28800) -> str:
         '''
