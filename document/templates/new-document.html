@@ -23,12 +23,10 @@
 <body class="bg-gray-100">
     <!-- Navbar -->
     {% include 'navbar.html' %}
-
+    <div id="toast-container" class="fixed top-5 right-5 space-y-4 z-50"></div>
     <main class="container mx-auto mt-8 px-4">
         <form 
             id="chatbot-form" 
-            method="POST" 
-            action="/api/documents"  
             enctype="multipart/form-data" 
             class="bg-white shadow-md rounded-lg p-6" 
         >
@@ -98,4 +96,51 @@
         </form>
     </main>
 </body>
+<script>
+    document.getElementById('chatbot-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('/api/documents', {
+                method: 'POST',
+                body: formData,
+            });
+            console.log(response)
+            if (response.ok) {
+                window.location.href = '/document';
+            } else {
+                const errorData = await response.json();
+                showToast(`Failed to submit form: ${errorData.detail || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('An unexpected error occurred. Please try again.');
+        }
+      }); 
+    function showToast(message, type = 'error', duration = 3000) {
+        const toastContainer = document.getElementById('toast-container');
+    
+        const toast = document.createElement('div');
+        toast.className = `flex items-center p-4 text-white rounded shadow ${
+            type === 'error' ? 'bg-red-500' : 'bg-green-500'
+        }`;
+    
+        toast.innerHTML = `
+            <div class="flex-1">${message}</div>
+            <button class="ml-4 text-xl font-bold focus:outline-none">&times;</button>
+        `;
+    
+        const closeButton = toast.querySelector('button');
+        closeButton.addEventListener('click', () => toast.remove());
+    
+        toastContainer.appendChild(toast);
+    
+        setTimeout(() => {
+            toast.remove();
+        }, duration);
+    }
+</script>
 </html>
